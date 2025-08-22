@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Bookmark Notion Sync",
+  "version": "0.1.0",
+  "permissions": [
+    "bookmarks",
+    "storage",
+    "identity"
+  ],
+  "host_permissions": [
+    "https://api.notion.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "src/popup/popup.html"
+  },
+  "options_page": "src/options/options.html",
+  "oauth2": {
+    "client_id": "257d872b-594c-805a-9f58-0037c0162612",
+    "scopes": ["database", "insert", "read", "update"]
+  }
+}
