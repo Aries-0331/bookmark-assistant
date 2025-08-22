@@ -5,21 +5,27 @@
   "permissions": [
     "bookmarks",
     "storage",
-    "identity"
+    "identity",
+    "activeTab",
+    "scripting",
+    "notifications"
   ],
   "host_permissions": [
-    "https://api.notion.com/*"
+    "https://api.notion.com/*",
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js",
     "type": "module"
   },
   "action": {
-    "default_popup": "src/popup/popup.html"
+    "default_popup": "popup.html"
   },
-  "options_page": "src/options/options.html",
-  "oauth2": {
-    "client_id": "257d872b-594c-805a-9f58-0037c0162612",
-    "scopes": ["database", "insert", "read", "update"]
-  }
+  "options_page": "options.html",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
 }

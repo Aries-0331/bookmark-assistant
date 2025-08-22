@@ -9,19 +9,27 @@ export default defineConfig({
     // Custom plugin to handle Chrome extension build
     {
       name: 'chrome-extension-build',
-      generateBundle(_options, bundle) {
-        // Move HTML files to root and rename them
-        for (const fileName in bundle) {
-          const file = bundle[fileName]
-          if (fileName.includes('popup') && fileName.endsWith('.html')) {
-            delete bundle[fileName]
-            bundle['popup.html'] = file
-          }
-          if (fileName.includes('options') && fileName.endsWith('.html')) {
-            delete bundle[fileName]
-            bundle['options.html'] = file
-          }
-        }
+      writeBundle() {
+        // Copy HTML files to root with correct names after build
+        import('fs').then(({ copyFileSync, existsSync }) => {
+          import('path').then(({ resolve }) => {
+            const distDir = 'dist'
+            
+            if (existsSync(resolve(distDir, 'src/popup/popup.html'))) {
+              copyFileSync(
+                resolve(distDir, 'src/popup/popup.html'),
+                resolve(distDir, 'popup.html')
+              )
+            }
+            
+            if (existsSync(resolve(distDir, 'src/options/options.html'))) {
+              copyFileSync(
+                resolve(distDir, 'src/options/options.html'),
+                resolve(distDir, 'options.html')
+              )
+            }
+          })
+        })
       }
     }
   ],

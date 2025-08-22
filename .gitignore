@@ -22,3 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Keep template and development/production files in git but ignore sensitive data
+# Users should copy .env.example to .env.development and .env.production with real values
+
+# Chrome extension build artifacts
+*.crx
+*.pem
+
+# Temporary files
+.temp
+.tmp

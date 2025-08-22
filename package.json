@@ -4,10 +4,21 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build --mode development",
+    "build:prod": "tsc -b && vite build --mode production",
+    "preview": "vite preview",
+    "preview:dev": "vite preview --mode development",
+    "preview:prod": "vite preview --mode production",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "lint:fix": "eslint . --fix",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "env:validate": "node scripts/validate-env.js development",
+    "env:validate:prod": "node scripts/validate-env.js production",
+    "workflow:setup": "node scripts/dev-workflow.js setup",
+    "workflow:dev": "node scripts/dev-workflow.js dev",
+    "workflow:prod": "node scripts/dev-workflow.js prod",
+    "workflow:clean": "node scripts/dev-workflow.js clean"
   },
   "dependencies": {
     "@notionhq/client": "^4.0.2",
@@ -17,6 +28,7 @@
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@types/chrome": "^0.1.4",
+    "@types/node": "^24.3.0",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.1",
