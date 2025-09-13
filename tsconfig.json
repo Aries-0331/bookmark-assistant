@@ -1,11 +1,25 @@
 {
   "files": [],
   "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.node.json"
+    }
   ],
   "compilerOptions": {
-    "types": ["chrome", "node"],
-    "lib": ["dom", "dom.iterable", "es6"]
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "types": [
+      "chrome",
+      "node"
+    ],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "jsx": "react-jsx"
   }
 }
