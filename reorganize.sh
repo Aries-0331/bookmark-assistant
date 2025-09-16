@@ -74,7 +74,7 @@ cp eslint.config.js tools/ 2>/dev/null || true
 echo "✅ Project reorganization complete!"
 echo "📝 Next steps:"
 echo "  1. Update import paths in files"
-echo "  2. Create package.json files for each package" 
+echo "  2. Create package.json files for each package"
 echo "  3. Test builds"
 echo "  4. Remove old files after verification"
 
