@@ -1,4 +1,8 @@
-import { Client } from '@notionhq/client';
+// DEPRECATED: This file is no longer used in the extension
+// All Notion operations have been moved to the server for better architecture
+// This file remains for reference but should not be imported
+
+// import { Client } from '@notionhq/client'; // REMOVED - now server-only
 import { makeRequest } from './request-helper';
 
 // Error type for API errors

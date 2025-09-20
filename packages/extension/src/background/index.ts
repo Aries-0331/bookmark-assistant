@@ -1,8 +1,15 @@
 // filepath: src/background/index.ts
+
+// NOTE: Polyfills removed since @notionhq/client is no longer used in extension
+// import './polyfill'; // REMOVED: No longer needed with server-first architecture
+
 import { launchNotionOAuth, exchangeCodeForToken, debugOAuthSetup } from './oauth';
 import { processBookmarkForNotion, buildBookmarkPath } from './bookmark-sync';
 import { validateConfig, debugConfig } from '../lib/config';
-import { debugCurrentDatabase, clearStoredDatabase } from '../lib/notion';
+// import { debugCurrentDatabase, clearStoredDatabase } from '../lib/notion'; // REMOVED: Moving to server-only
+
+// Import OAuth test for debugging
+import './test-oauth-flow';
 
 // Initialize configuration and validate on startup
 debugConfig();
@@ -184,8 +191,9 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === 'DEBUG_DATABASE') {
     (async () => {
       try {
-        await debugCurrentDatabase();
-        sendResponse({ success: true });
+        // NOTE: Database debugging now handled by server
+        console.log('🔄 Database debugging moved to server - check server logs');
+        sendResponse({ success: true, message: 'Database debugging moved to server' });
       } catch (err) {
         console.error('Database debug failed:', err);
         sendResponse({ success: false, error: String(err) });
@@ -197,8 +205,9 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === 'CLEAR_DATABASE') {
     (async () => {
       try {
-        await clearStoredDatabase();
-        sendResponse({ success: true });
+        // NOTE: Database clearing now handled by server if needed
+        console.log('🔄 Database clearing moved to server - use server API');
+        sendResponse({ success: true, message: 'Database clearing moved to server' });
       } catch (err) {
         console.error('Clear database failed:', err);
         sendResponse({ success: false, error: String(err) });

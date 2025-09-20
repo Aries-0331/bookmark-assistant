@@ -1,41 +1,41 @@
-import { extractPageContent } from "../lib/content-extractor";
-import { createNotionPage, initNotion } from "../lib/notion";
+import { extractPageContent } from '../lib/content-extractor';
+import { serverAPI } from '../lib/server-api';
+// import { createNotionPage, initNotion } from "../lib/notion"; // REMOVED: Using server API instead
 
-export async function processBookmarkForNotion(url: string, title: string, path: string = "Bookmarks") {
-	try {
-		// Get stored token
-		const result = await chrome.storage.local.get(["notion_token"]);
-		if (!result.notion_token) {
-			throw new Error("Notion not connected");
-		}
+export async function processBookmarkForNotion(
+  url: string,
+  title: string,
+  path: string = 'Bookmarks'
+) {
+  try {
+    // Extract page content
+    const content = await extractPageContent(url);
 
-		initNotion(result.notion_token);
+    // Extract AI features (simplified without OpenAI)
+    const summary = `${content.text.substring(0, 500)}${content.text.length > 500 ? '...' : ''}`;
 
-		// Extract page content
-		const content = await extractPageContent(url);
+    // Create bookmark data for server
+    const bookmarkData = {
+      title,
+      url,
+      description: summary,
+      path: path,
+      dateAdded: new Date().toISOString(),
+      syncId: `bookmark_${url}_${Date.now()}`,
+    };
 
-		// Extract AI features (simplified without OpenAI)
-		const summary = `${content.text.substring(0, 500)}${
-			content.text.length > 500 ? "..." : ""
-		}`;
+    // Use server API instead of direct Notion calls
+    await serverAPI.upsertBookmarks([bookmarkData]);
 
-		// Use createNotionPage which handles database validation
-		await createNotionPage({
-			title,
-			url,
-			description: summary,
-			content: content.text.substring(0, 2000), // Limit content length
-			dateAdded: new Date().toISOString(),
-			path: path,
-		});
-	} catch (error) {
-		console.error("Failed to process bookmark:", error);
-		// Show notification to user
-		chrome.notifications.create({
-			type: "basic",
-			iconUrl: "/icons/icon48.png",
-			title: "Bookmark Sync Failed",
-			message: `Failed to sync "${title}" to Notion`,
-		});
-	}
+    console.log('✅ Bookmark synced to Notion via server:', title);
+  } catch (error) {
+    console.error('Failed to process bookmark:', error);
+    // Show notification to user
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: '/icons/icon48.png',
+      title: 'Bookmark Sync Failed',
+      message: `Failed to sync "${title}" to Notion`,
+    });
+  }
 }
