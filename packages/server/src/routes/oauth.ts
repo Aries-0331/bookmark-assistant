@@ -17,7 +17,12 @@ const router = Router();
  */
 router.post('/exchange', validateExtension, async (req, res: Response) => {
   try {
-    const { code, extensionUserId, templateDatabaseId }: OAuthExchangeRequest = req.body;
+    const {
+      code,
+      extensionUserId,
+      templateDatabaseId,
+      redirectUri,
+    }: OAuthExchangeRequest & { redirectUri?: string } = req.body;
 
     if (!code) {
       return res.status(400).json({
@@ -26,9 +31,12 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
       });
     }
 
+    // Use the redirect URI from the request, or fall back to default
+    const actualRedirectUri =
+      redirectUri || `chrome-extension://${config.allowedExtensionId}/oauth-callback.html`;
+
     // Exchange code for tokens with Notion
-    const redirectUri = `chrome-extension://${config.allowedExtensionId}/oauth-callback.html`;
-    const tokenData = await notionService.exchangeOAuthCode(code, redirectUri);
+    const tokenData = await notionService.exchangeOAuthCode(code, actualRedirectUri);
 
     const userId = extensionUserId || `user_${Date.now()}`;
 

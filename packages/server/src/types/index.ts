@@ -30,6 +30,7 @@ export interface OAuthExchangeRequest {
   code: string;
   extensionUserId?: string;
   templateDatabaseId?: string;
+  redirectUri?: string;
 }
 
 export interface BookmarkSyncOptions {
