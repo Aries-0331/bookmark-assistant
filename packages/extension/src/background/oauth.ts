@@ -101,22 +101,14 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
   const redirectUri = chrome.identity.getRedirectURL('callback');
 
   try {
-    console.log('🔗 Exchanging code for token via secure server...');
+  console.log('🔗 Exchanging code for token via server (server-first)...');
     console.log('🔗 Using redirect URI:', redirectUri);
 
     // Exchange code via server
     const result = await serverAPI.exchangeOAuthCode(code, redirectUri);
 
-    console.log('✅ OAuth exchange successful via server');
-
-    // Check if OAuth template was configured
-    if (result.user.duplicatedTemplateId) {
-      console.log('🎨 OAuth template detected:', result.user.duplicatedTemplateId);
-      await chrome.storage.local.set({
-        oauth_template_database_id: result.user.duplicatedTemplateId,
-        database_name: '📚 Chrome Bookmarks DB (OAuth Template)',
-      });
-    }
+    console.log('✅ OAuth exchange successful via server. User ID:', result.user.userId);
+    // Template database handling now deferred to separate endpoint/status check.
 
     return 'session_authenticated';
   } catch (error) {

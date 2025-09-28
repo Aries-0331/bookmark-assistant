@@ -88,84 +88,45 @@ class ServerAPIClient {
     }
   }
 
-  // 🔐 OAuth Token Exchange (Direct Notion API)
+  // 🔐 OAuth Token Exchange (Server-first, secure)
   async exchangeOAuthCode(
     code: string,
     redirectUri: string
   ): Promise<{
     sessionToken: string;
-    user: any;
+    user: { userId: string; templateDatabaseId?: string | null };
   }> {
-    console.log('🔬 Starting DIRECT Notion OAuth code exchange...');
-    console.log('🔬 Code:', code.substring(0, 8) + '...');
-    console.log('🔬 Redirect URI:', redirectUri);
-
+    console.log('🔐 Exchanging OAuth code via server...');
     try {
-      // Get Notion OAuth credentials from environment
-      const clientId = import.meta.env.VITE_NOTION_CLIENT_ID;
-      const clientSecret = import.meta.env.VITE_NOTION_CLIENT_SECRET;
-
-      if (!clientId || !clientSecret) {
-        throw new Error('Notion OAuth credentials not configured');
-      }
-
-      console.log('🔬 Client ID:', clientId.substring(0, 8) + '...');
-
-      // Call Notion OAuth API directly
-      const response = await globalThis.fetch('https://api.notion.com/v1/oauth/token', {
+      const response = await this.makeRequest<any>('/oauth/exchange', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
-          'Notion-Version': '2022-06-28',
-        },
         body: JSON.stringify({
-          grant_type: 'authorization_code',
-          code: code,
-          redirect_uri: redirectUri,
+          code,
+          redirectUri,
+          extensionUserId: chrome.runtime.id,
         }),
       });
 
-      console.log('🔬 Notion API response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('🔬 Notion OAuth API error:', errorText);
-        throw new Error(`Notion OAuth failed: ${errorText}`);
+      if (!response.sessionToken) {
+        throw new Error('Server did not return a session token');
       }
 
-      const tokenData = await response.json();
-      console.log('🔬 Token exchange successful:', {
-        hasAccessToken: !!tokenData.access_token,
-        workspaceName: tokenData.workspace_name,
-        botId: tokenData.bot_id,
-      });
-
-      // Store tokens in Chrome storage
-      const sessionToken = `notion_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      await chrome.storage.local.set({
-        session_token: sessionToken,
-        notion_access_token: tokenData.access_token,
-        notion_refresh_token: tokenData.refresh_token,
-        notion_workspace_id: tokenData.workspace_id,
-        notion_workspace_name: tokenData.workspace_name,
-        notion_bot_id: tokenData.bot_id,
-        oauth_timestamp: Date.now(),
-      });
-
-      this.sessionToken = sessionToken;
+      this.sessionToken = response.sessionToken;
+      const toStore: Record<string, any> = {
+        session_token: response.sessionToken,
+        user_id: response.userId,
+      };
+      if (response.templateDatabaseId) {
+        toStore.oauth_template_database_id = response.templateDatabaseId;
+      }
+      await chrome.storage.local.set(toStore);
 
       return {
-        sessionToken,
-        user: {
-          workspaceId: tokenData.workspace_id,
-          workspaceName: tokenData.workspace_name,
-          botId: tokenData.bot_id,
-          accessToken: tokenData.access_token,
-        },
+        sessionToken: response.sessionToken,
+        user: { userId: response.userId, templateDatabaseId: response.templateDatabaseId },
       };
     } catch (error) {
-      console.error('🔬 Direct OAuth exchange failed:', error);
+      console.error('� OAuth exchange (server) failed:', error);
       throw error;
     }
   }

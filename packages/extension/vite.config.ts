@@ -46,7 +46,7 @@ export default defineConfig({
         popup: 'src/popup/popup.html',
         options: 'src/options/options.html',
         background: 'src/background/index.ts',
-        content: 'src/content/injector.ts',
+  // content script removed in refactor (legacy injector.ts deleted)
       },
       output: {
         entryFileNames: '[name].js',

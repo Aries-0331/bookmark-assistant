@@ -17,11 +17,11 @@ export default function Popup() {
 	const checkConnectionStatus = async () => {
 		try {
 			const result = await chrome.storage.local.get([
-				"notion_token",
-				"last_sync",
+				'session_token',
+				'last_sync',
 			]);
 			setStatus({
-				isConnected: !!result.notion_token,
+				isConnected: !!result.session_token,
 				lastSync: result.last_sync,
 				error: undefined,
 				isLoading: false,

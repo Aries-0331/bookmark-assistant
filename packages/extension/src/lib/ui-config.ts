@@ -1,7 +1,6 @@
 // UI Configuration constants for the options page
 // These were moved from notion.ts to eliminate dependencies
 
-import { serverAPI } from './server-api';
 
 export interface DatabaseCreationOption {
   type: 'oauth_template' | 'duplicate' | 'custom';
@@ -159,38 +158,6 @@ export async function validateDuplicatedTemplate(databaseId: string): Promise<{
       isValid: false,
       error: error instanceof Error ? error.message : 'Unknown validation error',
     };
-  }
-}
-
-/**
- * List available databases via server API
- */
-export async function listAvailableDatabases(): Promise<DatabaseOption[]> {
-  try {
-    const response = await serverAPI.getDatabases();
-    const databases = response.databases || [];
-    return databases.map((db: any) => ({
-      id: db.id,
-      name: db.title || 'Untitled Database',
-      url: `https://notion.so/${db.id.replace(/-/g, '')}`,
-      isValid: true,
-    }));
-  } catch (error) {
-    console.error('Failed to list databases:', error);
-    return [];
-  }
-}
-
-/**
- * Test template access (placeholder for server API)
- */
-export async function testTemplateAccess(): Promise<{ accessible: boolean; error?: string }> {
-  try {
-    // TODO: Implement server API call to test template access
-    return { accessible: true };
-  } catch (error) {
-    console.error('Failed to test template access:', error);
-    return { accessible: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
 

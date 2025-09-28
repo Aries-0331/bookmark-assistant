@@ -1,17 +1,8 @@
-// filepath: src/background/index.ts
-
-// NOTE: Polyfills removed since @notionhq/client is no longer used in extension
-// import './polyfill'; // REMOVED: No longer needed with server-first architecture
-
 import { launchNotionOAuth, exchangeCodeForToken, debugOAuthSetup } from './oauth';
-import { processBookmarkForNotion, buildBookmarkPath } from './bookmark-sync';
 import { validateConfig, debugConfig } from '../lib/config';
-// import { debugCurrentDatabase, clearStoredDatabase } from '../lib/notion'; // REMOVED: Moving to server-only
 
-// Import OAuth test for debugging
-import './test-oauth-flow';
+// import './test-oauth-flow'; // Removed in production build
 
-// Initialize configuration and validate on startup
 debugConfig();
 debugOAuthSetup();
 const configValidation = validateConfig();
@@ -47,12 +38,31 @@ async function cleanupInvalidDatabaseId() {
 // Run cleanup on startup
 cleanupInvalidDatabaseId();
 
+// Legacy storage migration (convert old direct Notion storage to server session model)
+(async function migrateLegacyStorage() {
+  try {
+    const legacy = await chrome.storage.local.get([
+      'notion_access_token',
+      'notion_refresh_token',
+      'session_token',
+    ]);
+    if (legacy.notion_access_token && !legacy.session_token) {
+      console.log('🧪 Detected legacy direct Notion tokens without session. Prompting reconnect.');
+      // We deliberately do NOT migrate tokens for security — force user to re-auth.
+      await chrome.storage.local.set({ legacy_reauth_required: true });
+    }
+  } catch (e) {
+    console.warn('Legacy storage migration failed:', e);
+  }
+})();
+
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === 'NOTION_OAUTH') {
     (async () => {
       try {
-        const code = await launchNotionOAuth();
-        await exchangeCodeForToken(code);
+  const code = await launchNotionOAuth();
+  // Server-first secure exchange
+  await exchangeCodeForToken(code);
 
         // Check if OAuth template was used
         const storage = await chrome.storage.local.get([
@@ -84,21 +94,16 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true;
   }
 
-  if (msg.type === 'SYNC_ALL_BOOKMARKS') {
+  if (msg.type === 'SYNC_BOOKMARKS') {
     (async () => {
       try {
-        console.log('🔄 Starting server-side bookmark sync...');
-
-        // Import server API
-        const { syncAllBookmarksViaServer } = await import('../lib/server-api');
-
-        // Get all bookmarks
+        console.log('🔄 Starting server-side bookmark sync (bulk)...');
         const bookmarkTree = await chrome.bookmarks.getTree();
-
-        // Sync via server
-        await syncAllBookmarksViaServer(bookmarkTree);
-
-        sendResponse({ success: true, message: 'Bookmarks synced successfully via server' });
+        const flat = bookmarkTree[0]?.children || [];
+        // Use existing helper (dynamic import to keep weight low)
+        const { syncAllBookmarksViaServer } = await import('../lib/server-api');
+        await syncAllBookmarksViaServer(flat as any);
+        sendResponse({ success: true, message: 'Bookmarks sync requested' });
       } catch (err) {
         console.error('❌ Server-side bookmark sync failed:', err);
         sendResponse({ success: false, error: String(err) });
@@ -167,73 +172,5 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       }
     })();
     return true;
-  }
-
-  if (msg.type === 'SYNC_BOOKMARK') {
-    (async () => {
-      try {
-        const { bookmarkId, url, title } = msg.payload;
-
-        // Get bookmark tree to build path
-        const bookmarkTree = await chrome.bookmarks.getTree();
-        const path = buildBookmarkPath(bookmarkTree, bookmarkId);
-
-        await processBookmarkForNotion(bookmarkId, url, title, path);
-        sendResponse({ ok: true });
-      } catch (err) {
-        console.error(err);
-        sendResponse({ ok: false, error: String(err) });
-      }
-    })();
-    return true;
-  }
-
-  if (msg.type === 'DEBUG_DATABASE') {
-    (async () => {
-      try {
-        // NOTE: Database debugging now handled by server
-        console.log('🔄 Database debugging moved to server - check server logs');
-        sendResponse({ success: true, message: 'Database debugging moved to server' });
-      } catch (err) {
-        console.error('Database debug failed:', err);
-        sendResponse({ success: false, error: String(err) });
-      }
-    })();
-    return true;
-  }
-
-  if (msg.type === 'CLEAR_DATABASE') {
-    (async () => {
-      try {
-        // NOTE: Database clearing now handled by server if needed
-        console.log('🔄 Database clearing moved to server - use server API');
-        sendResponse({ success: true, message: 'Database clearing moved to server' });
-      } catch (err) {
-        console.error('Clear database failed:', err);
-        sendResponse({ success: false, error: String(err) });
-      }
-    })();
-    return true;
-  }
-});
-
-// Listen for bookmark creation (optional - for real-time sync)
-chrome.bookmarks.onCreated.addListener(async (id, bookmark) => {
-  if (bookmark.url) {
-    // Auto-sync new bookmarks only if auto-sync is enabled
-    const { auto_sync_enabled } = await chrome.storage.local.get('auto_sync_enabled');
-    if (auto_sync_enabled !== false) {
-      // Default to true
-      try {
-        // Get bookmark tree to build path for new bookmark
-        const bookmarkTree = await chrome.bookmarks.getTree();
-        const path = buildBookmarkPath(bookmarkTree, id);
-
-        await processBookmarkForNotion(id, bookmark.url, bookmark.title, path);
-        console.log(`🔖 Auto-synced new bookmark: ${bookmark.title}`);
-      } catch (error) {
-        console.warn(`⚠️ Failed to auto-sync bookmark: ${error}`);
-      }
-    }
   }
 });

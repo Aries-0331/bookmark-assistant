@@ -1,8 +1,5 @@
-import { extractContentFromUrl } from '../lib/content-extractor';
-import { buildBookmarkPath } from './bookmark-handler';
-import { notionClient, formatBookmarkForNotion } from '../lib/notion-client';
+// Server-first bookmark sync (legacy direct Notion client removed)
 import { serverAPI } from '../lib/server-api';
-// import { createNotionPage, getOrCreateBookmarkDatabase, initNotion } from "../lib/notion"; // REMOVED: Using server API instead
 
 export interface BookmarkItem {
   id: string;
@@ -111,12 +108,7 @@ export async function syncAllBookmarksToNotion() {
             throw new Error('Bookmark URL is missing');
           }
 
-          await processBookmarkForNotion(
-            bookmark.id,
-            bookmark.url,
-            bookmark.title,
-            bookmark.path || 'Bookmarks'
-          );
+          await processBookmarkForNotion(bookmark);
           results.successful++;
         } catch (error) {
           results.failed++;
@@ -186,98 +178,24 @@ function flattenBookmarks(bookmarkNodes: chrome.bookmarks.BookmarkTreeNode[]): B
   return flattened;
 }
 
-export async function processBookmarkForNotion(
-  bookmark: chrome.bookmarks.BookmarkTreeNode,
-  bookmarkPath?: string
-): Promise<any> {
-  console.log('� Processing bookmark for Notion (Direct API):', bookmark.title);
-
+export async function processBookmarkForNotion(bookmark: chrome.bookmarks.BookmarkTreeNode) {
+  console.log('🔄 Processing single bookmark via server:', bookmark.title);
   try {
-    // Get database ID from storage
-    const result = await chrome.storage.local.get(['notion_database_id']);
-    let databaseId = result.notion_database_id;
-
-    // If no database exists, create one
-    if (!databaseId) {
-      console.log('📚 No database found, creating new bookmark database...');
-      const database = await notionClient.createBookmarkDatabase('Chrome Bookmarks');
-      databaseId = database.id;
-
-      await chrome.storage.local.set({
-        notion_database_id: databaseId,
-        database_name: database.title,
-      });
-
-      console.log('✅ Created new database:', database.title);
-    }
-
-    // Build bookmark path
-    const path = bookmarkPath || (await buildBookmarkPath(bookmark.id));
-
-    // Extract content if it's a URL
-    let description = `Imported from Chrome bookmarks (${path})`;
-    if (bookmark.url) {
-      try {
-        const content = await extractContentFromUrl(bookmark.url);
-        if (content?.description) {
-          description = content.description;
-        }
-      } catch (error) {
-        console.log('⚠️ Could not extract content for:', bookmark.url);
-      }
-    }
-
-    // Format for Notion
-    const notionProperties = formatBookmarkForNotion(bookmark, path);
-
-    // Update description with extracted content
-    notionProperties.Description = {
-      rich_text: [
-        {
-          type: 'text',
-          text: {
-            content: description
-          }
-        }
-      ]
+    const path = buildBookmarkPath([bookmark], bookmark.id);
+    const payload = {
+      title: bookmark.title || 'Untitled',
+      url: bookmark.url || '',
+      description: `Imported from Chrome bookmarks (${path})`,
+      path,
+      dateAdded: bookmark.dateAdded
+        ? new Date(bookmark.dateAdded).toISOString()
+        : new Date().toISOString(),
+      syncId: `${bookmark.url}-${bookmark.dateAdded || Date.now()}`,
     };
-
-    // Check if bookmark already exists
-    const existingPages = await notionClient.queryDatabase(databaseId, {
-      property: 'URL',
-      url: {
-        equals: bookmark.url
-      }
-    });
-
-    let result_page;
-    if (existingPages.length > 0) {
-      // Update existing page
-      console.log('🔄 Updating existing bookmark in Notion');
-      result_page = await notionClient.updatePage(existingPages[0].id, notionProperties);
-    } else {
-      // Create new page
-      console.log('➕ Creating new bookmark in Notion');
-      result_page = await notionClient.createPage(databaseId, notionProperties);
-    }
-
-    console.log('✅ Bookmark processed successfully:', result_page.title);
-    return result_page;
-
-  } catch (error) {
-    console.error('❌ Failed to process bookmark:', error);
-    throw error;
-  }
-} "${title}":`, error);
-    throw error;
-  }
-}
-
-function isValidUrl(url: string): boolean {
-  try {
-    const urlObj = new URL(url);
-    return ['http:', 'https:'].includes(urlObj.protocol);
-  } catch {
-    return false;
+    const result = await serverAPI.upsertBookmarks([payload]);
+    return result.results?.[0] || null;
+  } catch (e) {
+    console.error('❌ Server bookmark process failed:', e);
+    throw e;
   }
 }
