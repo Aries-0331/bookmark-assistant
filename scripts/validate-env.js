@@ -44,8 +44,7 @@ envContent.split('\n').forEach(line => {
 // Define validation rules
 const validationRules = {
   required: [
-    'VITE_NOTION_CLIENT_ID',
-    'VITE_NOTION_CLIENT_SECRET'
+    'VITE_NOTION_CLIENT_ID'
   ],
   optional: [
     'VITE_OPENAI_API_KEY',
@@ -103,14 +102,14 @@ Object.entries(validationRules.defaults).forEach(([key, defaultValue]) => {
 // Mode-specific validations
 if (mode === 'production') {
   console.log('\n🚀 Production Mode Checks:');
-  
+
   if (envVars['VITE_DEBUG_MODE'] === 'true') {
     console.log('   ⚠️  VITE_DEBUG_MODE is enabled in production');
     hasWarnings = true;
   } else {
     console.log('   ✅ Debug mode disabled');
   }
-  
+
   if (!envVars['VITE_OPENAI_API_KEY'] || envVars['VITE_OPENAI_API_KEY'].includes('your_')) {
     console.log('   ⚠️  AI features will be disabled in production build');
     hasWarnings = true;
@@ -119,7 +118,7 @@ if (mode === 'production') {
 
 if (mode === 'development') {
   console.log('\n🛠️  Development Mode Checks:');
-  
+
   if (envVars['VITE_DEBUG_MODE'] !== 'true') {
     console.log('   💡 Consider enabling VITE_DEBUG_MODE for development');
   } else {

@@ -13,7 +13,6 @@ export interface AppConfig {
   // Notion Integration
   notion: {
     clientId: string;
-    clientSecret: string;
     redirectUri: string;
     serverUrl: string;
   };
@@ -83,7 +82,6 @@ function getEnvNumber(key: string, defaultValue = 0) {
 export const config: AppConfig = {
   notion: {
     clientId: getEnvVar('VITE_NOTION_CLIENT_ID', ''),
-    clientSecret: getEnvVar('VITE_NOTION_CLIENT_SECRET', ''),
     redirectUri: getEnvVar('VITE_NOTION_REDIRECT_URI', 'chrome-extension://'),
     serverUrl: getEnvVar('VITE_OAUTH_SERVER_URL', 'http://localhost:3333'),
   },
@@ -126,7 +124,7 @@ export const NOTION_CONFIG = {
   apiUrl: 'https://api.notion.com/v1',
   version: '2022-06-28',
   clientId: import.meta.env.VITE_NOTION_CLIENT_ID || '',
-  clientSecret: import.meta.env.VITE_NOTION_CLIENT_SECRET || '',
+  // clientSecret intentionally omitted from extension bundle (server-only)
 } as const;
 
 /**
@@ -140,9 +138,8 @@ export function validateConfig(): { isValid: boolean; errors: string[]; warnings
   if (!config.notion.clientId) {
     errors.push('VITE_NOTION_CLIENT_ID is required');
   }
-  if (!config.notion.clientSecret) {
-    errors.push('VITE_NOTION_CLIENT_SECRET is required');
-  } // Check AI configuration (optional - only warn)
+  // Client secret intentionally NOT required client-side; server handles confidential exchange
+  // Check AI configuration (optional - only warn)
   if (!config.ai.openaiApiKey) {
     warnings.push('VITE_OPENAI_API_KEY not provided - AI features will be disabled');
   }
@@ -186,7 +183,6 @@ export function debugConfig(): void {
   });
   console.log('Notion:', {
     clientId: config.notion.clientId ? '✅ Set' : '❌ Missing',
-    clientSecret: config.notion.clientSecret ? '✅ Set' : '❌ Missing',
     redirectUri: config.notion.redirectUri ? '✅ Set' : '❌ Missing',
   });
   console.log('AI:', {

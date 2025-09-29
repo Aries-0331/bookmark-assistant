@@ -8,7 +8,6 @@ export function debugOAuthSetup() {
   console.log('Extension ID:', chrome.runtime.id);
   console.log('Redirect URI:', redirectUri);
   console.log('Client ID configured:', !!config.notion.clientId);
-  console.log('Client Secret configured:', !!config.notion.clientSecret);
   console.log(
     'Expected Notion redirect URI format:',
     `chrome-extension://${chrome.runtime.id}/callback`
@@ -43,7 +42,6 @@ export async function launchNotionOAuth() {
       {
         url: authUrl,
         interactive: true,
-        // Note: Chrome will automatically size the popup appropriately for OAuth flows
       },
       async (redirectedTo) => {
         if (chrome.runtime.lastError) {
@@ -101,7 +99,7 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
   const redirectUri = chrome.identity.getRedirectURL('callback');
 
   try {
-  console.log('🔗 Exchanging code for token via server (server-first)...');
+    console.log('🔗 Exchanging code for token via server (server-first)...');
     console.log('🔗 Using redirect URI:', redirectUri);
 
     // Exchange code via server

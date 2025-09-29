@@ -35,6 +35,7 @@ class ServerAPIClient {
   private async loadSessionToken() {
     const result = await chrome.storage.local.get(['session_token']);
     this.sessionToken = result.session_token || null;
+    console.log('session token:', this.sessionToken);
   }
 
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {

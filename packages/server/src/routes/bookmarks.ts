@@ -10,6 +10,16 @@ import { auditLog, sanitizeError, validateBookmark, createBatches, sleep } from 
 
 const router = Router();
 
+// Result type definitions to avoid implicit never[] inference
+type UpsertResult =
+  | { success: true; bookmark: string; action: 'updated' | 'created'; syncId: string }
+  | { success: false; bookmark: string; error: string };
+
+type SyncResult =
+  | { success: true; bookmark: string; action: 'updated' | 'created'; syncId?: string }
+  | { success: true; bookmark: string; action: 'skipped'; reason: string; syncId?: string }
+  | { success: false; bookmark: string; error: string; syncId?: string };
+
 /**
  * Bookmark Upsert Endpoint (Legacy)
  * Insert or update bookmarks with duplicate prevention
@@ -48,7 +58,7 @@ router.post('/upsert', validateSession, async (req: AuthenticatedRequest, res: R
     );
 
     // Process bookmarks in batches
-    const results = [];
+  const results: UpsertResult[] = [];
     const batches = createBatches(bookmarks, config.batchDefaults.size);
 
     for (const batch of batches) {
@@ -96,8 +106,8 @@ router.post('/upsert', validateSession, async (req: AuthenticatedRequest, res: R
         }
       });
 
-      const batchResults = await Promise.all(batchPromises);
-      results.push(...batchResults);
+  const batchResults = (await Promise.all(batchPromises)) as UpsertResult[];
+  results.push(...batchResults);
 
       // Rate limiting between batches
       if (batches.indexOf(batch) < batches.length - 1) {
@@ -180,7 +190,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     );
 
     // Smart batching with duplicate detection
-    const results = [];
+  const results: SyncResult[] = [];
     const batchSize = options.batchSize || config.batchDefaults.size;
     const duplicateHandling = options.duplicateHandling || 'update';
     const batches = createBatches(enrichedBookmarks, batchSize);
@@ -243,8 +253,8 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
         }
       });
 
-      const batchResults = await Promise.all(batchPromises);
-      results.push(...batchResults);
+  const batchResults = (await Promise.all(batchPromises)) as SyncResult[];
+  results.push(...batchResults);
 
       // Rate limiting between batches
       if (batches.indexOf(batch) < batches.length - 1) {

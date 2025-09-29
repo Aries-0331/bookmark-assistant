@@ -15,6 +15,7 @@
     "test": "npm run test --workspaces",
     "lint": "npm run lint --workspaces",
     "clean": "npm run clean --workspaces",
+    "clean:legacy": "bash scripts/cleanup-legacy-dist.sh",
     "start:server": "npm run start --workspace=packages/server"
   },
   "devDependencies": {

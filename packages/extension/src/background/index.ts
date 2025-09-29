@@ -1,3 +1,7 @@
+// Apply service-worker polyfills first so modules that expect a window-like
+// environment don't throw during import/evaluation in the MV3 service worker.
+import './polyfill';
+
 import { launchNotionOAuth, exchangeCodeForToken, debugOAuthSetup } from './oauth';
 import { validateConfig, debugConfig } from '../lib/config';
 
@@ -38,31 +42,13 @@ async function cleanupInvalidDatabaseId() {
 // Run cleanup on startup
 cleanupInvalidDatabaseId();
 
-// Legacy storage migration (convert old direct Notion storage to server session model)
-(async function migrateLegacyStorage() {
-  try {
-    const legacy = await chrome.storage.local.get([
-      'notion_access_token',
-      'notion_refresh_token',
-      'session_token',
-    ]);
-    if (legacy.notion_access_token && !legacy.session_token) {
-      console.log('🧪 Detected legacy direct Notion tokens without session. Prompting reconnect.');
-      // We deliberately do NOT migrate tokens for security — force user to re-auth.
-      await chrome.storage.local.set({ legacy_reauth_required: true });
-    }
-  } catch (e) {
-    console.warn('Legacy storage migration failed:', e);
-  }
-})();
-
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === 'NOTION_OAUTH') {
     (async () => {
       try {
-  const code = await launchNotionOAuth();
-  // Server-first secure exchange
-  await exchangeCodeForToken(code);
+        const code = await launchNotionOAuth();
+        // Server-first secure exchange
+        await exchangeCodeForToken(code);
 
         // Check if OAuth template was used
         const storage = await chrome.storage.local.get([

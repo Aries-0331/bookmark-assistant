@@ -7,9 +7,11 @@
 Create a `.env` file in the project root:
 
 ```env
-# Required for basic functionality
+# Required for basic functionality (Public Identifier Only)
 VITE_NOTION_CLIENT_ID=your_notion_client_id
-VITE_NOTION_CLIENT_SECRET=your_notion_client_secret
+
+# Do NOT include the Notion client secret in extension env files.
+# The confidential client secret lives only on the server which performs the OAuth code exchange.
 
 # Optional for AI features (extension works without these)
 VITE_OPENAI_API_KEY=your_openai_api_key
@@ -31,6 +33,7 @@ npm run build
 ### Step 4: Get Extension ID
 
 After loading the extension:
+
 1. Copy the Extension ID from the Chrome extensions page
 2. Note this ID - you'll need it for Notion integration setup
 
@@ -53,11 +56,13 @@ After loading the extension:
 4. Verify connection status shows "Connected"
 
 **Expected Results:**
+
 - OAuth flow completes successfully
 - Token is stored in Chrome storage
 - Popup shows connected status
 
 **Common Issues:**
+
 - "User didn't approve access" → User cancelled authorization
 - "Invalid redirect URI" → Extension ID mismatch in Notion settings
 
@@ -71,6 +76,7 @@ After loading the extension:
 4. Check your Notion workspace for the new bookmark
 
 **Expected Results:**
+
 - Page is saved to Notion database
 - Title, URL, and extracted content are included
 - AI tags and summary (if OpenAI key provided)
@@ -84,6 +90,7 @@ After loading the extension:
 3. Check that content summary is generated
 
 **Expected Results:**
+
 - Intelligent tags based on content
 - Concise summary of page content
 - Graceful fallback if AI unavailable
@@ -97,6 +104,7 @@ After loading the extension:
 3. Check that manual tags are used instead
 
 **Expected Results:**
+
 - Extension functions normally
 - Basic tags from keywords/domain
 - No AI-related errors
@@ -130,7 +138,7 @@ chrome.storage.local.get(null, console.log);
 ### Connection Issues
 
 **Problem:** "Notion credentials not configured"
-**Solution:** Verify `.env` file has correct VITE_NOTION_CLIENT_ID and VITE_NOTION_CLIENT_SECRET
+**Solution:** Verify `.env` file has correct VITE_NOTION_CLIENT_ID (secret belongs only on server)
 
 **Problem:** "Invalid redirect URI"
 **Solution:** Update Notion integration settings with correct extension ID

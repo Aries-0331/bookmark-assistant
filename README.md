@@ -18,10 +18,11 @@ A Chrome extension that syncs your bookmarks to Notion with AI-powered tagging a
 Create environment files for configuration:
 
 **`.env.development`** (for development):
+
 ```env
-# Notion OAuth Configuration (Required)
+# Notion OAuth Configuration (Extension Side)
+# IMPORTANT: Only include the public Client ID here. The Client Secret MUST remain server-only.
 VITE_NOTION_CLIENT_ID=your_notion_integration_client_id
-VITE_NOTION_CLIENT_SECRET=your_notion_integration_client_secret
 VITE_NOTION_REDIRECT_URI=https://your_extension_id.chromiumapp.org/
 
 # Note: AI features are currently disabled to focus on core functionality
@@ -29,10 +30,11 @@ VITE_NOTION_REDIRECT_URI=https://your_extension_id.chromiumapp.org/
 ```
 
 **`.env.production`** (for production build):
+
 ```env
 # Same as development but with production values
 VITE_NOTION_CLIENT_ID=your_production_notion_client_id
-# ... etc
+# (No secret in extension env)
 ```
 
 ### 2. Build and Install
@@ -204,12 +206,14 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🌟 Features Roadmap
 
 ### Core Features ✅
+
 - [x] Bulk bookmark sync
-- [x] OAuth authentication  
+- [x] OAuth authentication
 - [x] Content extraction
 - [x] Error handling
 
 ### Advanced Features 🔮
+
 - [ ] AI-powered tagging (OpenAI integration)
 - [ ] AI-generated summaries
 - [ ] Custom tag templates
@@ -222,8 +226,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 **Happy bookmarking! 🔖**
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+// Optionally, add this for stylistic rules
+...tseslint.configs.stylisticTypeChecked,
 
       // Other configs...
     ],
@@ -234,9 +238,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
       },
       // other options...
     },
-  },
+
+},
 ])
-```
+
+````
 
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
@@ -265,4 +271,4 @@ export default tseslint.config([
     },
   },
 ])
-```
+````
