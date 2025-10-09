@@ -27,9 +27,9 @@ export class NotionService {
    * Exchange OAuth code for access tokens
    */
   async exchangeOAuthCode(code: string, redirectUri: string): Promise<any> {
-    const encoded = Buffer.from(
-      `${config.notionClientId}:${config.notionClientSecret}`
-    ).toString('base64');
+    const encoded = Buffer.from(`${config.notionClientId}:${config.notionClientSecret}`).toString(
+      'base64'
+    );
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
     try {
@@ -52,7 +52,9 @@ export class NotionService {
 
       if (!response.ok) {
         const errorData = await response.text();
-        throw new Error(`OAuth exchange failed: ${response.status} ${response.statusText} - ${errorData}`);
+        throw new Error(
+          `OAuth exchange failed: ${response.status} ${response.statusText} - ${errorData}`
+        );
       }
 
       return response.json();
@@ -60,7 +62,9 @@ export class NotionService {
       clearTimeout(timeout);
       const code = err?.code || err?.cause?.code || 'UNKNOWN';
       const name = err?.name || 'Error';
-      throw new Error(`OAuth exchange network error (${name}:${code}): ${err?.message || String(err)}`);
+      throw new Error(
+        `OAuth exchange network error (${name}:${code}): ${err?.message || String(err)}`
+      );
     }
   }
 
@@ -68,9 +72,9 @@ export class NotionService {
    * Refresh access token using refresh token
    */
   async refreshAccessToken(refreshToken: string): Promise<any> {
-    const encoded = Buffer.from(
-      `${config.notionClientId}:${config.notionClientSecret}`
-    ).toString('base64');
+    const encoded = Buffer.from(`${config.notionClientId}:${config.notionClientSecret}`).toString(
+      'base64'
+    );
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
     try {
@@ -92,7 +96,9 @@ export class NotionService {
 
       if (!response.ok) {
         const errorData = await response.text();
-        throw new Error(`Token refresh failed: ${response.status} ${response.statusText} - ${errorData}`);
+        throw new Error(
+          `Token refresh failed: ${response.status} ${response.statusText} - ${errorData}`
+        );
       }
 
       return response.json();
@@ -100,7 +106,9 @@ export class NotionService {
       clearTimeout(timeout);
       const code = err?.code || err?.cause?.code || 'UNKNOWN';
       const name = err?.name || 'Error';
-      throw new Error(`Token refresh network error (${name}:${code}): ${err?.message || String(err)}`);
+      throw new Error(
+        `Token refresh network error (${name}:${code}): ${err?.message || String(err)}`
+      );
     }
   }
 
@@ -128,9 +136,9 @@ export class NotionService {
   async searchDataSources(accessToken: string): Promise<any> {
     const notion = this.getClient(accessToken);
     return await notion.search({
-        filter: { property: 'object', value: 'data_source' as any },
-        page_size: 100,
-      })
+      filter: { property: 'object', value: 'data_source' as any },
+      page_size: 100,
+    });
   }
 
   /**
@@ -167,11 +175,11 @@ export class NotionService {
   async duplicateTemplate(accessToken: string): Promise<any> {
     const notion = this.getClient(accessToken);
     return await notion.pages.create({
-        parent: { type: 'page_id', page_id: config.templatePageId },
-        properties: {
-          title: { title: [{ text: { content: '📚 Chrome Bookmarks DB' } }] },
-        },
-      });
+      parent: { type: 'page_id', page_id: config.templatePageId },
+      properties: {
+        title: { title: [{ text: { content: '📚 Chrome Bookmarks DB' } }] },
+      },
+    });
   }
 
   /**

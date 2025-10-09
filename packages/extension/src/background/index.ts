@@ -4,6 +4,7 @@ import './polyfill';
 
 import { launchNotionOAuth, exchangeCodeForToken, debugOAuthSetup } from './oauth';
 import { validateConfig, debugConfig } from '../lib/config';
+import { serverAPI, syncAllBookmarksViaServer } from '../lib/server-api';
 
 // import './test-oauth-flow'; // Removed in production build
 
@@ -80,14 +81,13 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true;
   }
 
-  if (msg.type === 'SYNC_BOOKMARKS') {
+  if (msg.type === 'SYNC_ALL_BOOKMARKS') {
     (async () => {
       try {
         console.log('🔄 Starting server-side bookmark sync (bulk)...');
         const bookmarkTree = await chrome.bookmarks.getTree();
         const flat = bookmarkTree[0]?.children || [];
-        // Use existing helper (dynamic import to keep weight low)
-        const { syncAllBookmarksViaServer } = await import('../lib/server-api');
+        // Use existing helper (statically imported to avoid dynamic import issues in SW)
         await syncAllBookmarksViaServer(flat as any);
         sendResponse({ success: true, message: 'Bookmarks sync requested' });
       } catch (err) {
@@ -102,9 +102,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     (async () => {
       try {
         console.log('🎨 Duplicating template via server...');
-
-        // Import server API
-        const { serverAPI } = await import('../lib/server-api');
 
         // Duplicate template
         const result = await serverAPI.duplicateTemplate(msg.templateId);
@@ -126,7 +123,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === 'GET_USER_PROFILE') {
     (async () => {
       try {
-        const { serverAPI } = await import('../lib/server-api');
         const profile = await serverAPI.getUserProfile();
         sendResponse({ success: true, profile: profile.user });
       } catch (err) {
@@ -140,7 +136,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === 'CHECK_SERVER_CONNECTION') {
     (async () => {
       try {
-        const { serverAPI } = await import('../lib/server-api');
         const isConnected = await serverAPI.isConnected();
         const health = await serverAPI.healthCheck();
         sendResponse({

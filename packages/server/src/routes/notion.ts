@@ -20,7 +20,7 @@ router.post(
     try {
       const userId = req.user!.userId;
       const userData = userStorage.getUser(userId);
-  const { dataSourceId, databaseId, filter, sorts }: DatabaseQueryRequest = req.body;
+      const { dataSourceId, databaseId, filter, sorts }: DatabaseQueryRequest = req.body;
 
       if (!userData) {
         return res.status(404).json({
@@ -90,7 +90,7 @@ router.get('/databases', validateSession, async (req: AuthenticatedRequest, res:
       });
     }
 
-  const data = await notionService.searchDataSources(userData.notionAccessToken);
+    const data = await notionService.searchDataSources(userData.notionAccessToken);
 
     // Cache the databases in user storage
     userStorage.setUserDatabases(userId, data.results);

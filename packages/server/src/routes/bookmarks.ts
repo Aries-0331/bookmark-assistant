@@ -27,8 +27,8 @@ type SyncResult =
 router.post('/upsert', validateSession, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-  const userData = userStorage.getUser(userId);
-  const { dataSourceId, databaseId, bookmarks } = req.body;
+    const userData = userStorage.getUser(userId);
+    const { dataSourceId, databaseId, bookmarks } = req.body;
 
     if (!userData) {
       return res.status(404).json({
@@ -80,7 +80,7 @@ router.post('/upsert', validateSession, async (req: AuthenticatedRequest, res: R
     );
 
     // Process bookmarks in batches
-  const results: UpsertResult[] = [];
+    const results: UpsertResult[] = [];
     const batches = createBatches(bookmarks, config.batchDefaults.size);
 
     for (const batch of batches) {
@@ -128,8 +128,8 @@ router.post('/upsert', validateSession, async (req: AuthenticatedRequest, res: R
         }
       });
 
-  const batchResults = (await Promise.all(batchPromises)) as UpsertResult[];
-  results.push(...batchResults);
+      const batchResults = (await Promise.all(batchPromises)) as UpsertResult[];
+      results.push(...batchResults);
 
       // Rate limiting between batches
       if (batches.indexOf(batch) < batches.length - 1) {
@@ -177,7 +177,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
   try {
     const userId = req.user!.userId;
     const userData = userStorage.getUser(userId);
-  const { dataSourceId, databaseId, bookmarks, options = {} }: BookmarkSyncRequest = req.body;
+    const { dataSourceId, databaseId, bookmarks, options = {} }: BookmarkSyncRequest = req.body;
 
     if (!userData) {
       return res.status(404).json({
@@ -234,7 +234,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     );
 
     // Smart batching with duplicate detection
-  const results: SyncResult[] = [];
+    const results: SyncResult[] = [];
     const batchSize = options.batchSize || config.batchDefaults.size;
     const duplicateHandling = options.duplicateHandling || 'update';
     const batches = createBatches(enrichedBookmarks, batchSize);
@@ -297,8 +297,8 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
         }
       });
 
-  const batchResults = (await Promise.all(batchPromises)) as SyncResult[];
-  results.push(...batchResults);
+      const batchResults = (await Promise.all(batchPromises)) as SyncResult[];
+      results.push(...batchResults);
 
       // Rate limiting between batches
       if (batches.indexOf(batch) < batches.length - 1) {
@@ -349,7 +349,7 @@ router.get(
     try {
       const userId = req.user!.userId;
       const userData = userStorage.getUser(userId);
-  const { databaseId } = req.params;
+      const { databaseId } = req.params;
 
       if (!userData) {
         return res.status(404).json({
