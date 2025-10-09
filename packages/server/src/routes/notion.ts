@@ -20,7 +20,7 @@ router.post(
     try {
       const userId = req.user!.userId;
       const userData = userStorage.getUser(userId);
-      const { databaseId, filter, sorts }: DatabaseQueryRequest = req.body;
+  const { dataSourceId, databaseId, filter, sorts }: DatabaseQueryRequest = req.body;
 
       if (!userData) {
         return res.status(404).json({
@@ -29,15 +29,23 @@ router.post(
         });
       }
 
-      if (!databaseId) {
+      // Prefer dataSourceId; resolve from databaseId if needed
+      let effectiveDataSourceId = dataSourceId as string | undefined;
+      if (!effectiveDataSourceId && databaseId) {
+        effectiveDataSourceId = await notionService.getPrimaryDataSourceId(
+          databaseId,
+          userData.notionAccessToken
+        );
+      }
+      if (!effectiveDataSourceId) {
         return res.status(400).json({
           error: 'Bad Request',
-          message: 'Database ID is required',
+          message: 'dataSourceId (preferred) or a resolvable databaseId is required',
         });
       }
 
-      const data = await notionService.queryDatabase(
-        databaseId,
+      const data = await notionService.queryDataSource(
+        effectiveDataSourceId,
         userData.notionAccessToken,
         filter,
         sorts
@@ -82,7 +90,7 @@ router.get('/databases', validateSession, async (req: AuthenticatedRequest, res:
       });
     }
 
-    const data = await notionService.searchDatabases(userData.notionAccessToken);
+  const data = await notionService.searchDataSources(userData.notionAccessToken);
 
     // Cache the databases in user storage
     userStorage.setUserDatabases(userId, data.results);
@@ -183,7 +191,7 @@ router.get(
       const response = await fetch(`https://api.notion.com/v1/databases/${databaseId}`, {
         headers: {
           Authorization: `Bearer ${userData.notionAccessToken}`,
-          'Notion-Version': '2022-06-28',
+          'Notion-Version': '2025-09-03',
         },
       });
 
@@ -209,6 +217,7 @@ router.get(
         properties: data.properties,
         created_time: data.created_time,
         last_edited_time: data.last_edited_time,
+        data_sources: data.data_sources,
       });
     } catch (error) {
       const errorMessage = sanitizeError(error);

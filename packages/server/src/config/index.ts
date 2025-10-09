@@ -7,7 +7,7 @@ dotenv.config();
 
 export const config = {
   // Server Configuration
-  port: process.env.PORT || 3334,
+  port: process.env.PORT || 3333,
   nodeEnv: process.env.NODE_ENV || 'development',
 
   // Security Configuration
@@ -17,7 +17,8 @@ export const config = {
   // Notion API Configuration
   notionClientId: process.env.NOTION_CLIENT_ID!,
   notionClientSecret: process.env.NOTION_CLIENT_SECRET!,
-  notionApiVersion: '2022-06-28',
+  // Upgrade to new Notion API release; allow env override for safe rollout
+  notionApiVersion: process.env.NOTION_API_VERSION || '2025-09-03',
 
   // Rate Limiting Configuration
   rateLimits: {

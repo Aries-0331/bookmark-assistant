@@ -122,7 +122,7 @@ export const API_CONFIG = {
  */
 export const NOTION_CONFIG = {
   apiUrl: 'https://api.notion.com/v1',
-  version: '2022-06-28',
+  version: '2025-09-03',
   clientId: import.meta.env.VITE_NOTION_CLIENT_ID || '',
   // clientSecret intentionally omitted from extension bundle (server-only)
 } as const;

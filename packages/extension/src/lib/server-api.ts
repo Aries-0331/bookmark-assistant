@@ -30,6 +30,7 @@ class ServerAPIClient {
   constructor() {
     this.baseUrl = import.meta.env.VITE_OAUTH_SERVER_URL || 'http://localhost:3333';
     this.loadSessionToken();
+    console.log('🌐 ServerAPI baseUrl:', this.baseUrl);
   }
 
   private async loadSessionToken() {
@@ -58,15 +59,23 @@ class ServerAPIClient {
       headers['Authorization'] = `Bearer ${this.sessionToken}`;
     }
 
+    const timeoutMs = 8000;
+    const controller = new AbortController();
+    const started = Date.now();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
     try {
-      console.log('🔬 About to call globalThis.fetch...');
-      // Use service worker compatible fetch
+      console.log('🔬 About to call globalThis.fetch... (timeout', timeoutMs, 'ms)');
       const response = await globalThis.fetch(url, {
         ...options,
         headers,
+        signal: controller.signal,
+        cache: 'no-store',
       });
-
-      console.log('🔬 Fetch completed, status:', response.status);
+      clearTimeout(timeout);
+      console.log(
+        `🔬 Fetch completed, status: ${response.status} (elapsed ${Date.now() - started}ms)`
+      );
 
       // Handle non-JSON responses gracefully
       let data;
@@ -83,9 +92,38 @@ class ServerAPIClient {
       }
 
       return data;
-    } catch (error) {
-      console.error(`API request failed: ${endpoint}`, error);
+    } catch (error: any) {
+      clearTimeout(timeout);
+      const elapsed = Date.now() - started;
+      if (error?.name === 'AbortError') {
+        console.error(`⏱️ Request timeout after ${timeoutMs}ms: ${url}`);
+        throw new Error(`Request timed out after ${timeoutMs}ms (server unreachable?)`);
+      }
+      if (error instanceof TypeError) {
+        console.error(
+          `🌐 Network failure for ${url} (elapsed ${elapsed}ms). Potential causes: server down, CORS, invalid baseUrl, mixed content.`
+        );
+        this.hintConnectivity();
+      } else {
+        console.error(`API request failed: ${endpoint}`, error);
+      }
       throw error;
+    }
+  }
+
+  private async hintConnectivity() {
+    try {
+      const healthUrl = `${this.baseUrl}/health`;
+      const started = Date.now();
+      const r = await globalThis.fetch(healthUrl, { method: 'GET', cache: 'no-store' });
+      console.log(
+        `🩺 Health probe ${r.ok ? 'OK' : 'FAIL'} status=${r.status} (${Date.now() - started}ms)`
+      );
+    } catch (e) {
+      console.warn(
+        '🩺 Health probe failed (cannot reach server):',
+        e instanceof Error ? e.message : e
+      );
     }
   }
 
@@ -99,6 +137,19 @@ class ServerAPIClient {
   }> {
     console.log('🔐 Exchanging OAuth code via server...');
     try {
+      // Preflight quick health check (non-blocking if fails)
+      try {
+        const preflight = await globalThis.fetch(`${this.baseUrl}/health`, {
+          method: 'GET',
+          cache: 'no-store',
+        });
+        console.log('🛰️ Preflight health status:', preflight.status);
+      } catch (pfErr) {
+        console.warn(
+          '🛰️ Preflight health failed (continuing):',
+          pfErr instanceof Error ? pfErr.message : pfErr
+        );
+      }
       const response = await this.makeRequest<any>('/oauth/exchange', {
         method: 'POST',
         body: JSON.stringify({
@@ -126,8 +177,16 @@ class ServerAPIClient {
         sessionToken: response.sessionToken,
         user: { userId: response.userId, templateDatabaseId: response.templateDatabaseId },
       };
-    } catch (error) {
-      console.error('� OAuth exchange (server) failed:', error);
+    } catch (error: any) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error('� OAuth exchange (server) failed:', msg);
+      if (msg.includes('Failed to fetch')) {
+        console.error(
+          '🔧 Hint: Is the server running & accessible at',
+          this.baseUrl,
+          '? Check CORS / network / HTTPS mismatch.'
+        );
+      }
       throw error;
     }
   }
@@ -157,6 +216,7 @@ class ServerAPIClient {
   // 📚 Sync Bookmarks (High-Level)
   async syncBookmarks(
     bookmarks: BookmarkData[],
+    dataSourceId?: string,
     databaseId?: string
   ): Promise<{
     summary: {
@@ -170,6 +230,8 @@ class ServerAPIClient {
       method: 'POST',
       body: JSON.stringify({
         bookmarks,
+        // 2025-09-03: prefer dataSourceId; keep databaseId for back-compat resolution on server
+        dataSourceId,
         databaseId,
       }),
     });
@@ -178,6 +240,7 @@ class ServerAPIClient {
   // 🔄 Smart Upsert Bookmarks
   async upsertBookmarks(
     bookmarks: BookmarkData[],
+    dataSourceId?: string,
     databaseId?: string
   ): Promise<{
     summary: {
@@ -192,6 +255,7 @@ class ServerAPIClient {
       method: 'POST',
       body: JSON.stringify({
         bookmarks,
+        dataSourceId,
         databaseId,
       }),
     });

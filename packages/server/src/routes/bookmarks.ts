@@ -27,8 +27,8 @@ type SyncResult =
 router.post('/upsert', validateSession, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const userData = userStorage.getUser(userId);
-    const { databaseId, bookmarks } = req.body;
+  const userData = userStorage.getUser(userId);
+  const { dataSourceId, databaseId, bookmarks } = req.body;
 
     if (!userData) {
       return res.status(404).json({
@@ -44,16 +44,38 @@ router.post('/upsert', validateSession, async (req: AuthenticatedRequest, res: R
       });
     }
 
-    if (!databaseId) {
+    // Determine effective data source ID
+    let effectiveDataSourceId = dataSourceId as string | undefined;
+    if (!effectiveDataSourceId && databaseId) {
+      try {
+        effectiveDataSourceId = await notionService.getPrimaryDataSourceId(
+          databaseId,
+          userData.notionAccessToken
+        );
+      } catch (e) {
+        console.warn('Failed to resolve data source from databaseId:', e);
+      }
+    }
+    if (!effectiveDataSourceId && userData.templateDatabaseId) {
+      try {
+        effectiveDataSourceId = await notionService.getPrimaryDataSourceId(
+          userData.templateDatabaseId,
+          userData.notionAccessToken
+        );
+      } catch (e) {
+        console.warn('Failed to resolve data source from template database:', e);
+      }
+    }
+    if (!effectiveDataSourceId) {
       return res.status(400).json({
         error: 'Bad Request',
-        message: 'Database ID is required',
+        message: 'dataSourceId (preferred) or a resolvable databaseId is required',
       });
     }
 
     // Get existing bookmarks to prevent duplicates
     const existingBookmarks = await notionService.getExistingBookmarks(
-      databaseId,
+      effectiveDataSourceId,
       userData.notionAccessToken
     );
 
@@ -85,7 +107,7 @@ router.post('/upsert', validateSession, async (req: AuthenticatedRequest, res: R
           } else {
             // Create new page
             await notionService.createPage(
-              { database_id: databaseId },
+              { type: 'data_source_id', data_source_id: effectiveDataSourceId },
               properties,
               userData.notionAccessToken
             );
@@ -155,7 +177,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
   try {
     const userId = req.user!.userId;
     const userData = userStorage.getUser(userId);
-    const { databaseId, bookmarks, options = {} }: BookmarkSyncRequest = req.body;
+  const { dataSourceId, databaseId, bookmarks, options = {} }: BookmarkSyncRequest = req.body;
 
     if (!userData) {
       return res.status(404).json({
@@ -171,10 +193,32 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       });
     }
 
-    if (!databaseId) {
+    // Determine effective data source ID
+    let effectiveDataSourceId = dataSourceId as string | undefined;
+    if (!effectiveDataSourceId && databaseId) {
+      try {
+        effectiveDataSourceId = await notionService.getPrimaryDataSourceId(
+          databaseId,
+          userData.notionAccessToken
+        );
+      } catch (e) {
+        console.warn('Failed to resolve data source from databaseId:', e);
+      }
+    }
+    if (!effectiveDataSourceId && userData.templateDatabaseId) {
+      try {
+        effectiveDataSourceId = await notionService.getPrimaryDataSourceId(
+          userData.templateDatabaseId,
+          userData.notionAccessToken
+        );
+      } catch (e) {
+        console.warn('Failed to resolve data source from template database:', e);
+      }
+    }
+    if (!effectiveDataSourceId) {
       return res.status(400).json({
         error: 'Bad Request',
-        message: 'Database ID is required',
+        message: 'dataSourceId (preferred) or a resolvable databaseId is required',
       });
     }
 
@@ -185,7 +229,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
 
     // Query existing bookmarks to build sync map
     const existingBookmarks = await notionService.getExistingBookmarks(
-      databaseId,
+      effectiveDataSourceId,
       userData.notionAccessToken
     );
 
@@ -232,7 +276,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
           } else {
             // Create new page
             await notionService.createPage(
-              { database_id: databaseId },
+              { type: 'data_source_id', data_source_id: effectiveDataSourceId },
               properties,
               userData.notionAccessToken
             );
@@ -305,7 +349,7 @@ router.get(
     try {
       const userId = req.user!.userId;
       const userData = userStorage.getUser(userId);
-      const { databaseId } = req.params;
+  const { databaseId } = req.params;
 
       if (!userData) {
         return res.status(404).json({
@@ -314,9 +358,13 @@ router.get(
         });
       }
 
-      // Query database for statistics
-      const data = await notionService.queryDatabase(
+      // Resolve to data source and query for statistics
+      const dataSourceId = await notionService.getPrimaryDataSourceId(
         databaseId,
+        userData.notionAccessToken
+      );
+      const data = await notionService.queryDataSource(
+        dataSourceId,
         userData.notionAccessToken,
         undefined,
         [{ property: 'Created', direction: 'descending' }]

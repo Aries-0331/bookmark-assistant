@@ -1,5 +1,4 @@
 import { config } from '../lib/config';
-import { serverAPI } from '../lib/server-api';
 
 // Debug function to help with OAuth setup
 export function debugOAuthSetup() {
@@ -103,6 +102,7 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
     console.log('🔗 Using redirect URI:', redirectUri);
 
     // Exchange code via server
+    const { serverAPI } = await import('../lib/server-api');
     const result = await serverAPI.exchangeOAuthCode(code, redirectUri);
 
     console.log('✅ OAuth exchange successful via server. User ID:', result.user.userId);

@@ -13,14 +13,31 @@ export const corsMiddleware = cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
+    // Normalize origin
+    const isChromeExt = origin.startsWith('chrome-extension://');
+    const allowed = config.allowedOrigins.includes(origin as any);
 
-    if (config.allowedOrigins.includes(origin as any)) {
+    // In development, if the origin is a chrome extension and matches the configured extension ID, allow it
+    if (isChromeExt) {
+      const expected = `chrome-extension://${config.allowedExtensionId}`;
+      if (origin === expected) {
+        return callback(null, true);
+      }
+      // Additional dev-friendly allowance: any chrome-extension origin in development
+      if (config.nodeEnv === 'development') {
+        console.warn(
+          `⚠️ Dev CORS: allowing chrome extension origin ${origin} (expected ${expected})`
+        );
+        return callback(null, true);
+      }
+    }
+
+    if (allowed) {
       return callback(null, true);
     }
 
     console.warn(`🚫 Blocked CORS request from: ${origin}`);
     auditLog('cors_blocked', 'unknown', { origin });
-
     return callback(new Error('Not allowed by CORS policy'));
   },
   credentials: true,

@@ -1,5 +1,4 @@
 // Server-first bookmark sync (legacy direct Notion client removed)
-import { serverAPI } from '../lib/server-api';
 
 export interface BookmarkItem {
   id: string;
@@ -181,6 +180,7 @@ function flattenBookmarks(bookmarkNodes: chrome.bookmarks.BookmarkTreeNode[]): B
 export async function processBookmarkForNotion(bookmark: chrome.bookmarks.BookmarkTreeNode) {
   console.log('🔄 Processing single bookmark via server:', bookmark.title);
   try {
+    const { serverAPI } = await import('../lib/server-api');
     const path = buildBookmarkPath([bookmark], bookmark.id);
     const payload = {
       title: bookmark.title || 'Untitled',

@@ -39,13 +39,19 @@ export interface BookmarkSyncOptions {
 }
 
 export interface BookmarkSyncRequest {
-  databaseId: string;
+  // New in Notion API 2025-09-03: prefer dataSourceId
+  dataSourceId?: string;
+  // Back-compat: allow databaseId and we will resolve its primary data source
+  databaseId?: string;
   bookmarks: BookmarkItem[];
   options?: BookmarkSyncOptions;
 }
 
 export interface DatabaseQueryRequest {
-  databaseId: string;
+  // Prefer dataSourceId with 2025-09-03
+  dataSourceId?: string;
+  // Back-compat
+  databaseId?: string;
   filter?: any;
   sorts?: any[];
 }
