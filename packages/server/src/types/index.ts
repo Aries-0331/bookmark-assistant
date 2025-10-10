@@ -8,6 +8,11 @@ export interface UserData {
   notionRefreshToken?: string;
   databases?: any[];
   templateDatabaseId?: string;
+  notionDatabaseId?: string;
+  notionDataSourceId?: string;
+  notionWorkspaceId?: string;
+  botId?: string;
+  duplicatedTemplateId?: string;
   lastActivity: Date;
 }
 

@@ -24,6 +24,71 @@ export class NotionService {
   }
 
   /**
+   * Resolve databaseId and primary dataSourceId from a duplicated_template_id.
+   * This inspects the template's duplicated workspace objects and attempts to find the database.
+   * Fallback: searches for data sources and returns the first as the database context.
+   */
+  async resolveDatabaseFromTemplate(
+    duplicatedTemplateId: string,
+    accessToken: string
+  ): Promise<{ databaseId: string; dataSourceId?: string }> {
+    const notion = this.getClient(accessToken);
+
+    // Breadth-first search the block tree to find an inline database (child_database)
+    const queue: Array<{ id: string; depth: number }> = [{ id: duplicatedTemplateId, depth: 0 }];
+    const visited = new Set<string>();
+    const maxDepth = 4; // keep it shallow to avoid excessive requests
+    const maxRequests = 25; // safety cap
+    let requestCount = 0;
+
+    while (queue.length > 0 && requestCount < maxRequests) {
+      const { id, depth } = queue.shift()!;
+      if (visited.has(id)) continue;
+      visited.add(id);
+
+      try {
+        const children = await notion.blocks.children.list({ block_id: id, page_size: 100 });
+        requestCount++;
+
+        for (const block of (children as any).results || []) {
+          const type = block?.type;
+          // Inline database block exposes the database's id as the block id
+          if (type === 'child_database') {
+            const databaseId = block.id as string;
+            let dataSourceId: string | undefined;
+            try {
+              dataSourceId = await this.getPrimaryDataSourceId(databaseId, accessToken);
+            } catch {
+              dataSourceId = undefined;
+            }
+            return { databaseId, dataSourceId };
+          }
+
+          // Recurse into blocks that can contain children
+          if (block?.has_children && depth < maxDepth) {
+            queue.push({ id: block.id as string, depth: depth + 1 });
+          }
+        }
+      } catch (e) {
+        // Ignore non-block targets or permission issues; continue
+      }
+    }
+
+    // Fallback: search for any data sources available and pick the first
+    const search = await this.searchDataSources(accessToken);
+    const first = (search?.results || [])[0];
+    if (!first) throw new Error('No databases found after template duplication');
+    const databaseId = first.id as string;
+    let dataSourceId: string | undefined;
+    try {
+      dataSourceId = await this.getPrimaryDataSourceId(databaseId, accessToken);
+    } catch {
+      dataSourceId = undefined;
+    }
+    return { databaseId, dataSourceId };
+  }
+
+  /**
    * Exchange OAuth code for access tokens
    */
   async exchangeOAuthCode(code: string, redirectUri: string): Promise<any> {
@@ -36,9 +101,9 @@ export class NotionService {
       const response = await fetch('https://api.notion.com/v1/oauth/token', {
         method: 'POST',
         headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
+          accept: 'application/json',
           Authorization: `Basic ${encoded}`,
+          'content-type': 'application/json',
         },
         body: JSON.stringify({
           grant_type: 'authorization_code',
@@ -167,19 +232,6 @@ export class NotionService {
   async updatePage(pageId: string, properties: any, accessToken: string): Promise<any> {
     const notion = this.getClient(accessToken);
     return await notion.pages.update({ page_id: pageId, properties });
-  }
-
-  /**
-   * Duplicate the bookmark template
-   */
-  async duplicateTemplate(accessToken: string): Promise<any> {
-    const notion = this.getClient(accessToken);
-    return await notion.pages.create({
-      parent: { type: 'page_id', page_id: config.templatePageId },
-      properties: {
-        title: { title: [{ text: { content: '📚 Chrome Bookmarks DB' } }] },
-      },
-    });
   }
 
   /**

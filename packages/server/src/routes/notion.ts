@@ -4,7 +4,7 @@ import { Router, Response } from 'express';
 import { AuthenticatedRequest, DatabaseQueryRequest } from '../types';
 import { validateSession } from '../middleware/auth';
 import { notionService } from '../services/notion';
-import { userStorage } from '../services/userStorage';
+import { userPrisma } from '../services/userPrisma';
 import { auditLog, sanitizeError } from '../utils';
 
 const router = Router();
@@ -19,7 +19,7 @@ router.post(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = req.user!.userId;
-      const userData = userStorage.getUser(userId);
+      const userData = await userPrisma.find(userId);
       const { dataSourceId, databaseId, filter, sorts }: DatabaseQueryRequest = req.body;
 
       if (!userData) {
@@ -51,7 +51,7 @@ router.post(
         sorts
       );
 
-      userStorage.updateLastActivity(userId);
+      // lastActivity is updated by DB writes elsewhere; no-op here
 
       auditLog('database_query_success', userId, {
         databaseId,
@@ -81,7 +81,7 @@ router.post(
 router.get('/databases', validateSession, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const userData = userStorage.getUser(userId);
+    const userData = await userPrisma.find(userId);
 
     if (!userData) {
       return res.status(404).json({
@@ -92,8 +92,7 @@ router.get('/databases', validateSession, async (req: AuthenticatedRequest, res:
 
     const data = await notionService.searchDataSources(userData.notionAccessToken);
 
-    // Cache the databases in user storage
-    userStorage.setUserDatabases(userId, data.results);
+    // Optional: persist databases list if desired in DB; skipping for simplicity
 
     auditLog('databases_fetch_success', userId, {
       databaseCount: data.results?.length || 0,
@@ -121,7 +120,7 @@ router.get('/databases', validateSession, async (req: AuthenticatedRequest, res:
 router.post('/create-page', validateSession, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const userData = userStorage.getUser(userId);
+    const userData = await userPrisma.find(userId);
     const { parent, properties, children } = req.body;
 
     if (!userData) {
@@ -145,7 +144,7 @@ router.post('/create-page', validateSession, async (req: AuthenticatedRequest, r
       children
     );
 
-    userStorage.updateLastActivity(userId);
+    // lastActivity is updated by DB writes elsewhere; no-op here
 
     auditLog('page_create_success', userId, {
       pageId: data.id,
@@ -177,7 +176,7 @@ router.get(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = req.user!.userId;
-      const userData = userStorage.getUser(userId);
+      const userData = await userPrisma.find(userId);
       const { databaseId } = req.params;
 
       if (!userData) {
@@ -204,7 +203,7 @@ router.get(
       }
 
       const data = await response.json();
-      userStorage.updateLastActivity(userId);
+      // lastActivity is updated by DB writes elsewhere; no-op here
 
       auditLog('database_schema_fetch', userId, {
         databaseId,

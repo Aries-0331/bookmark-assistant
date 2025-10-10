@@ -4,7 +4,6 @@
 import express from 'express';
 import helmet from 'helmet';
 import { config, validateConfig } from './config';
-import { userStorage } from './services';
 import routes from './routes';
 import {
   corsMiddleware,
@@ -55,13 +54,11 @@ app.use('*', notFoundHandler);
 // Graceful shutdown handling
 process.on('SIGTERM', () => {
   console.log('🛑 SIGTERM received, shutting down gracefully...');
-  userStorage.destroy();
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
   console.log('🛑 SIGINT received, shutting down gracefully...');
-  userStorage.destroy();
   process.exit(0);
 });
 

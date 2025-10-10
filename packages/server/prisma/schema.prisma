@@ -1,0 +1,26 @@
+// Prisma schema for Bookmark Notion Sync
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id               String  @id
+  notion_access_token   String
+  notion_refresh_token  String?
+  notion_workspace_id   String?
+  bot_id                String?
+  duplicated_template_id String?
+  notion_database_id    String?
+  notion_data_source_id String?
+  template_database_id  String?
+  databases             Json?
+  last_activity         DateTime @default(now())
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+}

@@ -4,7 +4,7 @@ import { Router, Response } from 'express';
 import { AuthenticatedRequest, BookmarkSyncRequest, BookmarkItem } from '../types';
 import { validateSession } from '../middleware/auth';
 import { notionService } from '../services/notion';
-import { userStorage } from '../services/userStorage';
+import { userPrisma } from '../services/userPrisma';
 import { config } from '../config';
 import { auditLog, sanitizeError, validateBookmark, createBatches, sleep } from '../utils';
 
@@ -27,8 +27,8 @@ type SyncResult =
 router.post('/upsert', validateSession, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const userData = userStorage.getUser(userId);
-    const { dataSourceId, databaseId, bookmarks } = req.body;
+    const userData = await userPrisma.find(userId);
+    const { bookmarks } = req.body;
 
     if (!userData) {
       return res.status(404).json({
@@ -44,16 +44,16 @@ router.post('/upsert', validateSession, async (req: AuthenticatedRequest, res: R
       });
     }
 
-    // Determine effective data source ID
-    let effectiveDataSourceId = dataSourceId as string | undefined;
-    if (!effectiveDataSourceId && databaseId) {
+    // Determine effective data source ID from persisted user configuration
+    let effectiveDataSourceId = userData.notionDataSourceId as string | undefined;
+    if (!effectiveDataSourceId && userData.notionDatabaseId) {
       try {
         effectiveDataSourceId = await notionService.getPrimaryDataSourceId(
-          databaseId,
+          userData.notionDatabaseId,
           userData.notionAccessToken
         );
       } catch (e) {
-        console.warn('Failed to resolve data source from databaseId:', e);
+        console.warn('Failed to resolve data source from notionDatabaseId:', e);
       }
     }
     if (!effectiveDataSourceId && userData.templateDatabaseId) {
@@ -137,7 +137,7 @@ router.post('/upsert', validateSession, async (req: AuthenticatedRequest, res: R
       }
     }
 
-    userStorage.updateLastActivity(userId);
+    // lastActivity is updated by DB writes elsewhere; no-op here
 
     const successCount = results.filter((r) => r.success).length;
     auditLog('bookmark_upsert_success', userId, {
@@ -176,7 +176,7 @@ router.post('/upsert', validateSession, async (req: AuthenticatedRequest, res: R
 router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const userData = userStorage.getUser(userId);
+    const userData = await userPrisma.find(userId);
     const { dataSourceId, databaseId, bookmarks, options = {} }: BookmarkSyncRequest = req.body;
 
     if (!userData) {
@@ -306,7 +306,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       }
     }
 
-    userStorage.updateLastActivity(userId);
+    // lastActivity is updated by DB writes elsewhere; no-op here
 
     const successCount = results.filter((r) => r.success).length;
     const summary = {
@@ -348,7 +348,7 @@ router.get(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = req.user!.userId;
-      const userData = userStorage.getUser(userId);
+      const userData = await userPrisma.find(userId);
       const { databaseId } = req.params;
 
       if (!userData) {
@@ -386,7 +386,7 @@ router.get(
         });
       });
 
-      userStorage.updateLastActivity(userId);
+      // lastActivity is updated by DB writes elsewhere; no-op here
 
       const stats = {
         total: bookmarks.length,

@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 import { AuthenticatedRequest, OAuthExchangeRequest, UserData } from '../types';
 import { validateExtension, validateSession } from '../middleware/auth';
 import { notionService } from '../services/notion';
-import { userStorage } from '../services/userStorage';
+import { userPrisma } from '../services/userPrisma';
 import { config } from '../config';
 import { auditLog, sanitizeError } from '../utils';
 
@@ -17,12 +17,8 @@ const router = Router();
  */
 router.post('/exchange', validateExtension, async (req, res: Response) => {
   try {
-    const {
-      code,
-      extensionUserId,
-      templateDatabaseId,
-      redirectUri,
-    }: OAuthExchangeRequest & { redirectUri?: string } = req.body;
+    const { code, extensionUserId, redirectUri }: OAuthExchangeRequest & { redirectUri?: string } =
+      req.body;
 
     if (!code) {
       return res.status(400).json({
@@ -31,13 +27,15 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
       });
     }
 
-    // Use the redirect URI from the request, or fall back to default
-    const actualRedirectUri =
-      redirectUri || `chrome-extension://${config.allowedExtensionId}/oauth-callback.html`;
-
+    if (!redirectUri) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'redirectUri is required',
+      });
+    }
     // Exchange code for tokens with Notion
-    const tokenData = await notionService.exchangeOAuthCode(code, actualRedirectUri);
-
+    const tokenData = await notionService.exchangeOAuthCode(code, redirectUri);
+    console.log('Received token data from Notion:', tokenData);
     const userId = extensionUserId || `user_${Date.now()}`;
 
     // Store user data securely on server
@@ -45,28 +43,49 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
       userId,
       notionAccessToken: tokenData.access_token,
       notionRefreshToken: tokenData.refresh_token,
-      templateDatabaseId,
       databases: [],
       lastActivity: new Date(),
     };
 
-    userStorage.setUser(userId, userData);
+    // Persist in DB
+    try {
+      await userPrisma.upsert(userData);
+    } catch (e) {
+      console.warn('Prisma upsert failed:', e);
+    }
 
     // Create JWT session token
     const sessionToken = jwt.sign({ userId, timestamp: Date.now() }, config.jwtSecret, {
       expiresIn: '24h',
     });
 
+    // Resolve and persist template -> database mapping if available
+    const dupId = (tokenData as any).duplicated_template_id as string | undefined;
+    if (dupId) {
+      try {
+        const resolved = await notionService.resolveDatabaseFromTemplate(
+          dupId,
+          tokenData.access_token
+        );
+        try {
+          await userPrisma.setResolvedDatabase(userId, resolved.databaseId, resolved.dataSourceId);
+        } catch {}
+      } catch (e) {
+        console.warn('Failed to resolve database from duplicated_template_id:', e);
+      }
+    }
+
     auditLog('oauth_exchange_success', userId, {
       hasRefreshToken: !!tokenData.refresh_token,
-      templateDatabaseId,
     });
 
+    // Fetch latest user data (may include resolved template info)
+    const latest = await userPrisma.find(userId);
     res.json({
       success: true,
       sessionToken,
       userId,
-      templateDatabaseId: templateDatabaseId || null,
+      templateDatabaseId: latest?.templateDatabaseId || null,
       message: 'OAuth exchange successful',
     });
   } catch (error) {
@@ -90,7 +109,7 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
 router.post('/refresh', validateSession, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const userData = userStorage.getUser(userId);
+    const userData = await userPrisma.find(userId);
 
     if (!userData || !userData.notionRefreshToken) {
       return res.status(404).json({
@@ -103,7 +122,9 @@ router.post('/refresh', validateSession, async (req: AuthenticatedRequest, res: 
     const newTokenData = await notionService.refreshAccessToken(userData.notionRefreshToken);
 
     // Update stored tokens
-    userStorage.updateTokens(userId, newTokenData.access_token, newTokenData.refresh_token);
+    try {
+      await userPrisma.updateTokens(userId, newTokenData.access_token, newTokenData.refresh_token);
+    } catch {}
 
     auditLog('token_refresh_success', userId);
 
@@ -132,7 +153,7 @@ router.post('/refresh', validateSession, async (req: AuthenticatedRequest, res: 
 router.get('/status', validateSession, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const userData = userStorage.getUser(userId);
+    const userData = await userPrisma.find(userId);
 
     if (!userData) {
       return res.status(404).json({
@@ -141,7 +162,7 @@ router.get('/status', validateSession, async (req: AuthenticatedRequest, res: Re
       });
     }
 
-    userStorage.updateLastActivity(userId);
+    // lastActivity is updated by DB writes elsewhere; no-op here
 
     res.json({
       success: true,

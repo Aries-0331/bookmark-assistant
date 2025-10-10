@@ -4,7 +4,7 @@ import { Router, Response } from 'express';
 import { AuthenticatedRequest } from '../types';
 import { validateSession } from '../middleware/auth';
 import { notionService } from '../services/notion';
-import { userStorage } from '../services/userStorage';
+import { userPrisma } from '../services/userPrisma';
 import { auditLog, sanitizeError } from '../utils';
 
 const router = Router();
@@ -16,7 +16,7 @@ const router = Router();
 router.get('/profile', validateSession, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const userData = userStorage.getUser(userId);
+    const userData = await userPrisma.find(userId);
 
     if (!userData) {
       return res.status(404).json({
@@ -25,7 +25,7 @@ router.get('/profile', validateSession, async (req: AuthenticatedRequest, res: R
       });
     }
 
-    userStorage.updateLastActivity(userId);
+    // lastActivity is updated by DB writes elsewhere; no-op here
 
     const profile = {
       userId,
@@ -66,7 +66,7 @@ router.get('/profile', validateSession, async (req: AuthenticatedRequest, res: R
 router.patch('/settings', validateSession, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const userData = userStorage.getUser(userId);
+    const userData = await userPrisma.find(userId);
     const { templateDatabaseId } = req.body;
 
     if (!userData) {
@@ -78,7 +78,7 @@ router.patch('/settings', validateSession, async (req: AuthenticatedRequest, res
 
     // Update template database ID if provided
     if (templateDatabaseId) {
-      userStorage.setTemplateDatabase(userId, templateDatabaseId);
+      await userPrisma.setResolvedDatabase(userId, templateDatabaseId);
     }
 
     auditLog('user_settings_update', userId, {
@@ -107,95 +107,7 @@ router.patch('/settings', validateSession, async (req: AuthenticatedRequest, res
  * Get Session Statistics
  * Administrative endpoint for session monitoring
  */
-router.get('/session-stats', validateSession, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId;
-
-    // Only allow this for specific admin users or in development
-    const isAdmin =
-      process.env.NODE_ENV === 'development' ||
-      process.env.ADMIN_USER_IDS?.split(',').includes(userId);
-
-    if (!isAdmin) {
-      return res.status(403).json({
-        error: 'Forbidden',
-        message: 'Admin access required',
-      });
-    }
-
-    const stats = userStorage.getSessionStats();
-
-    auditLog('session_stats_access', userId, stats);
-
-    res.json({
-      success: true,
-      stats,
-    });
-  } catch (error) {
-    const errorMessage = sanitizeError(error);
-    auditLog('session_stats_error', req.user?.userId || 'unknown', {
-      error: errorMessage,
-    });
-
-    console.error('Session stats error:', error);
-    res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Failed to fetch session statistics',
-    });
-  }
-});
-
-/**
- * Template Duplication Endpoint
- * Duplicate the bookmark template for the user
- */
-router.post(
-  '/template/duplicate',
-  validateSession,
-  async (req: AuthenticatedRequest, res: Response) => {
-    try {
-      const userId = req.user!.userId;
-      const userData = userStorage.getUser(userId);
-
-      if (!userData) {
-        return res.status(404).json({
-          error: 'Not Found',
-          message: 'User data not found',
-        });
-      }
-
-      // Duplicate the template page
-      const duplicatedPage = await notionService.duplicateTemplate(userData.notionAccessToken);
-
-      // Store the template database ID
-      userStorage.setTemplateDatabase(userId, duplicatedPage.id);
-
-      auditLog('template_duplicate_success', userId, {
-        templateId: duplicatedPage.id,
-        title: '📚 Chrome Bookmarks DB',
-      });
-
-      res.json({
-        success: true,
-        databaseId: duplicatedPage.id,
-        title: '📚 Chrome Bookmarks DB',
-        url: duplicatedPage.url,
-        message: 'Template duplicated successfully',
-      });
-    } catch (error) {
-      const errorMessage = sanitizeError(error);
-      auditLog('template_duplicate_error', req.user?.userId || 'unknown', {
-        error: errorMessage,
-      });
-
-      console.error('Template duplication error:', error);
-      res.status(500).json({
-        error: 'Internal Server Error',
-        message: 'Failed to duplicate template',
-      });
-    }
-  }
-);
+// session-stats depended on in-memory store; removed to keep solution simple
 
 /**
  * Check Template Status
@@ -207,7 +119,7 @@ router.get(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = req.user!.userId;
-      const userData = userStorage.getUser(userId);
+      const userData = await userPrisma.find(userId);
 
       if (!userData) {
         return res.status(404).json({
@@ -218,7 +130,7 @@ router.get(
 
       const hasTemplate = !!userData.templateDatabaseId;
 
-      userStorage.updateLastActivity(userId);
+      // lastActivity is updated by DB writes elsewhere; no-op here
 
       res.json({
         success: true,
@@ -245,33 +157,6 @@ router.get(
  * Logout Endpoint
  * Clear user session and tokens
  */
-router.post('/logout', validateSession, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId;
-
-    // Remove user data from storage
-    const deleted = userStorage.deleteUser(userId);
-
-    auditLog('user_logout', userId, {
-      sessionDeleted: deleted,
-    });
-
-    res.json({
-      success: true,
-      message: 'Logged out successfully',
-    });
-  } catch (error) {
-    const errorMessage = sanitizeError(error);
-    auditLog('logout_error', req.user?.userId || 'unknown', {
-      error: errorMessage,
-    });
-
-    console.error('Logout error:', error);
-    res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Failed to logout',
-    });
-  }
-});
+// Logout previously cleared in-memory session; with DB-backed tokens, client can discard JWT
 
 export default router;
