@@ -35,7 +35,7 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
     }
     // Exchange code for tokens with Notion
     const tokenData = await notionService.exchangeOAuthCode(code, redirectUri);
-    console.log('Received token data from Notion:', tokenData);
+    console.log('Received token data from Notion, template id:', tokenData.duplicated_template_id);
     const userId = extensionUserId || `user_${Date.now()}`;
 
     // Store user data securely on server
@@ -67,9 +67,12 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
           dupId,
           tokenData.access_token
         );
-        try {
-          await userPrisma.setResolvedDatabase(userId, resolved.databaseId, resolved.dataSourceId);
-        } catch {}
+        await userPrisma.setResolvedDatabase(
+          userId,
+          dupId,
+          resolved.databaseId,
+          resolved.dataSourceId || null
+        );
       } catch (e) {
         console.warn('Failed to resolve database from duplicated_template_id:', e);
       }

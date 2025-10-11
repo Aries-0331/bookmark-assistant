@@ -45,31 +45,12 @@ router.post('/upsert', validateSession, async (req: AuthenticatedRequest, res: R
     }
 
     // Determine effective data source ID from persisted user configuration
-    let effectiveDataSourceId = userData.notionDataSourceId as string | undefined;
-    if (!effectiveDataSourceId && userData.notionDatabaseId) {
-      try {
-        effectiveDataSourceId = await notionService.getPrimaryDataSourceId(
-          userData.notionDatabaseId,
-          userData.notionAccessToken
-        );
-      } catch (e) {
-        console.warn('Failed to resolve data source from notionDatabaseId:', e);
-      }
-    }
-    if (!effectiveDataSourceId && userData.templateDatabaseId) {
-      try {
-        effectiveDataSourceId = await notionService.getPrimaryDataSourceId(
-          userData.templateDatabaseId,
-          userData.notionAccessToken
-        );
-      } catch (e) {
-        console.warn('Failed to resolve data source from template database:', e);
-      }
-    }
+    const effectiveDataSourceId = userData.notionDataSourceId as string | undefined;
     if (!effectiveDataSourceId) {
       return res.status(400).json({
         error: 'Bad Request',
-        message: 'dataSourceId (preferred) or a resolvable databaseId is required',
+        message:
+          'dataSourceId is required. Please complete OAuth and sharing so the server can resolve and persist your data source.',
       });
     }
 
@@ -89,10 +70,11 @@ router.post('/upsert', validateSession, async (req: AuthenticatedRequest, res: R
           const syncId = bookmark.syncId || `${bookmark.url}-${Date.now()}`;
           const existingPageId = existingBookmarks.get(syncId)?.pageId;
 
-          const properties = notionService.createBookmarkProperties({
-            ...bookmark,
-            syncId,
-          });
+          const properties = await notionService.buildPropertiesFromDataSource(
+            effectiveDataSourceId,
+            userData.notionAccessToken,
+            { ...bookmark, syncId }
+          );
 
           if (existingPageId) {
             // Update existing page
@@ -193,32 +175,13 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       });
     }
 
-    // Determine effective data source ID
-    let effectiveDataSourceId = dataSourceId as string | undefined;
-    if (!effectiveDataSourceId && databaseId) {
-      try {
-        effectiveDataSourceId = await notionService.getPrimaryDataSourceId(
-          databaseId,
-          userData.notionAccessToken
-        );
-      } catch (e) {
-        console.warn('Failed to resolve data source from databaseId:', e);
-      }
-    }
-    if (!effectiveDataSourceId && userData.templateDatabaseId) {
-      try {
-        effectiveDataSourceId = await notionService.getPrimaryDataSourceId(
-          userData.templateDatabaseId,
-          userData.notionAccessToken
-        );
-      } catch (e) {
-        console.warn('Failed to resolve data source from template database:', e);
-      }
-    }
+    // Determine effective data source ID (required)
+    const effectiveDataSourceId = (dataSourceId as string) || userData.notionDataSourceId;
     if (!effectiveDataSourceId) {
       return res.status(400).json({
         error: 'Bad Request',
-        message: 'dataSourceId (preferred) or a resolvable databaseId is required',
+        message:
+          'dataSourceId is required for sync. Please complete OAuth and share the template/database with the integration so the server can resolve it.',
       });
     }
 
@@ -261,7 +224,11 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
             }
           }
 
-          const properties = notionService.createBookmarkProperties(bookmark);
+          const properties = await notionService.buildPropertiesFromDataSource(
+            effectiveDataSourceId!,
+            userData.notionAccessToken,
+            bookmark
+          );
 
           if (existing && duplicateHandling === 'update') {
             // Update existing page

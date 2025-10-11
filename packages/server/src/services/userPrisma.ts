@@ -64,13 +64,18 @@ export class UserPrismaRepo {
     });
   }
 
-  async setResolvedDatabase(userId: string, databaseId: string, dataSourceId?: string) {
+  async setResolvedDatabase(
+    userId: string,
+    duplicated_template_id: string,
+    databaseId: string,
+    dataSourceId: string | null
+  ) {
     await prisma.user.update({
       where: { user_id: userId },
       data: {
+        template_database_id: duplicated_template_id,
         notion_database_id: databaseId,
-        notion_data_source_id: dataSourceId || null,
-        template_database_id: databaseId,
+        notion_data_source_id: dataSourceId,
         last_activity: new Date(),
       },
     });

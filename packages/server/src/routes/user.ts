@@ -77,9 +77,9 @@ router.patch('/settings', validateSession, async (req: AuthenticatedRequest, res
     }
 
     // Update template database ID if provided
-    if (templateDatabaseId) {
-      await userPrisma.setResolvedDatabase(userId, templateDatabaseId);
-    }
+    // if (templateDatabaseId) {
+    //   await userPrisma.setResolvedDatabase(userId, templateDatabaseId);
+    // }
 
     auditLog('user_settings_update', userId, {
       templateDatabaseId,
