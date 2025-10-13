@@ -191,7 +191,7 @@ export async function processBookmarkForNotion(bookmark: chrome.bookmarks.Bookma
         : new Date().toISOString(),
       syncId: `${bookmark.url}-${bookmark.dateAdded || Date.now()}`,
     };
-    const result = await serverAPI.upsertBookmarks([payload]);
+    const result = await serverAPI.syncBookmarks([payload]);
     return result.results?.[0] || null;
   } catch (e) {
     console.error('❌ Server bookmark process failed:', e);

@@ -134,7 +134,7 @@ class ServerAPIClient {
     }
   }
 
-  async upsertBookmarks(bookmarks: BookmarkData[]): Promise<{
+  async syncBookmarks(bookmarks: BookmarkData[]): Promise<{
     summary: {
       total: number;
       success: number;
@@ -142,7 +142,7 @@ class ServerAPIClient {
     };
     results: any[];
   }> {
-    return await this.makeRequest<any>('/bookmarks/upsert', {
+    return await this.makeRequest<any>('/bookmarks/sync', {
       method: 'POST',
       body: JSON.stringify({ bookmarks }),
     });
@@ -201,9 +201,6 @@ export async function syncAllBookmarksViaServer(
   bookmarks: chrome.bookmarks.BookmarkTreeNode[]
 ): Promise<void> {
   try {
-    console.log('🔄 Starting server-side bookmark sync...');
-
-    // Format bookmarks for server
     const formattedBookmarks: BookmarkData[] = [];
 
     function flattenBookmarks(
@@ -226,9 +223,8 @@ export async function syncAllBookmarksViaServer(
 
     console.log(`📚 Found ${formattedBookmarks.length} bookmarks to sync`);
 
-    // Use smart upsert to avoid duplicates
-    const result = await serverAPI.upsertBookmarks(formattedBookmarks);
-    console.log('✅ Bookmark upsert completed:', result.summary);
+    const result = await serverAPI.syncBookmarks(formattedBookmarks);
+    console.log('✅ Bookmark sync completed:', result.summary);
 
     // Show success notification with fields server returns
     chrome.notifications.create({

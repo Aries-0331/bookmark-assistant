@@ -3,7 +3,6 @@
 import { Router, Response } from 'express';
 import { AuthenticatedRequest } from '../types';
 import { validateSession } from '../middleware/auth';
-import { notionService } from '../services/notion';
 import { userPrisma } from '../services/userPrisma';
 import { auditLog, sanitizeError } from '../utils';
 
@@ -75,11 +74,6 @@ router.patch('/settings', validateSession, async (req: AuthenticatedRequest, res
         message: 'User data not found',
       });
     }
-
-    // Update template database ID if provided
-    // if (templateDatabaseId) {
-    //   await userPrisma.setResolvedDatabase(userId, templateDatabaseId);
-    // }
 
     auditLog('user_settings_update', userId, {
       templateDatabaseId,

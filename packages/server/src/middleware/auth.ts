@@ -140,7 +140,7 @@ export const notFoundHandler = (req: Request, res: Response) => {
       'POST /oauth/exchange',
       'POST /oauth/refresh',
       'POST /notion/query-database',
-      'POST /bookmarks/upsert',
+      'POST /bookmarks/sync',
       'GET /notion/databases',
       'GET /user/profile',
       'POST /bookmarks/sync',

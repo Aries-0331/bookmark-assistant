@@ -23,10 +23,6 @@ export async function launchNotionOAuth() {
     throw new Error('Notion Client ID not configured');
   }
 
-  // Log the redirect URI for debugging
-  console.log('🔗 OAuth Redirect URI:', redirectUri);
-
-  // Build the Notion OAuth URL with proper parameters
   const authParams = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
@@ -46,21 +42,6 @@ export async function launchNotionOAuth() {
       async (redirectedTo) => {
         if (chrome.runtime.lastError) {
           const errorMessage = chrome.runtime.lastError.message;
-          console.error('🔗 OAuth Error:', errorMessage);
-
-          // Handle specific error cases
-          if (errorMessage?.includes('not approve') || errorMessage?.includes('denied')) {
-            return reject(new Error('Access denied: Please approve the authorization request'));
-          }
-
-          if (errorMessage?.includes('redirect_uri')) {
-            return reject(
-              new Error(
-                `Invalid redirect URI. Expected: ${redirectUri}. Please update your Notion integration settings.`
-              )
-            );
-          }
-
           return reject(new Error(`OAuth failed: ${errorMessage}`));
         }
 
@@ -99,7 +80,6 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
   const redirectUri = chrome.identity.getRedirectURL('callback');
 
   try {
-    console.log('🔗 Using redirect URI:', redirectUri);
     const result = await serverAPI.exchangeOAuthCode(code, redirectUri);
 
     console.log('✅ OAuth exchange successful via server. result:', result);

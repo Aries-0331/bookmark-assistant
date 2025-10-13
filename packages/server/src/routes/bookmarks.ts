@@ -10,146 +10,17 @@ import { auditLog, sanitizeError, validateBookmark, createBatches, sleep } from 
 
 const router = Router();
 
-// Result type definitions to avoid implicit never[] inference
-type UpsertResult =
-  | { success: true; bookmark: string; action: 'updated' | 'created'; syncId: string }
-  | { success: false; bookmark: string; error: string };
-
+// Result type definitions
 type SyncResult =
-  | { success: true; bookmark: string; action: 'updated' | 'created'; syncId?: string }
-  | { success: true; bookmark: string; action: 'skipped'; reason: string; syncId?: string }
+  | { success: true; bookmark: string; action: 'created'; syncId?: string }
+  | {
+      success: true;
+      bookmark: string;
+      action: 'skipped';
+      reason: 'duplicate_exists';
+      syncId?: string;
+    }
   | { success: false; bookmark: string; error: string; syncId?: string };
-
-/**
- * Bookmark Upsert Endpoint (Legacy)
- * Insert or update bookmarks with duplicate prevention
- */
-router.post('/upsert', validateSession, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId;
-    const userData = await userPrisma.find(userId);
-    const { bookmarks } = req.body;
-
-    if (!userData) {
-      return res.status(404).json({
-        error: 'Not Found',
-        message: 'User data not found',
-      });
-    }
-
-    if (!Array.isArray(bookmarks) || bookmarks.length === 0) {
-      return res.status(400).json({
-        error: 'Bad Request',
-        message: 'Bookmarks array is required and cannot be empty',
-      });
-    }
-
-    // Determine effective data source ID from persisted user configuration
-    const effectiveDataSourceId = userData.notionDataSourceId as string | undefined;
-    if (!effectiveDataSourceId) {
-      return res.status(400).json({
-        error: 'Bad Request',
-        message:
-          'dataSourceId is required. Please complete OAuth and sharing so the server can resolve and persist your data source.',
-      });
-    }
-
-    // Get existing bookmarks to prevent duplicates
-    const existingBookmarks = await notionService.getExistingBookmarks(
-      effectiveDataSourceId,
-      userData.notionAccessToken
-    );
-
-    // Process bookmarks in batches
-    const results: UpsertResult[] = [];
-    const batches = createBatches(bookmarks, config.batchDefaults.size);
-
-    for (const batch of batches) {
-      const batchPromises = batch.map(async (bookmark: BookmarkItem) => {
-        try {
-          const syncId = bookmark.syncId || `${bookmark.url}-${Date.now()}`;
-          const existingPageId = existingBookmarks.get(syncId)?.pageId;
-
-          const properties = await notionService.buildPropertiesFromDataSource(
-            effectiveDataSourceId,
-            userData.notionAccessToken,
-            { ...bookmark, syncId }
-          );
-
-          if (existingPageId) {
-            // Update existing page
-            await notionService.updatePage(existingPageId, properties, userData.notionAccessToken);
-
-            return {
-              success: true,
-              bookmark: bookmark.title,
-              action: 'updated',
-              syncId,
-            };
-          } else {
-            // Create new page
-            await notionService.createPage(
-              { type: 'data_source_id', data_source_id: effectiveDataSourceId },
-              properties,
-              userData.notionAccessToken
-            );
-
-            return {
-              success: true,
-              bookmark: bookmark.title,
-              action: 'created',
-              syncId,
-            };
-          }
-        } catch (error) {
-          return {
-            success: false,
-            bookmark: bookmark.title,
-            error: sanitizeError(error),
-          };
-        }
-      });
-
-      const batchResults = (await Promise.all(batchPromises)) as UpsertResult[];
-      results.push(...batchResults);
-
-      // Rate limiting between batches
-      if (batches.indexOf(batch) < batches.length - 1) {
-        await sleep(config.batchDefaults.delayMs);
-      }
-    }
-
-    // lastActivity is updated by DB writes elsewhere; no-op here
-
-    const successCount = results.filter((r) => r.success).length;
-    auditLog('bookmark_upsert_success', userId, {
-      total: bookmarks.length,
-      success: successCount,
-      failed: results.length - successCount,
-    });
-
-    res.json({
-      success: true,
-      results,
-      summary: {
-        total: bookmarks.length,
-        success: successCount,
-        failed: results.length - successCount,
-      },
-    });
-  } catch (error) {
-    const errorMessage = sanitizeError(error);
-    auditLog('bookmark_upsert_error', req.user?.userId || 'unknown', {
-      error: errorMessage,
-    });
-
-    console.error('Bookmark upsert error:', error);
-    res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Failed to process bookmark upsert',
-    });
-  }
-});
 
 /**
  * Enhanced Bookmark Sync Endpoint
@@ -159,7 +30,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
   try {
     const userId = req.user!.userId;
     const userData = await userPrisma.find(userId);
-    const { dataSourceId, databaseId, bookmarks, options = {} }: BookmarkSyncRequest = req.body;
+    const { dataSourceId, bookmarks, options = {} }: BookmarkSyncRequest = req.body;
 
     if (!userData) {
       return res.status(404).json({
@@ -199,29 +70,33 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     // Smart batching with duplicate detection
     const results: SyncResult[] = [];
     const batchSize = options.batchSize || config.batchDefaults.size;
-    const duplicateHandling = options.duplicateHandling || 'update';
-    const batches = createBatches(enrichedBookmarks, batchSize);
+
+    // If strategy is 'skip', pre-filter bookmarks that already exist to reduce API calls
+    let preSkipped = 0;
+    const toProcess = enrichedBookmarks.filter((b: BookmarkItem) => {
+      const bySync = b.syncId ? existingBookmarks.get(b.syncId) : undefined;
+      const byUrl = b.url ? existingBookmarks.get(b.url) : undefined;
+      const exists = !!(bySync || byUrl);
+      if (exists) preSkipped++;
+      return !exists;
+    });
+
+    const batches = createBatches(toProcess, batchSize);
 
     for (const batch of batches) {
       const batchPromises = batch.map(async (bookmark: BookmarkItem) => {
         try {
-          const existing = existingBookmarks.get(bookmark.syncId!);
-
-          // Handle duplicates based on strategy
+          const existing =
+            (bookmark.syncId && existingBookmarks.get(bookmark.syncId)) ||
+            (bookmark.url && existingBookmarks.get(bookmark.url));
           if (existing) {
-            if (duplicateHandling === 'skip') {
-              return {
-                success: true,
-                bookmark: bookmark.title,
-                action: 'skipped',
-                reason: 'duplicate_exists',
-                syncId: bookmark.syncId,
-              };
-            }
-
-            if (duplicateHandling === 'create_new') {
-              bookmark.syncId = `${bookmark.syncId}_new_${Date.now()}`;
-            }
+            return {
+              success: true,
+              bookmark: bookmark.title,
+              action: 'skipped',
+              reason: 'duplicate_exists',
+              syncId: bookmark.syncId,
+            };
           }
 
           const properties = await notionService.buildPropertiesFromDataSource(
@@ -230,31 +105,19 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
             bookmark
           );
 
-          if (existing && duplicateHandling === 'update') {
-            // Update existing page
-            await notionService.updatePage(existing.pageId, properties, userData.notionAccessToken);
+          // Create new page (incremental create-only)
+          await notionService.createPage(
+            { type: 'data_source_id', data_source_id: effectiveDataSourceId },
+            properties,
+            userData.notionAccessToken
+          );
 
-            return {
-              success: true,
-              bookmark: bookmark.title,
-              action: 'updated',
-              syncId: bookmark.syncId,
-            };
-          } else {
-            // Create new page
-            await notionService.createPage(
-              { type: 'data_source_id', data_source_id: effectiveDataSourceId },
-              properties,
-              userData.notionAccessToken
-            );
-
-            return {
-              success: true,
-              bookmark: bookmark.title,
-              action: 'created',
-              syncId: bookmark.syncId,
-            };
-          }
+          return {
+            success: true,
+            bookmark: bookmark.title,
+            action: 'created',
+            syncId: bookmark.syncId,
+          };
         } catch (error) {
           return {
             success: false,
@@ -280,8 +143,8 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       total: enrichedBookmarks.length,
       success: successCount,
       failed: results.length - successCount,
-      duplicateHandling,
       batchSize,
+      skippedExisting: preSkipped,
     };
 
     auditLog('bookmark_sync_success', userId, summary);

@@ -146,81 +146,6 @@ export class NotionService {
   }
 
   /**
-   * Retrieve a Notion database schema and build properties for a bookmark
-   * using the actual field names and types from the schema.
-   */
-  async buildPropertiesFromDatabase(
-    databaseId: string,
-    accessToken: string,
-    bookmark: BookmarkItem
-  ): Promise<Record<string, any>> {
-    const notion = this.getClient(accessToken);
-    const db = (await notion.request({ method: 'get', path: `databases/${databaseId}` })) as any;
-    const schema = db?.properties || {};
-
-    const props: Record<string, any> = {};
-
-    // Helpers to discover property names by type and heuristics
-    const entries = Object.entries<any>(schema) as Array<[string, any]>;
-    const byType = (type: string) => entries.find(([_, v]) => v?.type === type)?.[0];
-    const byTypeNamed = (type: string, regex: RegExp) =>
-      entries.find(([k, v]) => v?.type === type && regex.test(k.toLowerCase()))?.[0];
-
-    const titleName = byType('title') || byTypeNamed('title', /name|title/);
-    const urlName = byType('url') || byTypeNamed('url', /url|link/);
-    const tagsName =
-      byTypeNamed('multi_select', /tag|label|category|topic/) || byType('multi_select');
-    const descName =
-      byTypeNamed('rich_text', /desc|summary|note|description/) || byType('rich_text');
-    const folderName =
-      byTypeNamed('select', /folder|path|location/) ||
-      byTypeNamed('rich_text', /folder|path|location/);
-    const dateName = byTypeNamed('date', /date|created|added/) || byType('date');
-    const syncIdName = byTypeNamed('rich_text', /sync\s*id|sync|identifier|id/);
-
-    if (titleName && bookmark.title) {
-      props[titleName] = { title: [{ text: { content: bookmark.title } }] };
-    }
-    if (urlName && bookmark.url) {
-      props[urlName] = { url: bookmark.url };
-    }
-    if (tagsName && Array.isArray(bookmark.tags)) {
-      props[tagsName] = { multi_select: bookmark.tags.map((t) => ({ name: t })) };
-    }
-    if (descName && (bookmark as any).description) {
-      props[descName] = { rich_text: [{ text: { content: (bookmark as any).description } }] };
-    }
-    if (folderName && bookmark.folder) {
-      const folderSchema = (schema as any)[folderName];
-      if (folderSchema?.type === 'select') {
-        props[folderName] = { select: { name: bookmark.folder } };
-      } else {
-        props[folderName] = { rich_text: [{ text: { content: bookmark.folder } }] };
-      }
-    }
-    if (dateName) {
-      props[dateName] = { date: { start: bookmark.dateAdded || new Date().toISOString() } };
-    }
-    if (syncIdName && bookmark.syncId) {
-      props[syncIdName] = { rich_text: [{ text: { content: bookmark.syncId } }] };
-    }
-
-    // Debug mapping to help diagnose missing fields
-    console.log('[Schema Builder] chosen fields:', {
-      databaseId,
-      titleName,
-      urlName,
-      tagsName,
-      descName,
-      folderName,
-      dateName,
-      syncIdName,
-    });
-
-    return props;
-  }
-
-  /**
    * Exchange OAuth code for access tokens
    */
   async exchangeOAuthCode(code: string, redirectUri: string): Promise<any> {
@@ -367,96 +292,72 @@ export class NotionService {
   }
 
   /**
-   * Create Notion properties object for a bookmark
-   */
-  createBookmarkProperties(bookmark: BookmarkItem): NotionPageProperties {
-    return {
-      Title: {
-        title: [{ text: { content: bookmark.title } }],
-      },
-      URL: {
-        url: bookmark.url,
-      },
-      Folder: {
-        rich_text: [{ text: { content: bookmark.folder || 'Default' } }],
-      },
-      Tags: {
-        multi_select: (bookmark.tags || []).map((tag: string) => ({ name: tag })),
-      },
-      'Date Added': {
-        date: { start: bookmark.dateAdded! },
-      },
-      'Sync ID': {
-        rich_text: [{ text: { content: bookmark.syncId! } }],
-      },
-    };
-  }
-
-  /**
    * Get existing bookmarks from database to check for duplicates
    */
   async getExistingBookmarks(
     dataSourceId: string,
     accessToken: string
   ): Promise<Map<string, { pageId: string; url: string }>> {
-    const existingBookmarks = new Map<string, { pageId: string; url: string }>();
+    const existing = new Map<string, { pageId: string; url: string }>();
 
-    // Discover the sync id property name from data source schema
+    // Discover key property names from data source schema
     let syncPropName: string | undefined;
+    let urlPropName: string | undefined;
     try {
-      const ds = (await this.getClient(accessToken).request({
-        method: 'get',
-        path: `data-sources/${dataSourceId}`,
-      })) as any;
-      const entries = Object.entries<any>(ds?.properties || {});
+      const notion = this.getClient(accessToken);
+      const ds = (await notion.dataSources.retrieve({ data_source_id: dataSourceId })) as any;
+      const schema = ds?.properties || {};
+      const entries = Object.entries<any>(schema);
+      console.log('[Notion] Duplicate scan — data source schema keys:', Object.keys(schema));
       syncPropName = entries.find(
         ([k, v]) => v?.type === 'rich_text' && /sync\s*id|sync|identifier|id/i.test(k)
       )?.[0];
+      urlPropName = entries.find(([k, v]) => v?.type === 'url')?.[0];
+      console.log('[Notion] Duplicate scan — detected properties:', { syncPropName, urlPropName });
     } catch (e) {
       console.warn('[Notion] Failed to retrieve data source schema for duplicate detection:', e);
     }
 
-    let response: any;
-    try {
-      if (syncPropName) {
-        response = await this.queryDataSource(dataSourceId, accessToken, {
-          property: syncPropName,
-          rich_text: { is_not_empty: true },
+    // Iterate through all pages (pagination) to build map
+    let cursor: string | undefined = undefined;
+    do {
+      let resp: any;
+      try {
+        const filter = syncPropName
+          ? { property: syncPropName, rich_text: { is_not_empty: true as true } }
+          : undefined;
+        resp = await this.getClient(accessToken).dataSources.query({
+          data_source_id: dataSourceId,
+          filter,
+          start_cursor: cursor,
+          page_size: 100,
         });
-      } else {
-        response = await this.queryDataSource(dataSourceId, accessToken);
+      } catch (e) {
+        console.warn('[Notion] dataSources.query failed during duplicate scan:', e);
+        break;
       }
-    } catch (e) {
-      console.warn('[Notion] Query failed (will fallback to unfiltered scan):', e);
-      response = await this.queryDataSource(dataSourceId, accessToken);
-    }
-
-    const results = (response as any)?.results || [];
-    for (const page of results) {
-      // Extract sync id by preferred property (if known), otherwise best-effort scan
-      let syncId: string | undefined;
-      if (syncPropName) {
-        syncId = page.properties?.[syncPropName]?.rich_text?.[0]?.text?.content;
-      } else {
-        const props = page.properties || {};
-        for (const [key, val] of Object.entries<any>(props)) {
-          if (val?.type === 'rich_text') {
-            const text = val.rich_text?.[0]?.text?.content as string | undefined;
-            if (text && /[A-Za-z0-9_-]{6,}/.test(text)) {
-              syncId = text;
-              break;
-            }
-          }
+      const results: any[] = resp?.results || [];
+      for (const page of results) {
+        let syncId: string | undefined;
+        if (syncPropName) {
+          syncId = page.properties?.[syncPropName]?.rich_text?.[0]?.text?.content;
+        }
+        // Also collect URL key if available
+        let pageUrl: string | undefined;
+        if (urlPropName) {
+          pageUrl = page.properties?.[urlPropName]?.url;
+        }
+        if (syncId) {
+          existing.set(syncId, { pageId: page.id, url: pageUrl || '' });
+        }
+        if (pageUrl) {
+          existing.set(pageUrl, { pageId: page.id, url: pageUrl });
         }
       }
-      if (syncId) {
-        existingBookmarks.set(syncId, {
-          pageId: page.id,
-          url: page.properties?.['URL']?.url,
-        });
-      }
-    }
-    return existingBookmarks;
+      cursor = resp?.next_cursor || undefined;
+    } while (cursor);
+
+    return existing;
   }
 
   /**
