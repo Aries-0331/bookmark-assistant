@@ -10,6 +10,38 @@ export class NotionService {
     return new Client({ auth: accessToken, notionVersion: config.notionApiVersion });
   }
 
+  /**
+   * Resolve the title property name for a given data source by first attempting
+   * to read it from the data source schema; if not found, fall back to the
+   * underlying database schema and return the first property of type 'title'.
+   */
+  private async resolveTitlePropertyName(
+    dataSourceId: string,
+    accessToken: string
+  ): Promise<string | undefined> {
+    const notion = this.getClient(accessToken);
+    try {
+      const ds: any = await notion.dataSources.retrieve({ data_source_id: dataSourceId });
+      const entries = Object.entries<any>(ds?.properties || {});
+      const fromDataSource = entries.find(([_, v]) => v?.type === 'title')?.[0];
+      if (fromDataSource) return fromDataSource as string;
+    } catch (e) {
+      console.warn('[Notion] Title resolution: failed to read data source schema:', e);
+    }
+
+    try {
+      const databaseId = await this.getDatabaseIdByDataSourceId(dataSourceId, accessToken);
+      const db: any = await notion.request({ method: 'get', path: `databases/${databaseId}` });
+      const dbEntries = Object.entries<any>(db?.properties || {});
+      const fromDatabase = dbEntries.find(([_, v]) => v?.type === 'title')?.[0];
+      if (fromDatabase) return fromDatabase as string;
+    } catch (e) {
+      console.warn('[Notion] Title resolution: failed to read database schema:', e);
+    }
+
+    return undefined;
+  }
+
   async getPrimaryDataSourceId(databaseId: string, accessToken: string): Promise<string> {
     const notion = this.getClient(accessToken);
     try {
@@ -85,27 +117,36 @@ export class NotionService {
     // Retrieve the data source to access its properties (schema)
     const ds = (await notion.dataSources.retrieve({ data_source_id: dataSourceId })) as any;
     const schema = ds?.properties || {};
-    console.log('[Schema Builder - DataSource] full schema:', schema);
     const props: Record<string, any> = {};
     const entries = Object.entries<any>(schema) as Array<[string, any]>;
     const byType = (type: string) => entries.find(([_, v]) => v?.type === type)?.[0];
     const byTypeNamed = (type: string, regex: RegExp) =>
       entries.find(([k, v]) => v?.type === type && regex.test(k.toLowerCase()))?.[0];
 
-    const titleName = byType('title') || byTypeNamed('title', /name|title/);
+    let titleName = byType('title') || byTypeNamed('title', /name|title/);
     const urlName = byType('url') || byTypeNamed('url', /url|link/);
     const tagsName =
       byTypeNamed('multi_select', /tag|label|category|topic/) || byType('multi_select');
     const descName =
       byTypeNamed('rich_text', /desc|summary|note|description/) || byType('rich_text');
-    const folderName =
-      byTypeNamed('select', /folder|path|location/) ||
-      byTypeNamed('rich_text', /folder|path|location/);
+    const path = byTypeNamed('rich_text', /folder|path|location/);
     const dateName = byTypeNamed('date', /date|created|added/) || byType('date');
     const syncIdName = byTypeNamed('rich_text', /sync\s*id|sync|identifier|id/);
 
-    if (titleName && bookmark.title) {
-      props[titleName] = { title: [{ text: { content: bookmark.title } }] };
+    // Ensure we always set a title to avoid creating an 'Untitled' blank row
+    const safeTitle = bookmark.title || 'Untitled Bookmark';
+    if (!titleName) {
+      // Try to resolve via database fallback
+      titleName = await this.resolveTitlePropertyName(dataSourceId, accessToken);
+      if (!titleName) {
+        console.warn(
+          '[Notion] No title property detected from data source or database schema; falling back to "Name"'
+        );
+        titleName = 'Name';
+      }
+    }
+    if (titleName) {
+      props[titleName] = { title: [{ text: { content: safeTitle } }] };
     }
     if (urlName && bookmark.url) {
       props[urlName] = { url: bookmark.url };
@@ -116,13 +157,9 @@ export class NotionService {
     if (descName && (bookmark as any).description) {
       props[descName] = { rich_text: [{ text: { content: (bookmark as any).description } }] };
     }
-    if (folderName && bookmark.folder) {
-      const folderSchema = (schema as any)[folderName];
-      if (folderSchema?.type === 'select') {
-        props[folderName] = { select: { name: bookmark.folder } };
-      } else {
-        props[folderName] = { rich_text: [{ text: { content: bookmark.folder } }] };
-      }
+    if (path && bookmark.path) {
+      console.log('Setting folder property:', bookmark.path);
+      props[path] = { rich_text: [{ text: { content: bookmark.path } }] };
     }
     if (dateName) {
       props[dateName] = { date: { start: bookmark.dateAdded || new Date().toISOString() } };
@@ -130,17 +167,6 @@ export class NotionService {
     if (syncIdName && bookmark.syncId) {
       props[syncIdName] = { rich_text: [{ text: { content: bookmark.syncId } }] };
     }
-
-    console.log('[Schema Builder - DataSource] chosen fields:', {
-      dataSourceId,
-      titleName,
-      urlName,
-      tagsName,
-      descName,
-      folderName,
-      dateName,
-      syncIdName,
-    });
 
     return props;
   }

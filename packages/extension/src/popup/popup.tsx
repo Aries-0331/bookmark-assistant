@@ -10,18 +10,63 @@ interface SyncStatus {
 export default function Popup() {
   const [status, setStatus] = useState<SyncStatus>({ isConnected: false });
 
+  // Resize the Chrome action popup to fit content whenever UI changes
+  const resizePopupToContent = () => {
+    try {
+      const root = document.documentElement;
+      const body = document.body;
+      if (!root || !body) return;
+      // Reset to auto first to allow shrink
+      root.style.height = 'auto';
+      body.style.height = 'auto';
+      // Measure in next frame and set explicit height to avoid stale space
+      requestAnimationFrame(() => {
+        const h = Math.max(body.scrollHeight, root.scrollHeight);
+        root.style.height = `${h}px`;
+        body.style.height = `${h}px`;
+      });
+    } catch {}
+  };
+
   useEffect(() => {
     checkConnectionStatus();
+    const onChanged = (
+      changes: { [key: string]: chrome.storage.StorageChange },
+      areaName: string
+    ) => {
+      if (areaName !== 'local') return;
+      const watchedKeys = ['sync_in_progress', 'last_sync', 'last_sync_error'];
+      const hasWatched = watchedKeys.some((k) => k in changes);
+      if (!hasWatched) return;
+      setStatus((prev) => ({
+        ...prev,
+        isLoading: changes.sync_in_progress ? !!changes.sync_in_progress.newValue : prev.isLoading,
+        lastSync: changes.last_sync ? changes.last_sync.newValue : prev.lastSync,
+        error: changes.last_sync_error ? changes.last_sync_error.newValue || undefined : prev.error,
+      }));
+    };
+    chrome.storage.onChanged.addListener(onChanged);
+    return () => chrome.storage.onChanged.removeListener(onChanged);
   }, []);
+
+  // Recompute popup height on relevant status changes
+  useEffect(() => {
+    resizePopupToContent();
+  }, [status.error, status.isLoading, status.lastSync, status.isConnected]);
 
   const checkConnectionStatus = async () => {
     try {
-      const result = await chrome.storage.local.get(['session_token', 'last_sync']);
+      const result = await chrome.storage.local.get([
+        'session_token',
+        'last_sync',
+        'sync_in_progress',
+        'last_sync_error',
+      ]);
       setStatus({
         isConnected: !!result.session_token,
         lastSync: result.last_sync,
-        error: undefined,
-        isLoading: false,
+        error: result.last_sync_error || undefined,
+        isLoading: !!result.sync_in_progress,
       });
     } catch {
       setStatus({
@@ -54,6 +99,11 @@ export default function Popup() {
         }));
       }
     } catch (error) {
+      // Suppress timeout tips in UI; background will update storage flags
+      if (error instanceof Error && error.message === 'REQUEST_TIMEOUT') {
+        // Keep spinner and rely on storage listener to flip state when done
+        return;
+      }
       setStatus((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -71,24 +121,50 @@ export default function Popup() {
       const response = await chrome.runtime.sendMessage({
         type: 'SYNC_ALL_BOOKMARKS',
       });
-
-      if (response.success) {
+      if (!response?.success) {
         setStatus((prev) => ({
           ...prev,
-          lastSync: new Date().toISOString(),
+          error: response?.error || 'Failed to start sync',
           isLoading: false,
         }));
-
-        // Store last sync time
-        await chrome.storage.local.set({ last_sync: new Date().toISOString() });
-      } else {
-        setStatus((prev) => ({
-          ...prev,
-          error: response.error || 'Sync failed',
-          isLoading: false,
-        }));
+        return;
       }
+
+      // Poll the sync state until it finishes
+      const pollInterval = 1000;
+      const maxDurationMs = 5 * 60 * 1000; // 5 minutes cap
+      const start = Date.now();
+      const poll = async (): Promise<void> => {
+        const { sync_in_progress, last_sync, last_sync_error } = await chrome.storage.local.get([
+          'sync_in_progress',
+          'last_sync',
+          'last_sync_error',
+        ]);
+        if (!sync_in_progress) {
+          setStatus((prev) => ({
+            ...prev,
+            isLoading: false,
+            lastSync: last_sync || new Date().toISOString(),
+            error: last_sync_error || undefined,
+          }));
+          return;
+        }
+        if (Date.now() - start > maxDurationMs) {
+          setStatus((prev) => ({
+            ...prev,
+            isLoading: false,
+            error: 'Sync taking longer than expected. It may still continue in the background.',
+          }));
+          return;
+        }
+        setTimeout(poll, pollInterval);
+      };
+      setTimeout(poll, pollInterval);
     } catch (error) {
+      if (error instanceof Error && error.message === 'REQUEST_TIMEOUT') {
+        // Keep spinner; background/storage will update UI
+        return;
+      }
       setStatus((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -112,7 +188,7 @@ export default function Popup() {
 
       {/* Connection Status */}
       <div className="mb-4 p-3 rounded-lg bg-gray-50">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2">
           <div
             className={`w-2 h-2 rounded-full ${status.isConnected ? 'bg-green-500' : 'bg-red-500'}`}
           />
@@ -131,25 +207,10 @@ export default function Popup() {
       {/* Error Display */}
       {status.error && (
         <div className="mb-4 p-3 rounded-lg border bg-red-50 border-red-200">
-          <div className="flex items-start gap-2">
-            <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-red-100">
-              <svg className="w-3 h-3 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-red-600">Error</p>
-              <p className="text-xs mt-1 text-red-600">{status.error}</p>
-            </div>
-          </div>
+          <p className="text-xs mt-1 text-red-600">{status.error}</p>
         </div>
       )}
 
-      {/* Action Buttons */}
       <div className="space-y-3">
         {!status.isConnected ? (
           <button
@@ -161,7 +222,6 @@ export default function Popup() {
           </button>
         ) : (
           <>
-            {/* Primary Action - Sync All Bookmarks */}
             <button
               onClick={handleSyncAllBookmarks}
               disabled={status.isLoading}
@@ -187,7 +247,6 @@ export default function Popup() {
               )}
             </button>
 
-            {/* Secondary Actions */}
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={openOptions}
@@ -197,9 +256,7 @@ export default function Popup() {
               </button>
               <button
                 onClick={() =>
-                  chrome.storage.local
-                    .remove('notion_token')
-                    .then(() => setStatus((prev) => ({ ...prev, isConnected: false })))
+                  setStatus((prev) => ({ ...prev, isConnected: false, error: undefined }))
                 }
                 className="border border-red-300 hover:bg-red-50 text-red-600 px-3 py-2 rounded-lg transition-colors text-sm"
               >

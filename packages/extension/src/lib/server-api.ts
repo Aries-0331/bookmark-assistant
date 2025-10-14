@@ -33,7 +33,10 @@ class ServerAPIClient {
   }
 
   // todo - find a better way to make request
-  private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async makeRequest<T>(
+    endpoint: string,
+    options: RequestInit & { timeoutMs?: number } = {}
+  ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -44,18 +47,19 @@ class ServerAPIClient {
       headers['Authorization'] = `Bearer ${this.sessionToken}`;
     }
 
-    const timeoutMs = 8000;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const { timeoutMs = 8000, ...rest } = options as any;
+  const controller = new AbortController();
+  const useTimeout = typeof timeoutMs === 'number' && timeoutMs > 0;
+  const timeout = useTimeout ? setTimeout(() => controller.abort(), timeoutMs) : null;
 
     try {
       const response = await globalThis.fetch(url, {
         cache: 'no-store',
-        ...options,
+        ...rest,
         headers,
-        signal: controller.signal,
+        signal: useTimeout ? controller.signal : undefined,
       });
-      clearTimeout(timeout);
+      if (timeout) clearTimeout(timeout);
 
       const contentType = response.headers.get('content-type');
       const isJson = contentType && contentType.includes('application/json');
@@ -66,9 +70,27 @@ class ServerAPIClient {
       }
       return data as T;
     } catch (error: any) {
-      clearTimeout(timeout);
+      if (timeout) clearTimeout(timeout);
       if (error?.name === 'AbortError') {
-        throw new Error(`Request timed out after ${timeoutMs}ms`);
+        // Log timeout to console
+        console.warn(`[ServerAPI] Request to ${endpoint} timed out after ${timeoutMs}ms`);
+        // Fire-and-forget backend client-log for observability
+        try {
+          globalThis.fetch(`${this.baseUrl}/client-log`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Extension-ID': chrome.runtime.id },
+            body: JSON.stringify({
+              level: 'warn',
+              message: 'REQUEST_TIMEOUT',
+              meta: { endpoint, timeoutMs },
+            }),
+            cache: 'no-store',
+          });
+        } catch {}
+        // Optional health probe
+        this.hintConnectivity();
+        // Return a shaped timeout signal to caller; popup suppresses this
+        throw new Error('REQUEST_TIMEOUT');
       }
       if (error instanceof TypeError) {
         this.hintConnectivity();
@@ -142,9 +164,12 @@ class ServerAPIClient {
     };
     results: any[];
   }> {
+    // Disable client-side timeout for bulk sync to avoid spurious UI errors
+    const estimatedTimeout = 0;
     return await this.makeRequest<any>('/bookmarks/sync', {
       method: 'POST',
       body: JSON.stringify({ bookmarks }),
+      timeoutMs: estimatedTimeout,
     });
   }
 
@@ -185,6 +210,11 @@ export function formatBookmarkForServer(
   bookmark: chrome.bookmarks.BookmarkTreeNode,
   path: string
 ): BookmarkData {
+  // Prefer server to assign syncId, but if provided here, use a UUID to ensure uniqueness
+  const syncId =
+    globalThis.crypto && 'randomUUID' in globalThis.crypto
+      ? (globalThis.crypto as any).randomUUID()
+      : `${bookmark.id}-${Date.now()}`;
   return {
     title: bookmark.title || 'Untitled',
     url: bookmark.url || '',
@@ -193,7 +223,7 @@ export function formatBookmarkForServer(
     dateAdded: bookmark.dateAdded
       ? new Date(bookmark.dateAdded).toISOString()
       : new Date().toISOString(),
-    syncId: `${bookmark.url}-${bookmark.dateAdded || Date.now()}`,
+    syncId,
   };
 }
 
@@ -223,6 +253,7 @@ export async function syncAllBookmarksViaServer(
 
     console.log(`📚 Found ${formattedBookmarks.length} bookmarks to sync`);
 
+    // Delegate batching to server; send all bookmarks in one request
     const result = await serverAPI.syncBookmarks(formattedBookmarks);
     console.log('✅ Bookmark sync completed:', result.summary);
 

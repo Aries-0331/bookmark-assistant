@@ -1,6 +1,7 @@
 // 🛠️ Utility Functions for Server Operations
 
 import { AuditLogEntry } from '../types';
+import { randomUUID } from 'crypto';
 
 /**
  * Audit logging utility for security and debugging
@@ -63,10 +64,10 @@ export const validateBookmark = (bookmark: any, index: number) => {
   return {
     title: bookmark.title || bookmark.name || 'Untitled Bookmark',
     url: bookmark.url,
-    folder: bookmark.folder || bookmark.parentTitle || 'Default',
+    path: bookmark.path,
     tags: Array.isArray(bookmark.tags) ? bookmark.tags : [],
     dateAdded: bookmark.dateAdded || bookmark.dateCreated || new Date().toISOString(),
-    syncId: bookmark.syncId || `bookmark_${bookmark.url || index}_${Date.now()}`,
+    syncId: bookmark.syncId || randomUUID(),
   };
 };
 

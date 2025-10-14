@@ -40,11 +40,27 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         console.log('🔄 Starting server-side bookmark sync (bulk)...');
         const bookmarkTree = await chrome.bookmarks.getTree();
         const flat = bookmarkTree[0]?.children || [];
-        // Use existing helper (statically imported to avoid dynamic import issues in SW)
+
+        // Mark sync as in progress so UI can render ongoing state
+        await chrome.storage.local.set({ sync_in_progress: true, last_sync_error: null });
+
+        // Await the full sync (request timeout is extended inside the API client)
         await syncAllBookmarksViaServer(flat as any);
-        sendResponse({ success: true, message: 'Bookmarks sync requested' });
+
+        await chrome.storage.local.set({
+          sync_in_progress: false,
+          last_sync: new Date().toISOString(),
+          last_sync_summary: null,
+          last_sync_error: null,
+        });
+
+        sendResponse({ success: true, message: 'Bookmarks sync completed' });
       } catch (err) {
         console.error('❌ Server-side bookmark sync failed:', err);
+        await chrome.storage.local.set({
+          sync_in_progress: false,
+          last_sync_error: err instanceof Error ? err.message : String(err),
+        });
         sendResponse({ success: false, error: String(err) });
       }
     })();

@@ -70,79 +70,48 @@ export async function syncAllBookmarksToNotion() {
 
     // Get all bookmarks from Chrome
     const bookmarkTree = await chrome.bookmarks.getTree();
-    console.log('📚 Retrieved bookmark tree from Chrome');
+    console.log('📚 Retrieved bookmark tree from Chrome', bookmarkTree.slice(0, 3));
 
     // Flatten bookmark tree and filter URLs only
     const flatBookmarks = flattenBookmarks(bookmarkTree).filter((bookmark) => bookmark.url);
-
+    console.log('📄 Flattened bookmarks', flatBookmarks.slice(0, 3));
     // Add paths to bookmarks for better organization in Notion
     const bookmarks = addPathsToBookmarks(flatBookmarks, bookmarkTree);
-    console.log(`📊 Found ${bookmarks.length} bookmarks to sync`);
+    console.log(
+      `📊 Found ${bookmarks.length} bookmarks to sync, after add path:`,
+      bookmarks.slice(0, 3)
+    );
 
     if (bookmarks.length === 0) {
       throw new Error('No bookmarks found to sync');
     }
 
-    // Process bookmarks in batches to avoid overwhelming the APIs
-    const batchSize = 5; // Process 5 bookmarks at a time
-    const results = {
-      total: bookmarks.length,
-      processed: 0,
-      successful: 0,
-      failed: 0,
-      errors: [] as string[],
-    };
+    // Delegate the bulk sync entirely to the server
+    const formatted = bookmarks
+      .filter((b) => !!b.url)
+      .map((b) => ({
+        title: b.title || 'Untitled',
+        url: b.url!,
+        description: `Imported from Chrome bookmarks (${buildBookmarkPath(bookmarkTree, b.id)})`,
+        path: buildBookmarkPath(bookmarkTree, b.id),
+        dateAdded: b.dateAdded ? new Date(b.dateAdded).toISOString() : new Date().toISOString(),
+        // Let server generate syncId, but include a UUID if available
+        syncId:
+          globalThis.crypto && 'randomUUID' in globalThis.crypto
+            ? (globalThis.crypto as any).randomUUID()
+            : `${b.id}-${Date.now()}`,
+      }));
 
-    for (let i = 0; i < bookmarks.length; i += batchSize) {
-      const batch = bookmarks.slice(i, i + batchSize);
-      console.log(
-        `🔄 Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(
-          bookmarks.length / batchSize
-        )}`
-      );
+    const result = await serverAPI.syncBookmarks(formatted as any);
+    console.log('🎉 Bulk bookmark sync completed:', result.summary);
 
-      const batchPromises = batch.map(async (bookmark) => {
-        try {
-          if (!bookmark.url) {
-            throw new Error('Bookmark URL is missing');
-          }
-
-          await processBookmarkForNotion(bookmark);
-          results.successful++;
-        } catch (error) {
-          results.failed++;
-          const errorMsg = `Failed to sync "${bookmark.title}": ${
-            error instanceof Error ? error.message : 'Unknown error'
-          }`;
-          results.errors.push(errorMsg);
-          console.warn(`⚠️ ${errorMsg}`);
-        }
-        results.processed++;
-      });
-
-      await Promise.all(batchPromises);
-
-      // Small delay between batches to be respectful to APIs
-      if (i + batchSize < bookmarks.length) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    }
-
-    console.log('🎉 Bulk bookmark sync completed:', results);
-
-    // Store sync results
+    // Store sync results metadata only
     await chrome.storage.local.set({
       last_bulk_sync: new Date().toISOString(),
-      last_sync_results: results,
+      last_sync_results: result.summary,
     });
 
-    if (results.failed > 0) {
-      throw new Error(
-        `Sync completed with ${results.failed} failures out of ${results.total} bookmarks`
-      );
-    }
-
-    return results;
+    return result.summary;
   } catch (error) {
     console.error('❌ Bulk bookmark sync failed:', error);
     throw error;

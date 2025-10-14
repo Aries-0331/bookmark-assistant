@@ -25,7 +25,7 @@ export interface AuthenticatedRequest extends Request {
 export interface BookmarkItem {
   title: string;
   url: string;
-  folder?: string;
+  path?: string;
   tags?: string[];
   dateAdded?: string;
   syncId?: string;

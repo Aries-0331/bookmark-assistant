@@ -10,6 +10,23 @@ import { auditLog, sanitizeError, validateBookmark, createBatches, sleep } from 
 
 const router = Router();
 
+// Helper: extract title from Notion page object regardless of property key name
+function extractPageTitle(page: any): string {
+  try {
+    const props = page?.properties;
+    if (!props || typeof props !== 'object') return 'Untitled';
+    for (const key of Object.keys(props)) {
+      const prop = (props as any)[key];
+      if (prop?.type === 'title' && Array.isArray(prop.title) && prop.title.length > 0) {
+        const first = prop.title[0];
+        const text = first?.plain_text || first?.text?.content;
+        if (text && String(text).trim()) return String(text);
+      }
+    }
+  } catch {}
+  return 'Untitled';
+}
+
 // Result type definitions
 type SyncResult =
   | { success: true; bookmark: string; action: 'created'; syncId?: string }
@@ -57,9 +74,17 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     }
 
     // Validate and enrich bookmarks
+    console.log('[Bookmark Sync] Received bookmarks:', {
+      count: bookmarks.length,
+      sample: bookmarks.slice(0, 3),
+    });
     const enrichedBookmarks = bookmarks.map((bookmark: any, index: number) =>
       validateBookmark(bookmark, index)
     );
+    console.log('[Bookmark Sync] Enriched bookmarks:', {
+      count: enrichedBookmarks.length,
+      sample: enrichedBookmarks.slice(0, 3),
+    });
 
     // Query existing bookmarks to build sync map
     const existingBookmarks = await notionService.getExistingBookmarks(
@@ -106,12 +131,12 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
           );
 
           // Create new page (incremental create-only)
-          await notionService.createPage(
+          const response = await notionService.createPage(
             { type: 'data_source_id', data_source_id: effectiveDataSourceId },
             properties,
             userData.notionAccessToken
           );
-
+          console.log('[Bookmark Sync] Created page:', extractPageTitle(response));
           return {
             success: true,
             bookmark: bookmark.title,
