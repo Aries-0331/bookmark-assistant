@@ -151,6 +151,21 @@ router.get(
  * Logout Endpoint
  * Clear user session and tokens
  */
-// Logout previously cleared in-memory session; with DB-backed tokens, client can discard JWT
+router.post('/logout', validateSession, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    // Best effort: remove tokens so server-side won’t use them later
+    try {
+      await userPrisma.updateTokens(userId, '', '');
+    } catch {}
+    // No server-side session to kill (JWT is stateless). Client should discard it.
+    auditLog('logout', userId, {});
+    res.json({ success: true });
+  } catch (error) {
+    const errorMessage = sanitizeError(error);
+    auditLog('logout_error', req.user?.userId || 'unknown', { error: errorMessage });
+    res.status(500).json({ success: false, message: 'Failed to logout' });
+  }
+});
 
 export default router;

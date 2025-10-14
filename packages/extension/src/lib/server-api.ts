@@ -23,13 +23,11 @@ class ServerAPIClient {
   constructor() {
     this.baseUrl = import.meta.env.VITE_OAUTH_SERVER_URL || 'http://localhost:3333';
     this.loadSessionToken();
-    console.log('🌐 ServerAPI baseUrl:', this.baseUrl);
   }
 
   private async loadSessionToken() {
     const result = await chrome.storage.local.get(['session_token']);
     this.sessionToken = result.session_token || null;
-    console.log('session token:', this.sessionToken);
   }
 
   // todo - find a better way to make request
@@ -47,10 +45,10 @@ class ServerAPIClient {
       headers['Authorization'] = `Bearer ${this.sessionToken}`;
     }
 
-  const { timeoutMs = 8000, ...rest } = options as any;
-  const controller = new AbortController();
-  const useTimeout = typeof timeoutMs === 'number' && timeoutMs > 0;
-  const timeout = useTimeout ? setTimeout(() => controller.abort(), timeoutMs) : null;
+    const { timeoutMs = 8000, ...rest } = options as any;
+    const controller = new AbortController();
+    const useTimeout = typeof timeoutMs === 'number' && timeoutMs > 0;
+    const timeout = useTimeout ? setTimeout(() => controller.abort(), timeoutMs) : null;
 
     try {
       const response = await globalThis.fetch(url, {
@@ -87,31 +85,10 @@ class ServerAPIClient {
             cache: 'no-store',
           });
         } catch {}
-        // Optional health probe
-        this.hintConnectivity();
         // Return a shaped timeout signal to caller; popup suppresses this
         throw new Error('REQUEST_TIMEOUT');
       }
-      if (error instanceof TypeError) {
-        this.hintConnectivity();
-      }
       throw error;
-    }
-  }
-
-  private async hintConnectivity() {
-    try {
-      const healthUrl = `${this.baseUrl}/health`;
-      const started = Date.now();
-      const r = await globalThis.fetch(healthUrl, { method: 'GET', cache: 'no-store' });
-      console.log(
-        `🩺 Health probe ${r.ok ? 'OK' : 'FAIL'} status=${r.status} (${Date.now() - started}ms)`
-      );
-    } catch (e) {
-      console.warn(
-        '🩺 Health probe failed (cannot reach server):',
-        e instanceof Error ? e.message : e
-      );
     }
   }
 
@@ -192,12 +169,25 @@ class ServerAPIClient {
 
   // 🚪 Logout
   async logout(): Promise<void> {
+    try {
+      await this.makeRequest('/user/logout', { method: 'POST', timeoutMs: 5000 });
+    } catch {}
     this.sessionToken = null;
     await chrome.storage.local.remove([
+      // auth/session
       'session_token',
+      'user_id',
+      // notion cached data
       'notion_user',
       'notion_database_id',
       'database_name',
+      'oauth_template_database_id',
+      // sync state
+      'sync_in_progress',
+      'last_sync',
+      'last_sync_results',
+      'last_sync_summary',
+      'last_sync_error',
     ]);
   }
 }

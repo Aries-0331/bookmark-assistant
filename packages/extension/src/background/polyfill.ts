@@ -41,7 +41,6 @@ function applyWindowPolyfill() {
     });
 
     (globalThis as any).window = windowProxy;
-    (globalThis as any).self = globalThis;
 
     return true;
   } else {

@@ -36,19 +36,31 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
   if (msg.type === 'SYNC_ALL_BOOKMARKS') {
     (async () => {
+      const setState = async (patch: Record<string, any>) => {
+        try {
+          await chrome.storage.local.set(patch);
+        } catch (e) {
+          console.warn('⚠️ Failed to update sync state:', patch, e);
+        }
+      };
       try {
-        console.log('🔄 Starting server-side bookmark sync (bulk)...');
+        // Prevent concurrent syncs
+        const { sync_in_progress } = await chrome.storage.local.get(['sync_in_progress']);
+        if (sync_in_progress) {
+          console.warn('⚠️ Sync request ignored: a sync is already in progress');
+          sendResponse({ success: false, error: 'Sync already in progress' });
+          return;
+        }
         const bookmarkTree = await chrome.bookmarks.getTree();
         const flat = bookmarkTree[0]?.children || [];
 
         // Mark sync as in progress so UI can render ongoing state
-        await chrome.storage.local.set({ sync_in_progress: true, last_sync_error: null });
+        await setState({ sync_in_progress: true, last_sync_error: null });
 
         // Await the full sync (request timeout is extended inside the API client)
         await syncAllBookmarksViaServer(flat as any);
 
-        await chrome.storage.local.set({
-          sync_in_progress: false,
+        await setState({
           last_sync: new Date().toISOString(),
           last_sync_summary: null,
           last_sync_error: null,
@@ -57,11 +69,11 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         sendResponse({ success: true, message: 'Bookmarks sync completed' });
       } catch (err) {
         console.error('❌ Server-side bookmark sync failed:', err);
-        await chrome.storage.local.set({
-          sync_in_progress: false,
-          last_sync_error: err instanceof Error ? err.message : String(err),
-        });
+        await setState({ last_sync_error: err instanceof Error ? err.message : String(err) });
         sendResponse({ success: false, error: String(err) });
+      } finally {
+        // Always ensure the flag is reset even if unexpected errors occur
+        await setState({ sync_in_progress: false });
       }
     })();
     return true;
@@ -74,6 +86,19 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         sendResponse({ success: true, profile: profile.user });
       } catch (err) {
         console.error('❌ Failed to get user profile:', err);
+        sendResponse({ success: false, error: String(err) });
+      }
+    })();
+    return true;
+  }
+
+  if (msg.type === 'LOGOUT') {
+    (async () => {
+      try {
+        await serverAPI.logout();
+        sendResponse({ success: true });
+      } catch (err) {
+        console.error('❌ Logout failed:', err);
         sendResponse({ success: false, error: String(err) });
       }
     })();

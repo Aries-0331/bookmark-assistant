@@ -14,8 +14,6 @@ export const auditLog = (action: string, userId: string, details: any = {}): voi
     userId,
     details,
   };
-
-  console.log(`[AUDIT] ${timestamp} | ${action} | User: ${userId} | ${JSON.stringify(details)}`);
 };
 
 /**
@@ -36,11 +34,7 @@ export const retryRequest = async <T>(
         throw error;
       }
 
-      const delayMs = baseDelayMs * Math.pow(2, attempt - 1); // Exponential backoff
-      console.log(
-        `Request failed (attempt ${attempt}/${maxRetries}), retrying in ${delayMs}ms...`,
-        error instanceof Error ? error.message : error
-      );
+      const delayMs = baseDelayMs * Math.pow(2, attempt - 1);
 
       await new Promise((resolve) => setTimeout(resolve, delayMs));
       attempt++;
@@ -65,6 +59,7 @@ export const validateBookmark = (bookmark: any, index: number) => {
     title: bookmark.title || bookmark.name || 'Untitled Bookmark',
     url: bookmark.url,
     path: bookmark.path,
+    description: bookmark.description || '',
     tags: Array.isArray(bookmark.tags) ? bookmark.tags : [],
     dateAdded: bookmark.dateAdded || bookmark.dateCreated || new Date().toISOString(),
     syncId: bookmark.syncId || randomUUID(),

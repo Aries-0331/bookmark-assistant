@@ -10,16 +10,15 @@ interface SyncStatus {
 export default function Popup() {
   const [status, setStatus] = useState<SyncStatus>({ isConnected: false });
 
-  // Resize the Chrome action popup to fit content whenever UI changes
   const resizePopupToContent = () => {
     try {
       const root = document.documentElement;
       const body = document.body;
       if (!root || !body) return;
-      // Reset to auto first to allow shrink
+
       root.style.height = 'auto';
       body.style.height = 'auto';
-      // Measure in next frame and set explicit height to avoid stale space
+
       requestAnimationFrame(() => {
         const h = Math.max(body.scrollHeight, root.scrollHeight);
         root.style.height = `${h}px`;
@@ -49,7 +48,6 @@ export default function Popup() {
     return () => chrome.storage.onChanged.removeListener(onChanged);
   }, []);
 
-  // Recompute popup height on relevant status changes
   useEffect(() => {
     resizePopupToContent();
   }, [status.error, status.isLoading, status.lastSync, status.isConnected]);
@@ -86,11 +84,12 @@ export default function Popup() {
       });
 
       if (response.ok) {
-        setStatus({
+        setStatus((prev) => ({
+          ...prev,
           isConnected: true,
           error: undefined,
           isLoading: false,
-        });
+        }));
       } else {
         setStatus((prev) => ({
           ...prev,
@@ -140,6 +139,7 @@ export default function Popup() {
           'last_sync',
           'last_sync_error',
         ]);
+        console.log('Polling sync status...', { sync_in_progress, last_sync, last_sync_error });
         if (!sync_in_progress) {
           setStatus((prev) => ({
             ...prev,
@@ -175,6 +175,11 @@ export default function Popup() {
 
   const openOptions = () => {
     chrome.runtime.openOptionsPage();
+  };
+
+  const handleDisconnect = async () => {
+    setStatus((prev) => ({ ...prev, isLoading: false, error: undefined, isConnected: false }));
+    await chrome.runtime.sendMessage({ type: 'LOGOUT' });
   };
 
   return (
@@ -255,9 +260,7 @@ export default function Popup() {
                 Settings
               </button>
               <button
-                onClick={() =>
-                  setStatus((prev) => ({ ...prev, isConnected: false, error: undefined }))
-                }
+                onClick={handleDisconnect}
                 className="border border-red-300 hover:bg-red-50 text-red-600 px-3 py-2 rounded-lg transition-colors text-sm"
               >
                 Disconnect

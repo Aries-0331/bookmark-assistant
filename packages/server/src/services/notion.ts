@@ -53,8 +53,6 @@ export class NotionService {
       if (!dataSources || dataSources.length === 0) {
         throw new Error('No data sources found for database');
       }
-      // log database to console for debug
-      console.log('Database data sources:', dataSources);
 
       return dataSources[0].id;
     } catch (error) {
@@ -72,7 +70,6 @@ export class NotionService {
    */
   async getDatabaseIdByDataSourceId(dataSourceId: string, accessToken: string): Promise<string> {
     const notion = this.getClient(accessToken);
-    console.log('[Notion] Resolving databaseId from dataSourceId:', dataSourceId);
     // Search for databases the integration can access
     let cursor: string | undefined = undefined;
     do {
@@ -82,7 +79,6 @@ export class NotionService {
         page_size: 50,
       });
       const results = resp?.results || [];
-      console.log('[Notion] Database search page count:', results.length);
       for (const dbSummary of results) {
         try {
           const db = (await notion.request({
@@ -91,7 +87,6 @@ export class NotionService {
           })) as any;
           const dataSources = (db?.data_sources || []) as Array<{ id: string }>;
           if (Array.isArray(dataSources) && dataSources.some((ds) => ds.id === dataSourceId)) {
-            console.log('[Notion] Matched database for dataSourceId:', dbSummary.id);
             return dbSummary.id as string;
           }
         } catch (e) {
@@ -158,7 +153,6 @@ export class NotionService {
       props[descName] = { rich_text: [{ text: { content: (bookmark as any).description } }] };
     }
     if (path && bookmark.path) {
-      console.log('Setting folder property:', bookmark.path);
       props[path] = { rich_text: [{ text: { content: bookmark.path } }] };
     }
     if (dateName) {
@@ -320,41 +314,17 @@ export class NotionService {
   /**
    * Get existing bookmarks from database to check for duplicates
    */
-  async getExistingBookmarks(
-    dataSourceId: string,
-    accessToken: string
-  ): Promise<Map<string, { pageId: string; url: string }>> {
-    const existing = new Map<string, { pageId: string; url: string }>();
-
-    // Discover key property names from data source schema
-    let syncPropName: string | undefined;
-    let urlPropName: string | undefined;
-    try {
-      const notion = this.getClient(accessToken);
-      const ds = (await notion.dataSources.retrieve({ data_source_id: dataSourceId })) as any;
-      const schema = ds?.properties || {};
-      const entries = Object.entries<any>(schema);
-      console.log('[Notion] Duplicate scan — data source schema keys:', Object.keys(schema));
-      syncPropName = entries.find(
-        ([k, v]) => v?.type === 'rich_text' && /sync\s*id|sync|identifier|id/i.test(k)
-      )?.[0];
-      urlPropName = entries.find(([k, v]) => v?.type === 'url')?.[0];
-      console.log('[Notion] Duplicate scan — detected properties:', { syncPropName, urlPropName });
-    } catch (e) {
-      console.warn('[Notion] Failed to retrieve data source schema for duplicate detection:', e);
-    }
-
+  async existingBookmarkUrls(dataSourceId: string, accessToken: string): Promise<string[]> {
+    const notion = this.getClient(accessToken);
     // Iterate through all pages (pagination) to build map
     let cursor: string | undefined = undefined;
+    let existing: string[] = [];
     do {
       let resp: any;
       try {
-        const filter = syncPropName
-          ? { property: syncPropName, rich_text: { is_not_empty: true as true } }
-          : undefined;
-        resp = await this.getClient(accessToken).dataSources.query({
+        resp = await notion.dataSources.query({
           data_source_id: dataSourceId,
-          filter,
+          filter: { property: 'URL', url: { is_not_empty: true } },
           start_cursor: cursor,
           page_size: 100,
         });
@@ -364,20 +334,8 @@ export class NotionService {
       }
       const results: any[] = resp?.results || [];
       for (const page of results) {
-        let syncId: string | undefined;
-        if (syncPropName) {
-          syncId = page.properties?.[syncPropName]?.rich_text?.[0]?.text?.content;
-        }
-        // Also collect URL key if available
-        let pageUrl: string | undefined;
-        if (urlPropName) {
-          pageUrl = page.properties?.[urlPropName]?.url;
-        }
-        if (syncId) {
-          existing.set(syncId, { pageId: page.id, url: pageUrl || '' });
-        }
-        if (pageUrl) {
-          existing.set(pageUrl, { pageId: page.id, url: pageUrl });
+        if (page?.properties?.URL?.url) {
+          existing.push(page.properties.URL.url);
         }
       }
       cursor = resp?.next_cursor || undefined;
@@ -396,17 +354,14 @@ export class NotionService {
     accessToken: string
   ): Promise<{ databaseId: string; dataSourceId?: string }> {
     const notion = this.getClient(accessToken);
-    console.log('[Notion] Resolve from template:', duplicatedTemplateId);
 
     // 0) Direct check: sometimes duplicated_template_id is already the database_id
     try {
-      console.log('[Notion] Trying direct database retrieve with id:', duplicatedTemplateId);
       const db = (await notion.request({
         method: 'get',
         path: `databases/${duplicatedTemplateId}`,
       })) as any;
       if (db && db.object === 'database') {
-        console.log('[Notion] duplicated_template_id is a database:', duplicatedTemplateId);
         let dataSourceId: string | undefined;
         try {
           dataSourceId = await this.getPrimaryDataSourceId(duplicatedTemplateId, accessToken);
@@ -417,20 +372,13 @@ export class NotionService {
       }
     } catch (e: any) {
       const msg = e?.message || String(e);
-      console.log('[Notion] Direct database retrieve failed, will traverse blocks. Reason:', msg);
     }
 
     // 0.5) Try retrieving the page to identify object type and children flag
     try {
-      const page = (await notion.request({
+      await notion.request({
         method: 'get',
         path: `pages/${duplicatedTemplateId}`,
-      })) as any;
-      console.log('[Notion] Page retrieve for template id:', {
-        id: page?.id,
-        object: page?.object,
-        archived: page?.archived,
-        // Notion doesn't return has_children in page retrieve; we rely on blocks.children.list
       });
     } catch (pe) {
       console.warn('[Notion] Page retrieve failed for template id (may not be a page):', pe);
@@ -448,18 +396,10 @@ export class NotionService {
       visited.add(id);
       try {
         const children = await notion.blocks.children.list({ block_id: id, page_size: 100 });
-        // log children to console for debug
-        console.log(`[Notion] Traversing block ${id} at depth ${depth}:`, children);
         for (const block of (children as any).results || []) {
           const type = block?.type;
-          console.log('[Notion] Visit child block:', {
-            id: block?.id,
-            type,
-            has_children: !!block?.has_children,
-          });
           if (type === 'child_database') {
             const candidateId = block.id as string;
-            console.log('[Notion] Found child_database block, verifying database id:', candidateId);
             let verified = false;
             try {
               const db = (await notion.request({
@@ -483,20 +423,14 @@ export class NotionService {
               } catch (e) {
                 console.warn('[Notion] Primary dataSourceId lookup failed for', candidateId, e);
               }
-              console.log('[Notion] Resolved via traversal:', {
-                databaseId: candidateId,
-                dataSourceId,
-              });
               return { databaseId: candidateId, dataSourceId };
             }
           }
           // Follow links to page/database from link_to_page blocks
           if (type === 'link_to_page') {
             const link = (block as any).link_to_page;
-            console.log('[Notion] link_to_page details:', link);
             if (link?.type === 'database_id' && link.database_id) {
               const dbId = link.database_id as string;
-              console.log('[Notion] link_to_page points to database, verifying:', dbId);
               try {
                 const db = (await notion.request({
                   method: 'get',
@@ -509,10 +443,6 @@ export class NotionService {
                   } catch (e) {
                     console.warn('[Notion] Primary dataSourceId lookup failed for', dbId, e);
                   }
-                  console.log('[Notion] Resolved via link_to_page:', {
-                    databaseId: dbId,
-                    dataSourceId,
-                  });
                   return { databaseId: dbId, dataSourceId };
                 }
               } catch (e) {
@@ -522,7 +452,6 @@ export class NotionService {
               // Enqueue the linked page to traverse its children
               const pageId = link.page_id as string;
               if (!visited.has(pageId)) {
-                console.log('[Notion] Enqueue linked page for traversal:', pageId);
                 queue.push(pageId);
                 meta.set(pageId, depth + 1);
               }
@@ -546,7 +475,6 @@ export class NotionService {
         filter: { property: 'object', value: 'database' as any },
         page_size: 10,
       });
-      console.log('[Notion] Database search results:', (search?.results || []).length);
     } catch (se) {
       console.warn('[Notion] Database search failed:', se);
       search = { results: [] };
@@ -569,7 +497,6 @@ export class NotionService {
         '— likely a permissions issue.'
       );
     }
-    console.log('[Notion] Fallback resolved:', { databaseId, dataSourceId });
     return { databaseId, dataSourceId };
   }
 }

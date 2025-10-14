@@ -80,9 +80,7 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
   const redirectUri = chrome.identity.getRedirectURL('callback');
 
   try {
-    const result = await serverAPI.exchangeOAuthCode(code, redirectUri);
-
-    console.log('✅ OAuth exchange successful via server. result:', result);
+    await serverAPI.exchangeOAuthCode(code, redirectUri);
     return 'session_authenticated';
   } catch (error) {
     console.error('🔗 OAuth exchange error:', error);

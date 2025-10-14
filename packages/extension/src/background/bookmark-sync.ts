@@ -61,27 +61,13 @@ function addPathsToBookmarks(
 }
 
 export async function syncAllBookmarksToNotion() {
-  console.log('🔖 Starting bulk bookmark sync to Notion...');
-
   try {
-    // NOTE: Database initialization now handled by server
-    console.log('🔄 Server will handle database initialization...');
-    console.log('✅ Ready for bulk sync via server API');
-
-    // Get all bookmarks from Chrome
     const bookmarkTree = await chrome.bookmarks.getTree();
-    console.log('📚 Retrieved bookmark tree from Chrome', bookmarkTree.slice(0, 3));
 
     // Flatten bookmark tree and filter URLs only
     const flatBookmarks = flattenBookmarks(bookmarkTree).filter((bookmark) => bookmark.url);
-    console.log('📄 Flattened bookmarks', flatBookmarks.slice(0, 3));
     // Add paths to bookmarks for better organization in Notion
     const bookmarks = addPathsToBookmarks(flatBookmarks, bookmarkTree);
-    console.log(
-      `📊 Found ${bookmarks.length} bookmarks to sync, after add path:`,
-      bookmarks.slice(0, 3)
-    );
-
     if (bookmarks.length === 0) {
       throw new Error('No bookmarks found to sync');
     }
@@ -91,8 +77,8 @@ export async function syncAllBookmarksToNotion() {
       .filter((b) => !!b.url)
       .map((b) => ({
         title: b.title || 'Untitled',
-        url: b.url!,
-        description: `Imported from Chrome bookmarks (${buildBookmarkPath(bookmarkTree, b.id)})`,
+        url: b.url || '',
+        description: '',
         path: buildBookmarkPath(bookmarkTree, b.id),
         dateAdded: b.dateAdded ? new Date(b.dateAdded).toISOString() : new Date().toISOString(),
         // Let server generate syncId, but include a UUID if available
@@ -101,14 +87,13 @@ export async function syncAllBookmarksToNotion() {
             ? (globalThis.crypto as any).randomUUID()
             : `${b.id}-${Date.now()}`,
       }));
-
     const result = await serverAPI.syncBookmarks(formatted as any);
-    console.log('🎉 Bulk bookmark sync completed:', result.summary);
 
     // Store sync results metadata only
     await chrome.storage.local.set({
       last_bulk_sync: new Date().toISOString(),
       last_sync_results: result.summary,
+      sync_in_progress: false,
     });
 
     return result.summary;
@@ -144,26 +129,4 @@ function flattenBookmarks(bookmarkNodes: chrome.bookmarks.BookmarkTreeNode[]): B
 
   traverse(bookmarkNodes);
   return flattened;
-}
-
-export async function processBookmarkForNotion(bookmark: chrome.bookmarks.BookmarkTreeNode) {
-  console.log('🔄 Processing single bookmark via server:', bookmark.title);
-  try {
-    const path = buildBookmarkPath([bookmark], bookmark.id);
-    const payload = {
-      title: bookmark.title || 'Untitled',
-      url: bookmark.url || '',
-      description: `Imported from Chrome bookmarks (${path})`,
-      path,
-      dateAdded: bookmark.dateAdded
-        ? new Date(bookmark.dateAdded).toISOString()
-        : new Date().toISOString(),
-      syncId: `${bookmark.url}-${bookmark.dateAdded || Date.now()}`,
-    };
-    const result = await serverAPI.syncBookmarks([payload]);
-    return result.results?.[0] || null;
-  } catch (e) {
-    console.error('❌ Server bookmark process failed:', e);
-    throw e;
-  }
 }

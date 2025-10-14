@@ -26,6 +26,7 @@ export interface BookmarkItem {
   title: string;
   url: string;
   path?: string;
+  description?: string;
   tags?: string[];
   dateAdded?: string;
   syncId?: string;

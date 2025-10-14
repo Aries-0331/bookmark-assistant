@@ -35,7 +35,6 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
     }
     // Exchange code for tokens with Notion
     const tokenData = await notionService.exchangeOAuthCode(code, redirectUri);
-    console.log('Received token data from Notion, template id:', tokenData.duplicated_template_id);
     const userId = extensionUserId || `user_${Date.now()}`;
 
     // Store user data securely on server

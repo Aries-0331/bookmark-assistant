@@ -10,21 +10,36 @@ import { auditLog, sanitizeError, validateBookmark, createBatches, sleep } from 
 
 const router = Router();
 
-// Helper: extract title from Notion page object regardless of property key name
-function extractPageTitle(page: any): string {
-  try {
-    const props = page?.properties;
-    if (!props || typeof props !== 'object') return 'Untitled';
-    for (const key of Object.keys(props)) {
-      const prop = (props as any)[key];
-      if (prop?.type === 'title' && Array.isArray(prop.title) && prop.title.length > 0) {
-        const first = prop.title[0];
-        const text = first?.plain_text || first?.text?.content;
-        if (text && String(text).trim()) return String(text);
-      }
+type DiffOutcome = {
+  toCreate: BookmarkItem[];
+  skippedExisting: number;
+  stats: {
+    requestTotal: number;
+    existingIndexSize: number;
+  };
+};
+
+function diffBookmarks(accepted: BookmarkItem[], urls: string[]): DiffOutcome {
+  let count = 0;
+
+  const toCreate: BookmarkItem[] = [];
+  for (const b of accepted) {
+    if (urls.includes(b.url)) {
+      count++;
+    } else {
+      toCreate.push(b);
     }
-  } catch {}
-  return 'Untitled';
+  }
+
+  const skippedExisting = accepted.length - toCreate.length;
+  return {
+    toCreate,
+    skippedExisting,
+    stats: {
+      requestTotal: accepted.length,
+      existingIndexSize: count,
+    },
+  };
 }
 
 // Result type definitions
@@ -74,56 +89,27 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     }
 
     // Validate and enrich bookmarks
-    console.log('[Bookmark Sync] Received bookmarks:', {
-      count: bookmarks.length,
-      sample: bookmarks.slice(0, 3),
-    });
     const enrichedBookmarks = bookmarks.map((bookmark: any, index: number) =>
       validateBookmark(bookmark, index)
     );
-    console.log('[Bookmark Sync] Enriched bookmarks:', {
-      count: enrichedBookmarks.length,
-      sample: enrichedBookmarks.slice(0, 3),
-    });
-
     // Query existing bookmarks to build sync map
-    const existingBookmarks = await notionService.getExistingBookmarks(
+    const urls = await notionService.existingBookmarkUrls(
       effectiveDataSourceId,
       userData.notionAccessToken
     );
+    // Compute diff (by syncId primarily, with URL fallback)
+    const diff = diffBookmarks(enrichedBookmarks as BookmarkItem[], urls);
+    console.log('[Bookmark Sync] Diff result:', diff.stats);
 
-    // Smart batching with duplicate detection
     const results: SyncResult[] = [];
     const batchSize = options.batchSize || config.batchDefaults.size;
-
-    // If strategy is 'skip', pre-filter bookmarks that already exist to reduce API calls
-    let preSkipped = 0;
-    const toProcess = enrichedBookmarks.filter((b: BookmarkItem) => {
-      const bySync = b.syncId ? existingBookmarks.get(b.syncId) : undefined;
-      const byUrl = b.url ? existingBookmarks.get(b.url) : undefined;
-      const exists = !!(bySync || byUrl);
-      if (exists) preSkipped++;
-      return !exists;
-    });
+    const toProcess = diff.toCreate;
 
     const batches = createBatches(toProcess, batchSize);
 
     for (const batch of batches) {
       const batchPromises = batch.map(async (bookmark: BookmarkItem) => {
         try {
-          const existing =
-            (bookmark.syncId && existingBookmarks.get(bookmark.syncId)) ||
-            (bookmark.url && existingBookmarks.get(bookmark.url));
-          if (existing) {
-            return {
-              success: true,
-              bookmark: bookmark.title,
-              action: 'skipped',
-              reason: 'duplicate_exists',
-              syncId: bookmark.syncId,
-            };
-          }
-
           const properties = await notionService.buildPropertiesFromDataSource(
             effectiveDataSourceId!,
             userData.notionAccessToken,
@@ -131,12 +117,11 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
           );
 
           // Create new page (incremental create-only)
-          const response = await notionService.createPage(
+          await notionService.createPage(
             { type: 'data_source_id', data_source_id: effectiveDataSourceId },
             properties,
             userData.notionAccessToken
           );
-          console.log('[Bookmark Sync] Created page:', extractPageTitle(response));
           return {
             success: true,
             bookmark: bookmark.title,
@@ -169,7 +154,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       success: successCount,
       failed: results.length - successCount,
       batchSize,
-      skippedExisting: preSkipped,
+      skippedExisting: diff.skippedExisting,
     };
 
     auditLog('bookmark_sync_success', userId, summary);
