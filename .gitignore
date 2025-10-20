@@ -30,7 +30,7 @@ yarn.lock
 
 # Environment variables
 .env
-.env.local
+.env.*
 .env.*.local
 
 # Keep template and development/production files in git but ignore sensitive data
