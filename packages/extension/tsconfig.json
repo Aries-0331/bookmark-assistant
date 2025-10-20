@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "composite": true,
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": [
@@ -22,9 +23,23 @@
     "types": [
       "chrome",
       "vite/client"
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@bookmark-sync/shared": [
+        "../shared/src"
+      ],
+      "@bookmark-sync/shared/*": [
+        "../shared/src/*"
+      ]
+    }
   },
   "include": [
     "src"
+  ],
+  "references": [
+    {
+      "path": "../shared"
+    }
   ]
 }

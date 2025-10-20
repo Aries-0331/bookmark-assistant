@@ -1,0 +1,16 @@
+{
+  "name": "@bookmark-sync/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./env": "./src/env.ts",
+    "./types": "./src/types/index.ts",
+    "./notionSync/adapter": "./src/notionSync/adapter.ts"
+  }
+}

@@ -4,7 +4,8 @@ import './polyfill';
 
 import { launchNotionOAuth, exchangeCodeForToken, debugOAuthSetup } from './oauth';
 import { validateConfig, debugConfig } from '../lib/config';
-import { serverAPI, syncAllBookmarksViaServer } from '../lib/server-api';
+import { serverAPI } from '../lib/server-api';
+import { api } from '../api';
 
 // import './test-oauth-flow'; // Removed in production build
 
@@ -57,8 +58,35 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         // Mark sync as in progress so UI can render ongoing state
         await setState({ sync_in_progress: true, last_sync_error: null });
 
-        // Await the full sync (request timeout is extended inside the API client)
-        await syncAllBookmarksViaServer(flat as any);
+        // Await the full sync using edition-aware adapter (Pro delegates to server)
+        // Flatten to BookmarkPayload via the existing helper path used in server-api
+        // For list-of-folders structure from getTree()[0].children, the adapter will format internally.
+        const formatted: any[] = [];
+        const flatten = (nodes: any[], currentPath = 'Bookmarks') => {
+          for (const node of nodes) {
+            if (node.url) {
+              formatted.push({
+                title: node.title || 'Untitled',
+                url: node.url || '',
+                description: 'Imported from Chrome bookmarks',
+                path: currentPath,
+                dateAdded: node.dateAdded
+                  ? new Date(node.dateAdded).toISOString()
+                  : new Date().toISOString(),
+                syncId:
+                  globalThis.crypto && 'randomUUID' in globalThis.crypto
+                    ? (globalThis.crypto as any).randomUUID()
+                    : `${node.id}-${Date.now()}`,
+              });
+            } else if (node.children) {
+              const nextPath = node.title ? `${currentPath} / ${node.title}` : currentPath;
+              flatten(node.children, nextPath);
+            }
+          }
+        };
+        flatten(flat as any);
+
+        await api.syncBookmarks(formatted);
 
         await setState({
           last_sync: new Date().toISOString(),

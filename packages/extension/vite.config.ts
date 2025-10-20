@@ -33,6 +33,11 @@ export default defineConfig({
       },
     },
   ],
+  resolve: {
+    alias: {
+      '@bookmark-sync/shared/': new URL('../shared/src/', import.meta.url).pathname,
+    },
+  },
   css: {
     postcss: {
       plugins: [tailwindcss, autoprefixer],
@@ -46,11 +51,20 @@ export default defineConfig({
         popup: 'src/popup/popup.html',
         options: 'src/options/options.html',
         background: 'src/background/index.ts',
-  // content script removed in refactor (legacy injector.ts deleted)
+        // content script removed in refactor (legacy injector.ts deleted)
       },
       output: {
-        entryFileNames: '[name].js',
-        chunkFileNames: '[name].js',
+        // Sanitize filenames to avoid leading underscores (Chrome disallows files like _commonjsHelpers.js)
+        entryFileNames: (chunkInfo) => {
+          const name = (chunkInfo && chunkInfo.name) || 'entry';
+          const safe = name.replace(/^_+/, 'cjs_');
+          return `${safe}.js`;
+        },
+        chunkFileNames: (chunkInfo) => {
+          const name = (chunkInfo && chunkInfo.name) || 'chunk';
+          const safe = name.replace(/^_+/, 'cjs_');
+          return `${safe}.js`;
+        },
         assetFileNames: 'assets/[name].[ext]',
       },
     },

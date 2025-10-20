@@ -35,25 +35,26 @@ function validateEnvironment(mode) {
 switch (command) {
   case 'setup':
     console.log('🚀 Setting up development environment...\n');
-    
+
     // Check if environment files exist
-    if (!fs.existsSync('.env.development')) {
+  if (!fs.existsSync('.env.development')) {
       console.log('📋 Creating .env.development from template...');
       execSync('cp .env.example .env.development');
       console.log('📝 Please edit .env.development with your actual values\n');
     }
-    
+
     if (!fs.existsSync('.env.production')) {
       console.log('📋 Creating .env.production from template...');
       execSync('cp .env.example .env.production');
       console.log('📝 Please edit .env.production with your actual values\n');
     }
-    
-    run('npm install', 'Installing dependencies');
+
+  run('pnpm install', 'Installing dependencies');
     validateEnvironment('development');
-    run('npm run type-check', 'Type checking');
-    run('npm run lint', 'Linting code');
-    
+  // Type check extension workspace
+  run('pnpm -F @bookmark-sync/extension type-check', 'Type checking (extension)');
+  run('pnpm -r lint', 'Linting code');
+
     console.log('🎉 Development environment setup complete!');
     console.log('💡 Next steps:');
     console.log('   1. Edit .env.development with your Notion credentials');
@@ -63,19 +64,19 @@ switch (command) {
 
   case 'dev':
     console.log('🛠️  Starting development build...\n');
-    validateEnvironment('development');
-    run('npm run clean', 'Cleaning previous build');
-    run('npm run build', 'Building development version');
+  validateEnvironment('development');
+  run('pnpm clean', 'Cleaning previous build');
+  run('pnpm build', 'Building development version');
     console.log('🎉 Development build ready in dist/ folder');
     break;
 
   case 'prod':
     console.log('🚀 Starting production build...\n');
-    validateEnvironment('production');
-    run('npm run clean', 'Cleaning previous build');
-    run('npm run type-check', 'Type checking');
-    run('npm run lint', 'Linting code');
-    run('npm run build:prod', 'Building production version');
+  validateEnvironment('production');
+  run('pnpm clean', 'Cleaning previous build');
+  run('pnpm -F @bookmark-sync/extension type-check', 'Type checking (extension)');
+  run('pnpm -r lint', 'Linting code');
+  run('pnpm -F @bookmark-sync/extension build:prod', 'Building production version');
     console.log('🎉 Production build ready in dist/ folder');
     break;
 
@@ -84,7 +85,7 @@ switch (command) {
     break;
 
   case 'clean':
-    run('npm run clean', 'Cleaning build files');
+  run('pnpm clean', 'Cleaning build files');
     break;
 
   default:

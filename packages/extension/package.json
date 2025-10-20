@@ -4,7 +4,7 @@
   "description": "Chrome Extension for Bookmark Notion Sync",
   "type": "module",
   "scripts": {
-    "dev": "vite build --watch --mode development",
+    "dev": "vite --open /src/dev/index.html",
     "build": "tsc -b && vite build --mode development",
     "build:prod": "tsc -b && vite build --mode production",
     "clean": "rm -rf dist",
@@ -12,7 +12,9 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@bookmark-sync/shared": "workspace:*",
     "@notionhq/client": "^5.0.0",
+    "lucide-react": "^0.546.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

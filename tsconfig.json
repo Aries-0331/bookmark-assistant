@@ -2,10 +2,10 @@
   "files": [],
   "references": [
     {
-      "path": "./tsconfig.app.json"
+      "path": "packages/shared"
     },
     {
-      "path": "./tsconfig.node.json"
+      "path": "packages/extension"
     }
   ],
   "compilerOptions": {
