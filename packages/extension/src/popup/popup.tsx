@@ -181,6 +181,8 @@ export default function Popup() {
     return `${days} day${days === 1 ? '' : 's'} ago`;
   };
 
+  // Settings now lives in a dedicated options page; popup always renders home.
+
   return (
     <div className="w-[360px] p-4 bg-gray-50 shadow-xl">
       <div className="flex items-center justify-between mb-4">

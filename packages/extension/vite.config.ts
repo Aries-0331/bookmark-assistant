@@ -21,7 +21,6 @@ export default defineConfig({
                 resolve(distDir, 'popup.html')
               );
             }
-
             if (existsSync(resolve(distDir, 'src/options/options.html'))) {
               copyFileSync(
                 resolve(distDir, 'src/options/options.html'),
