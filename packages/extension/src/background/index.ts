@@ -133,3 +133,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true;
   }
 });
+
+// Open the options page when the user clicks the extension icon
+try {
+  chrome.action.onClicked.addListener(() => {
+    chrome.runtime.openOptionsPage();
+  });
+} catch (e) {
+  // Some environments may not support action.onClicked in mocks; ignore
+}

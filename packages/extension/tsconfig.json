@@ -24,7 +24,6 @@
       "chrome",
       "vite/client"
     ],
-    "baseUrl": ".",
     "paths": {
       "@bookmark-sync/shared": [
         "../shared/src"

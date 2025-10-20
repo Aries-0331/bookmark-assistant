@@ -14,13 +14,6 @@ export default defineConfig({
         import('fs').then(({ copyFileSync, existsSync }) => {
           import('path').then(({ resolve }) => {
             const distDir = 'dist';
-
-            if (existsSync(resolve(distDir, 'src/popup/popup.html'))) {
-              copyFileSync(
-                resolve(distDir, 'src/popup/popup.html'),
-                resolve(distDir, 'popup.html')
-              );
-            }
             if (existsSync(resolve(distDir, 'src/options/options.html'))) {
               copyFileSync(
                 resolve(distDir, 'src/options/options.html'),
@@ -47,7 +40,6 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       input: {
-        popup: 'src/popup/popup.html',
         options: 'src/options/options.html',
         background: 'src/background/index.ts',
         // content script removed in refactor (legacy injector.ts deleted)

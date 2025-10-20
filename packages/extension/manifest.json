@@ -26,19 +26,16 @@
     "type": "module"
   },
   "action": {
-    "default_popup": "popup.html",
     "default_icon": "icons/icon48.png"
   },
   "options_page": "options.html",
-
-
   "web_accessible_resources": [
     {
       "resources": [
         "icons/*",
         "assets/*",
-        "popup.html"
         "options.html"
+      ],
       "matches": ["<all_urls>"]
     }
   ],
