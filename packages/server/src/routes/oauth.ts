@@ -9,7 +9,7 @@ import { userPrisma } from '../services/userPrisma';
 import { config } from '../config';
 import { auditLog, sanitizeError } from '../utils';
 
-const router = Router();
+const router: import('express').Router = Router();
 
 /**
  * OAuth Token Exchange Endpoint

@@ -11,7 +11,7 @@ export default defineConfig({
       name: 'chrome-extension-build',
       writeBundle() {
         // Copy HTML files to root with correct names after build
-        import('fs').then(({ copyFileSync, existsSync }) => {
+        import('fs').then(({ copyFileSync, existsSync, cpSync }) => {
           import('path').then(({ resolve }) => {
             const distDir = 'dist';
             if (existsSync(resolve(distDir, 'src/options/options.html'))) {
@@ -19,6 +19,16 @@ export default defineConfig({
                 resolve(distDir, 'src/options/options.html'),
                 resolve(distDir, 'options.html')
               );
+            }
+            // Always override the manifest in dist with the one at the package root
+            const rootManifest = resolve('manifest.json');
+            if (existsSync(rootManifest)) {
+              copyFileSync(rootManifest, resolve(distDir, 'manifest.json'));
+            }
+            // If an icons directory exists at the package root, copy it into dist/icons
+            const iconsDir = resolve('icons');
+            if (existsSync(iconsDir)) {
+              cpSync(iconsDir, resolve(distDir, 'icons'), { recursive: true });
             }
           });
         });

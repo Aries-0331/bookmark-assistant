@@ -8,7 +8,7 @@ import { userPrisma } from '../services/userPrisma';
 import { config } from '../config';
 import { auditLog, sanitizeError, validateBookmark, createBatches, sleep } from '../utils';
 
-const router = Router();
+const router: import('express').Router = Router();
 
 type DiffOutcome = {
   toCreate: BookmarkItem[];
@@ -60,6 +60,12 @@ type SyncResult =
  */
 router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Response) => {
   try {
+    if (config.edition !== 'pro') {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Server-side bookmark sync is a Pro feature',
+      });
+    }
     const userId = req.user!.userId;
     const userData = await userPrisma.find(userId);
     const { dataSourceId, bookmarks, options = {} }: BookmarkSyncRequest = req.body;

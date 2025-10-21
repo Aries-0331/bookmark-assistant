@@ -13,6 +13,7 @@ type ButtonProps = {
   className?: string;
   variant?: 'primary' | 'secondary';
   ariaLabel?: string;
+  title?: string;
 };
 
 export default function Button({
@@ -25,6 +26,7 @@ export default function Button({
   icon,
   className = '',
   ariaLabel,
+  title,
 }: ButtonProps) {
   const isDisabled = disabled || isLoading;
   const base =
@@ -38,6 +40,7 @@ export default function Button({
       aria-busy={isLoading || undefined}
       aria-label={ariaLabel || text}
       className={`${className} ${base}`}
+      title={title}
     >
       {isLoading ? (
         <>

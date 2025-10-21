@@ -7,7 +7,7 @@ import { notionService } from '../services/notion';
 import { userPrisma } from '../services/userPrisma';
 import { auditLog, sanitizeError } from '../utils';
 
-const router = Router();
+const router: import('express').Router = Router();
 
 /**
  * Query Notion Database

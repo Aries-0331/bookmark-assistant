@@ -6,7 +6,7 @@ import { validateSession } from '../middleware/auth';
 import { userPrisma } from '../services/userPrisma';
 import { auditLog, sanitizeError } from '../utils';
 
-const router = Router();
+const router: import('express').Router = Router();
 
 /**
  * User Profile & Status

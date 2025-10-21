@@ -9,6 +9,8 @@ export const config = {
   // Server Configuration
   port: process.env.PORT || 3333,
   nodeEnv: process.env.NODE_ENV || 'development',
+  // Edition (controls entitlements). Accepts 'pro' to enable Pro features; defaults to 'open-source'
+  edition: process.env.EDITION === 'pro' ? 'pro' : 'free',
 
   // Security Configuration
   jwtSecret: process.env.JWT_SECRET!,

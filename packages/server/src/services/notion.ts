@@ -21,7 +21,7 @@ export class NotionService {
   ): Promise<string | undefined> {
     const notion = this.getClient(accessToken);
     try {
-      const ds: any = await notion.dataSources.retrieve({ data_source_id: dataSourceId });
+      const ds: any = await (notion as any).dataSources.retrieve({ data_source_id: dataSourceId });
       const entries = Object.entries<any>(ds?.properties || {});
       const fromDataSource = entries.find(([_, v]) => v?.type === 'title')?.[0];
       if (fromDataSource) return fromDataSource as string;
@@ -110,7 +110,7 @@ export class NotionService {
   ): Promise<Record<string, any>> {
     const notion = this.getClient(accessToken);
     // Retrieve the data source to access its properties (schema)
-    const ds = (await notion.dataSources.retrieve({ data_source_id: dataSourceId })) as any;
+  const ds = (await (notion as any).dataSources.retrieve({ data_source_id: dataSourceId })) as any;
     const schema = ds?.properties || {};
     const props: Record<string, any> = {};
     const entries = Object.entries<any>(schema) as Array<[string, any]>;
@@ -264,7 +264,7 @@ export class NotionService {
     sorts?: any[]
   ): Promise<any> {
     const notion = this.getClient(accessToken);
-    return await notion.dataSources.query({
+    return await (notion as any).dataSources.query({
       data_source_id: dataSourceId,
       filter,
       sorts,
@@ -322,7 +322,7 @@ export class NotionService {
     do {
       let resp: any;
       try {
-        resp = await notion.dataSources.query({
+        resp = await (notion as any).dataSources.query({
           data_source_id: dataSourceId,
           filter: { property: 'URL', url: { is_not_empty: true } },
           start_cursor: cursor,

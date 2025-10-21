@@ -24,7 +24,7 @@ try {
   process.exit(1);
 }
 
-const app = express();
+const app: import('express').Application = express();
 const PORT = config.port;
 
 // 🛡️ Security middleware

@@ -25,6 +25,11 @@ class ServerAPIClient {
     this.loadSessionToken();
   }
 
+  async getEntitlements(): Promise<{ plan: 'free' | 'pro'; features: string[] }> {
+    const res = await this.makeRequest<any>('/entitlements', { method: 'GET', timeoutMs: 5000 });
+    return { plan: res.plan, features: res.features || [] };
+  }
+
   private async loadSessionToken() {
     const result = await chrome.storage.local.get(['session_token']);
     this.sessionToken = result.session_token || null;
@@ -35,6 +40,8 @@ class ServerAPIClient {
     endpoint: string,
     options: RequestInit & { timeoutMs?: number } = {}
   ): Promise<T> {
+    // Always reload token before requests to pick up changes after OAuth
+    await this.loadSessionToken();
     const url = `${this.baseUrl}${endpoint}`;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
