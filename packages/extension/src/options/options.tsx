@@ -6,13 +6,8 @@ import { OverviewSection } from './components/OverviewSection';
 import { ConnectionSection } from './components/ConnectionSection';
 import { SyncSettingsSection } from './components/SyncSettingsSection';
 import { AboutSection } from './components/AboutSection';
-import {
-  BillingSection,
-  NotificationsSection,
-  AdvancedSection,
-  FAQSection,
-  TutorialsSection,
-} from './components/Placeholders';
+import { FAQSection, TutorialsSection } from './components/Placeholders';
+import { BillingSection } from './components/BillingSection';
 import { useHashRoute } from './router';
 import type { Plan, Tab, SyncStatus } from './types';
 export default function Options() {
@@ -339,7 +334,7 @@ export default function Options() {
   return (
     <div className="w-full min-h-screen flex flex-col">
       <PageHeader />
-      <main className="flex-1 w-full bg-gray-50 flex flex-row items-start p-10 gap-6">
+      <main className="flex-1 w-full bg-gray-50 flex flex-row justify-center items-start p-10 gap-6">
         <Sidebar active={route} onNavigate={navigate} />
         <section className="w-full space-y-6 max-w-3xl">
           {route === 'general' && (
@@ -371,7 +366,7 @@ export default function Options() {
               />
             </>
           )}
-          {route === 'billing' && <BillingSection />}
+          {route === 'billing' && <BillingSection plan={plan} />}
           {route === 'tutorials' && <TutorialsSection />}
           {route === 'faq' && <FAQSection />}
           {route === 'about' && <AboutSection version={version} />}
