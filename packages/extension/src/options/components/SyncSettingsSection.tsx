@@ -18,7 +18,7 @@ export function SyncSettingsSection({
   isPro = false,
 }: Props) {
   const isLocked = !isPro;
-  const displayInterval = isLocked ? 12 : interval; // 12 hours = 720 minutes
+  const displayInterval = isLocked ? 12 : interval;
   return (
     <SectionCard
       id="sync"

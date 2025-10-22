@@ -15,5 +15,61 @@
     <script type="module" src="../index.css"></script>
     <script type="module" src="./chrome-mock.ts"></script>
     <script type="module" src="../options/index.tsx"></script>
+    <!-- Dev-only plan toggle -->
+    <script type="module">
+      // Persist override across reloads in dev
+      (function () {
+        if (import.meta && import.meta.env && !import.meta.env.DEV) return;
+        const key = 'debug_plan_override';
+        const saved = localStorage.getItem(key);
+        const initial = saved === 'pro' || saved === 'free' ? saved : 'free';
+        window.__DEV_PLAN__ = initial;
+
+        const bar = document.createElement('div');
+        bar.style.position = 'fixed';
+        bar.style.top = '10px';
+        bar.style.right = '10px';
+        bar.style.zIndex = '9999';
+        bar.style.background = 'rgba(255,255,255,0.9)';
+        bar.style.border = '1px solid #e5e7eb';
+        bar.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+        bar.style.borderRadius = '10px';
+        bar.style.padding = '6px 10px';
+        bar.style.fontFamily = 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
+        bar.style.fontSize = '12px';
+        bar.style.color = '#111827';
+
+        const label = document.createElement('span');
+        label.textContent = 'Plan:';
+        label.style.marginRight = '6px';
+
+  const select = document.createElement('select');
+  select.setAttribute('aria-label', 'Toggle plan (dev)');
+        select.style.border = '1px solid #e5e7eb';
+        select.style.borderRadius = '6px';
+        select.style.padding = '2px 6px';
+        select.style.background = '#fff';
+        const optFree = document.createElement('option');
+        optFree.value = 'free';
+        optFree.textContent = 'Free';
+        const optPro = document.createElement('option');
+        optPro.value = 'pro';
+        optPro.textContent = 'Pro';
+        select.appendChild(optFree);
+        select.appendChild(optPro);
+        select.value = initial;
+
+        select.addEventListener('change', () => {
+          const plan = select.value;
+          window.__DEV_PLAN__ = plan;
+          localStorage.setItem(key, plan);
+          window.dispatchEvent(new CustomEvent('dev:plan-change', { detail: { plan } }));
+        });
+
+        bar.appendChild(label);
+        bar.appendChild(select);
+        document.body.appendChild(bar);
+      })();
+    </script>
   </body>
   </html>

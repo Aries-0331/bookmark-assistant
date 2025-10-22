@@ -124,7 +124,7 @@ export function BillingSection({
           </div>
           <div className="text-sm text-gray-600 mb-4">Basic bookmark syncing</div>
           <button
-            className="w-full text-sm px-4 py-2 mb-4 rounded-lg border border-gray-200 text-gray-500 cursor-not-allowed"
+            className="w-full text-sm px-4 py-2 mb-4 rounded-lg border border-gray-200 text-gray-500 cursor-default"
             disabled
             aria-disabled
             title={isPro ? 'Included in all plans' : 'Current plan'}

@@ -30,7 +30,7 @@ export default function Options() {
   const [token, setToken] = useState('');
   const [databaseId, setDatabaseId] = useState('');
   const [autoSync, setAutoSync] = useState<boolean>(false);
-  const [interval, setInterval] = useState<number>(30);
+  const [interval, setInterval] = useState<number>(12);
 
   useEffect(() => {
     let isMounted = true;
@@ -138,24 +138,19 @@ export default function Options() {
   useEffect(() => {
     (async () => {
       try {
-        const {
-          session_token,
-          notion_token,
-          notion_database_id,
-          auto_sync,
-          sync_interval_minutes,
-        } = await chrome.storage.local.get([
-          'session_token',
-          'notion_token',
-          'notion_database_id',
-          'auto_sync',
-          'sync_interval_minutes',
-        ]);
+        const { session_token, notion_token, notion_database_id, auto_sync, sync_interval_hours } =
+          await chrome.storage.local.get([
+            'session_token',
+            'notion_token',
+            'notion_database_id',
+            'auto_sync',
+            'sync_interval_hours',
+          ]);
         setStatus((prev) => ({ ...prev, isConnected: !!session_token }));
         setToken(notion_token || '');
         setDatabaseId(notion_database_id || '');
         setAutoSync(!!auto_sync);
-        setInterval(Number(sync_interval_minutes) || 30);
+        setInterval(Number(sync_interval_hours) || 0.5);
       } catch (e) {
         console.error(e);
       }
@@ -170,6 +165,22 @@ export default function Options() {
   // Fetch entitlements from server once session is present
   useEffect(() => {
     (async () => {
+      // Debug-only plan override: skip server and use toggle when present
+      if (import.meta.env.DEV && (window as any).__DEV_PLAN__) {
+        const devPlan = (window as any).__DEV_PLAN__ as Plan;
+        setPlan(devPlan);
+        setActive(devPlan === 'pro' ? 'oauth' : 'manual');
+        // Listen for changes from the dev toggle
+        const onDevPlan = (e: any) => {
+          const p = e?.detail?.plan as Plan | undefined;
+          if (p === 'free' || p === 'pro') {
+            setPlan(p);
+            setActive(p === 'pro' ? 'oauth' : 'manual');
+          }
+        };
+        window.addEventListener('dev:plan-change', onDevPlan);
+        return () => window.removeEventListener('dev:plan-change', onDevPlan);
+      }
       try {
         const { session_token } = await chrome.storage.local.get(['session_token']);
         if (!session_token) return;
@@ -189,13 +200,13 @@ export default function Options() {
     (async () => {
       if (plan !== 'free') return;
       try {
-        const { sync_interval_minutes } = await chrome.storage.local.get(['sync_interval_minutes']);
-        const current = Number(sync_interval_minutes) || interval;
-        if (current !== 720) {
-          await chrome.storage.local.set({ sync_interval_minutes: 720 });
-          setInterval(720);
-        } else if (interval !== 720) {
-          setInterval(720);
+        const { sync_interval_hours } = await chrome.storage.local.get(['sync_interval_hours']);
+        const current = Number(sync_interval_hours) || interval;
+        if (current !== 12) {
+          await chrome.storage.local.set({ sync_interval_hours: 12 });
+          setInterval(12);
+        } else if (interval !== 12) {
+          setInterval(12);
         }
       } catch {}
     })();
@@ -367,7 +378,7 @@ export default function Options() {
             </>
           )}
           {route === 'billing' && <BillingSection plan={plan} />}
-          {route === 'tutorials' && <TutorialsSection />}
+          {route === 'tutorials' && <TutorialsSection plan={plan} />}
           {route === 'faq' && <FAQSection />}
           {route === 'about' && <AboutSection version={version} />}
         </section>
