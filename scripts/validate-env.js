@@ -14,17 +14,25 @@ const __dirname = path.dirname(__filename);
 
 const mode = process.argv[2] || 'development';
 const envFile = `.env.${mode}`;
-const envPath = path.join(process.cwd(), envFile);
+const repoRoot = process.cwd();
+const extensionDir = path.join(repoRoot, 'packages', 'extension');
+let envPath = path.join(repoRoot, envFile);
 
 console.log(`🔍 Validating environment for mode: ${mode}`);
-console.log(`📁 Checking file: ${envFile}`);
+console.log(`📁 Looking for env file: ${envFile}`);
 
 // Check if environment file exists
 if (!fs.existsSync(envPath)) {
-  console.error(`❌ Environment file not found: ${envFile}`);
-  console.log(`💡 Create the file with required variables:`);
-  console.log(`   cp .env.example ${envFile}`);
-  process.exit(1);
+  const altPath = path.join(extensionDir, envFile);
+  if (fs.existsSync(altPath)) {
+    envPath = altPath;
+    console.log(`   ➜ Using extension env at: packages/extension/${envFile}`);
+  } else {
+    console.error(`❌ Environment file not found at repo root or extension package`);
+    console.log(`   Tried: ${envPath} and ${altPath}`);
+    console.log(`💡 Create packages/extension/${envFile} with required variables (see packages/extension/.env.example)`);
+    process.exit(1);
+  }
 }
 
 // Read and parse environment file
@@ -49,7 +57,9 @@ const validationRules = {
   optional: [
     'VITE_OPENAI_API_KEY',
     'VITE_OPENAI_MODEL',
-    'VITE_OPENAI_MAX_TOKENS'
+    'VITE_OPENAI_MAX_TOKENS',
+    // Redirect URI is derived at runtime via chrome.identity.getRedirectURL
+    'VITE_NOTION_REDIRECT_URI'
   ],
   defaults: {
     'VITE_APP_NAME': 'Bookmark Notion Sync',
@@ -128,17 +138,7 @@ if (mode === 'development') {
 
 // Chrome Extension specific validations
 console.log('\n🌐 Chrome Extension Checks:');
-
-// Check if redirect URI matches expected format
-const redirectUri = envVars['VITE_NOTION_REDIRECT_URI'];
-if (redirectUri && redirectUri.startsWith('chrome-extension://')) {
-  console.log('   ✅ Redirect URI format looks correct');
-} else if (redirectUri) {
-  console.log('   ⚠️  Redirect URI should start with chrome-extension://');
-  hasWarnings = true;
-} else {
-  console.log('   💡 VITE_NOTION_REDIRECT_URI will be generated dynamically');
-}
+console.log('   ℹ️ Notion redirect URI is generated dynamically using chrome.identity.getRedirectURL');
 
 // Summary
 console.log('\n📊 Summary:');

@@ -15,26 +15,27 @@ A Chrome extension that syncs your bookmarks to Notion with AI-powered tagging a
 
 ### 1. Setup Your Environment
 
-Create environment files for configuration:
+Create environment files for configuration in the extension package:
 
-**`.env.development`** (for development):
+`packages/extension/.env.development` (for development):
 
 ```env
-# Notion OAuth Configuration (Extension Side)
+# Notion OAuth (client-side)
 # IMPORTANT: Only include the public Client ID here. The Client Secret MUST remain server-only.
 VITE_NOTION_CLIENT_ID=your_notion_integration_client_id
-VITE_NOTION_REDIRECT_URI=https://your_extension_id.chromiumapp.org/
 
 # Note: AI features are currently disabled to focus on core functionality
 # They will be added back as advanced features in the future
 ```
 
-**`.env.production`** (for production build):
+`packages/extension/.env.production` (for production build):
 
 ```env
 # Same as development but with production values
 VITE_NOTION_CLIENT_ID=your_production_notion_client_id
-# (No secret in extension env)
+# (No secret in extension env; redirect URI is computed dynamically)
+
+You can also set `VITE_EDITION` to `open-source` or `pro` to toggle feature flags in the client.
 ```
 
 ### 2. Build and Install

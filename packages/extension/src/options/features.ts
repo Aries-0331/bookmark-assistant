@@ -1,4 +1,7 @@
-export const IS_OSS_BUILD = Boolean(import.meta.env.VITE_OSS_BUILD);
+import { isOSS } from '@bookmark-sync/shared';
+
+// Build/edition detection
+export const IS_OSS_BUILD = isOSS();
 export const HAS_SERVER = Boolean(import.meta.env.VITE_OAUTH_SERVER_URL);
 
 // OAuth should be available whenever a server is configured (release build and any custom server)

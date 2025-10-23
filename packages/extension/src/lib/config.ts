@@ -13,7 +13,6 @@ export interface AppConfig {
   // Notion Integration
   notion: {
     clientId: string;
-    redirectUri: string;
     serverUrl: string;
   };
 
@@ -82,7 +81,6 @@ function getEnvNumber(key: string, defaultValue = 0) {
 export const config: AppConfig = {
   notion: {
     clientId: getEnvVar('VITE_NOTION_CLIENT_ID', ''),
-    redirectUri: getEnvVar('VITE_NOTION_REDIRECT_URI', 'chrome-extension://'),
     serverUrl: getEnvVar('VITE_OAUTH_SERVER_URL', 'http://localhost:3333'),
   },
   ai: {
@@ -183,7 +181,6 @@ export function debugConfig(): void {
   });
   console.log('Notion:', {
     clientId: config.notion.clientId ? '✅ Set' : '❌ Missing',
-    redirectUri: config.notion.redirectUri ? '✅ Set' : '❌ Missing',
   });
   console.log('AI:', {
     openaiApiKey: config.ai.openaiApiKey ? '✅ Set' : '❌ Missing',

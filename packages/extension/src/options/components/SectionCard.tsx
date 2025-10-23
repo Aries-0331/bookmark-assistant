@@ -44,7 +44,7 @@ export function PageHeader() {
           />
           <div className="flex flex-col leading-tight">
             <span className="text-sm font-semibold text-gray-900">Bookmark Assistant</span>
-            <span className="text-[11px] text-gray-500">Settings</span>
+            <span className="text-[11px] text-gray-500">Sync Bookmarks to Notion</span>
           </div>
         </div>
       </div>

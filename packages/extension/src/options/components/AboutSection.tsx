@@ -12,7 +12,7 @@ export function AboutSection({ version }: { version: string }) {
           <img
             src={logoUrl}
             alt="Bookmark Assistant logo"
-            className="w-14 h-14 rounded-xs border border-gray-200 object-cover mb-3"
+            className="w-16 h-16 rounded-xs object-cover mb-2"
           />
           <div className="text-lg font-semibold text-gray-900">Bookmark Assistant</div>
           <div className="text-xs text-gray-500">Version {version || '—'}</div>

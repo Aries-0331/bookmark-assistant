@@ -9,7 +9,9 @@ export function getEdition(): Edition {
 
   const fromVite =
     typeof import.meta !== 'undefined' && (import.meta as any).env
-      ? (import.meta as any).env.EDITION
+      ? // In Vite, only variables prefixed with VITE_ are exposed to the client.
+        // Support both EDITION (if manually injected) and VITE_EDITION.
+        ((import.meta as any).env.VITE_EDITION ?? (import.meta as any).env.EDITION)
       : undefined;
 
   const v = fromNode ?? fromVite ?? 'open-source';
