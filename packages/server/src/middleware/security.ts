@@ -1,7 +1,7 @@
 // 🔒 CORS and Rate Limiting Middleware
 
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
+import { rateLimit } from 'express-rate-limit';
 import { config } from '../config';
 import { auditLog } from '../utils';
 
