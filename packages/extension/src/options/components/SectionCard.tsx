@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import logoUrl from '../../assets/logo.png';
 import { Crown } from 'lucide-react';
 
 export function SectionCard({
@@ -36,11 +37,13 @@ export function PageHeader() {
     <header className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-200">
       <div className="w-full px-4 md:px-6 h-14 flex items-center justify-start gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 bg-gray-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xs">N</span>
-          </div>
+          <img
+            src={logoUrl}
+            alt="Bookmark Assistant logo"
+            className="w-8 h-8 rounded-xs object-cover"
+          />
           <div className="flex flex-col leading-tight">
-            <span className="text-sm font-semibold text-gray-900">Notion Bookmark Sync</span>
+            <span className="text-sm font-semibold text-gray-900">Bookmark Assistant</span>
             <span className="text-[11px] text-gray-500">Settings</span>
           </div>
         </div>

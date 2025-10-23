@@ -1,6 +1,12 @@
 import { SectionCard } from './SectionCard';
 import type { Plan } from '../types';
 import { ExternalLink } from 'lucide-react';
+import {
+  FREE_DAILY_LIMIT,
+  FREE_INTERVAL_HOURS,
+  PRO_MIN_INTERVAL_HOURS,
+  PRO_MIN_INTERVAL_MINUTES,
+} from '../store';
 
 export function BillingSection() {
   return (
@@ -40,6 +46,7 @@ export function FAQSection() {
     (import.meta.env.VITE_OAUTH_SERVER_URL &&
       `${import.meta.env.VITE_OAUTH_SERVER_URL.replace(/\/$/, '')}/support`) ||
     'https://github.com/Aries-0331/bookmarks_to_notion/issues/new/choose';
+  // use minutes constant from store for consistency
   const faqs: { q: string; a: JSX.Element }[] = [
     {
       q: 'Can I cancel anytime?',
@@ -93,10 +100,13 @@ export function FAQSection() {
       a: (
         <ul className="list-disc pl-5">
           <li>
-            Free: up to 50 bookmarks/day and a fixed <span className="font-medium">12‑hour</span>{' '}
-            sync interval.
+            Free: up to {FREE_DAILY_LIMIT} bookmarks/day and a fixed{' '}
+            <span className="font-medium">{FREE_INTERVAL_HOURS}‑hour</span> sync interval.
           </li>
-          <li>Pro: unlimited bookmarks and configurable sync interval (minimum 5 minutes).</li>
+          <li>
+            Pro: unlimited bookmarks and configurable sync interval (minimum{' '}
+            {PRO_MIN_INTERVAL_MINUTES} minutes).
+          </li>
         </ul>
       ),
     },
@@ -104,8 +114,8 @@ export function FAQSection() {
       q: 'How often does it sync?',
       a: (
         <ul className="list-disc pl-5">
-          <li>Free: every 12 hours (fixed).</li>
-          <li>Pro: choose your interval (5 minutes minimum).</li>
+          <li>Free: every {FREE_INTERVAL_HOURS} hours (fixed).</li>
+          <li>Pro: choose your interval ({PRO_MIN_INTERVAL_MINUTES} minutes minimum).</li>
           <li>You can always trigger a manual “Sync now” from the Options page.</li>
         </ul>
       ),
@@ -147,6 +157,10 @@ export function FAQSection() {
             connected. In Notion, open the database • Share • Invite the integration.
           </p>
           <p>For manual tokens, double‑check both the token and the Database ID.</p>
+          <p className="text-gray-500">
+            Note: OAuth is available in the Chrome Web Store release; manual token is intended for
+            the open‑source build.
+          </p>
         </div>
       ),
     },
@@ -247,6 +261,9 @@ export function TutorialsSection({ plan }: { plan: Plan }) {
           <div className="rounded-md border border-gray-200 p-3 bg-white">
             <p className="mb-2 text-gray-700">
               <span className="font-medium">Option A — OAuth (recommended):</span>
+              <span className="ml-1 text-gray-500">
+                (available in the Chrome Web Store release)
+              </span>
             </p>
             <ol className="list-decimal pl-5 space-y-1 text-gray-700">
               <li>In the Options • General • Connection, click “Connect with Notion”.</li>
@@ -255,6 +272,7 @@ export function TutorialsSection({ plan }: { plan: Plan }) {
             </ol>
             <p className="mt-3 mb-2 text-gray-700">
               <span className="font-medium">Option B — Manual token (advanced):</span>
+              <span className="ml-1 text-gray-500">(intended for the open‑source build)</span>
             </p>
             <ol className="list-decimal pl-5 space-y-1 text-gray-700">
               <li>Create a Notion internal integration and copy its secret token.</li>
@@ -289,10 +307,15 @@ export function TutorialsSection({ plan }: { plan: Plan }) {
               {!isPro && (
                 <li>
                   Free plan: the sync interval is fixed to{' '}
-                  <span className="font-medium">12 hours</span>.
+                  <span className="font-medium">{FREE_INTERVAL_HOURS} hours</span>.
                 </li>
               )}
-              {isPro && <li>Pro plan: choose your own interval (minimum 5 minutes).</li>}
+              {isPro && (
+                <li>
+                  Pro plan: choose your own interval (minimum{' '}
+                  {Math.round(PRO_MIN_INTERVAL_HOURS * 60)} minutes).
+                </li>
+              )}
             </ul>
           </div>
         </section>

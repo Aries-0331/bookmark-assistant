@@ -1,7 +1,7 @@
 {
-  "name": "bookmark-notion-sync",
-  "version": "1.0.0",
-  "description": "Chrome extension that syncs bookmarks to Notion with AI features",
+  "name": "bookmark-assistant",
+  "version": "0.1.0",
+  "description": "AI assistant for managing bookmarks and syncing with Notion",
   "private": true,
   "packageManager": "pnpm@9.12.0",
   "workspaces": [

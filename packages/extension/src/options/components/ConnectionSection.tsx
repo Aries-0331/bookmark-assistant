@@ -1,13 +1,10 @@
-import { Shield, RefreshCcw, Unplug, Crown } from 'lucide-react';
+import { Shield, RefreshCcw, Unplug } from 'lucide-react';
 import Button from '../button';
 import { SectionCard } from './SectionCard';
-import { SyncStatus, Tab } from '../types';
-import { Dispatch, SetStateAction } from 'react';
+import { SyncStatus } from '../types';
 
 interface Props {
-  isPro: boolean;
-  active: Tab;
-  setActive: Dispatch<SetStateAction<Tab>>;
+  mode: 'oauth' | 'manual';
   status: SyncStatus;
   saving: boolean;
   error: string | null;
@@ -23,9 +20,7 @@ interface Props {
 
 export function ConnectionSection(props: Props) {
   const {
-    isPro,
-    active,
-    setActive,
+    mode,
     status,
     saving,
     error,
@@ -45,35 +40,7 @@ export function ConnectionSection(props: Props) {
       title="Connection"
       description="Connect your Notion workspace to sync bookmarks"
     >
-      <div className="w-full flex bg-gray-50 p-1 rounded-2xl border border-gray-200 text-xs sm:text-sm font-medium mb-3">
-        <button
-          className={`flex-1 flex justify-center items-center gap-1 py-2 rounded-xl ${
-            active === 'oauth'
-              ? 'bg-white shadow-sm border border-gray-200 text-gray-900'
-              : 'text-gray-600'
-          } ${isPro ? '' : 'cursor-not-allowed'}`}
-          onClick={() => setActive('oauth')}
-          disabled={!isPro}
-          title={isPro ? undefined : 'Upgrade to Pro to unlock OAuth'}
-        >
-          OAuth
-          <Crown
-            className={`w-4 h-4 ml-1 inline-block ${isPro ? 'text-amber-500' : 'text-gray-500'}`}
-          />
-        </button>
-        <button
-          className={`flex-1 py-2 rounded-xl ${
-            active === 'manual'
-              ? 'bg-white shadow-sm border border-gray-200 text-gray-900'
-              : 'text-gray-600'
-          }`}
-          onClick={() => setActive('manual')}
-        >
-          Manual Token
-        </button>
-      </div>
-
-      {active === 'oauth' ? (
+      {mode === 'oauth' ? (
         <div className="mt-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-600">

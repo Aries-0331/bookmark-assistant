@@ -1,19 +1,20 @@
 {
   "name": "@bookmark-sync/server",
   "version": "1.0.0",
-  "description": "Secure OAuth server for Bookmark Notion Sync Chrome extension",
+  "description": "Secure OAuth server for Bookmark Assistant Chrome extension",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node src/index.ts",
-    "build": "tsc",
+    "dev": "prisma generate && nodemon --exec ts-node src/index.ts",
+    "build": "prisma generate && tsc",
     "start": "node dist/index.js",
     "test": "jest",
     "clean": "rm -rf dist",
     "lint": "eslint src --ext .ts",
     "deploy": "npm run build && node dist/index.js",
-    "vercel-build": "tsc",
+    "vercel-build": "prisma generate && tsc",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate deploy"
+    "prisma:migrate": "prisma migrate deploy",
+    "postinstall": "prisma generate"
   },
   "keywords": [
     "oauth",
@@ -21,7 +22,7 @@
     "chrome-extension",
     "security"
   ],
-  "author": "Your Name",
+  "author": "Aries",
   "license": "MIT",
   "dependencies": {
     "@prisma/client": "^6.17.1",

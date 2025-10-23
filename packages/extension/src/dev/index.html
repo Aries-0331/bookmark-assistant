@@ -43,31 +43,88 @@
         label.textContent = 'Plan:';
         label.style.marginRight = '6px';
 
-  const select = document.createElement('select');
-  select.setAttribute('aria-label', 'Toggle plan (dev)');
-        select.style.border = '1px solid #e5e7eb';
-        select.style.borderRadius = '6px';
-        select.style.padding = '2px 6px';
-        select.style.background = '#fff';
-        const optFree = document.createElement('option');
-        optFree.value = 'free';
-        optFree.textContent = 'Free';
-        const optPro = document.createElement('option');
-        optPro.value = 'pro';
-        optPro.textContent = 'Pro';
-        select.appendChild(optFree);
-        select.appendChild(optPro);
-        select.value = initial;
+        let isPro = initial === 'pro';
 
-        select.addEventListener('change', () => {
-          const plan = select.value;
+        const ctrl = document.createElement('div');
+        ctrl.style.display = 'inline-flex';
+        ctrl.style.alignItems = 'center';
+        ctrl.style.gap = '8px';
+
+        const freeText = document.createElement('span');
+        freeText.textContent = 'Free';
+        freeText.style.fontSize = '12px';
+        freeText.style.color = isPro ? '#6b7280' : '#111827';
+
+        const proText = document.createElement('span');
+        proText.textContent = 'Pro';
+        proText.style.fontSize = '12px';
+        proText.style.color = isPro ? '#111827' : '#6b7280';
+
+        const toggle = document.createElement('button');
+        toggle.setAttribute('type', 'button');
+        toggle.setAttribute('role', 'switch');
+        toggle.setAttribute('aria-label', 'Toggle plan (dev)');
+        toggle.setAttribute('aria-checked', String(isPro));
+        toggle.style.width = '42px';
+        toggle.style.height = '22px';
+        toggle.style.display = 'inline-flex';
+        toggle.style.alignItems = 'center';
+        toggle.style.border = '1px solid #e5e7eb';
+        toggle.style.borderRadius = '9999px';
+        toggle.style.position = 'relative';
+        toggle.style.background = isPro ? 'rgb(245 158 11)' : '#e5e7eb';
+        toggle.style.cursor = 'pointer';
+        toggle.style.padding = '0';
+
+        const knob = document.createElement('span');
+        knob.style.position = 'absolute';
+        knob.style.left = isPro ? '20px' : '2px';
+        knob.style.width = '18px';
+        knob.style.height = '18px';
+        knob.style.borderRadius = '9999px';
+        knob.style.background = '#fff';
+        knob.style.boxShadow = '0 1px 2px rgba(0,0,0,0.1)';
+        knob.style.transition = 'left 150ms ease';
+        toggle.appendChild(knob);
+
+        const applyState = () => {
+          toggle.setAttribute('aria-checked', String(isPro));
+          toggle.style.background = isPro ? 'rgb(245 158 11)' : '#e5e7eb';
+          knob.style.left = isPro ? '20px' : '2px';
+          freeText.style.color = isPro ? '#6b7280' : '#111827';
+          proText.style.color = isPro ? '#111827' : '#6b7280';
+        };
+
+        const updatePlan = () => {
+          const plan = isPro ? 'pro' : 'free';
           window.__DEV_PLAN__ = plan;
           localStorage.setItem(key, plan);
           window.dispatchEvent(new CustomEvent('dev:plan-change', { detail: { plan } }));
+        };
+
+        toggle.addEventListener('click', () => {
+          isPro = !isPro;
+          applyState();
+          updatePlan();
+        });
+        toggle.addEventListener('keydown', (e) => {
+          if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            isPro = !isPro;
+            applyState();
+            updatePlan();
+          }
         });
 
+        // Initialize
+        applyState();
+
+        ctrl.appendChild(freeText);
+        ctrl.appendChild(toggle);
+        ctrl.appendChild(proText);
+
         bar.appendChild(label);
-        bar.appendChild(select);
+        bar.appendChild(ctrl);
         document.body.appendChild(bar);
       })();
     </script>

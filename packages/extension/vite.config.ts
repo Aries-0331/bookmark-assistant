@@ -25,10 +25,10 @@ export default defineConfig({
             if (existsSync(rootManifest)) {
               copyFileSync(rootManifest, resolve(distDir, 'manifest.json'));
             }
-            // If an icons directory exists at the package root, copy it into dist/icons
-            const iconsDir = resolve('icons');
-            if (existsSync(iconsDir)) {
-              cpSync(iconsDir, resolve(distDir, 'icons'), { recursive: true });
+            // Ensure assets are available in dist; Vite will handle public but we copy from src as well
+            const assetsDir = resolve('src/assets');
+            if (existsSync(assetsDir)) {
+              cpSync(assetsDir, resolve(distDir, 'assets'), { recursive: true });
             }
           });
         });
@@ -69,7 +69,7 @@ export default defineConfig({
         assetFileNames: 'assets/[name].[ext]',
       },
     },
-    // Ensure the manifest and assets are copied
+    // Ensure the manifest and public assets are copied
     copyPublicDir: true,
     // Service worker compatibility
     target: 'es2017',

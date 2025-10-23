@@ -30,7 +30,7 @@ export default function Button({
 }: ButtonProps) {
   const isDisabled = disabled || isLoading;
   const base =
-    'h-12 rounded-xl transition-colors bg-gray-900 hover:bg-gray-700 font-medium text-white inline-flex items-center justify-center p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-900';
+    'h-12 rounded-xl transition-colors bg-gray-900 hover:bg-gray-700 font-medium text-base text-white inline-flex items-center justify-center p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-900';
 
   return (
     <button

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Bookmark Notion Sync",
+  "name": "Bookmark Assistant",
   "version": "0.1.0",
-  "description": "Sync Chrome bookmarks to Notion with optional server-assisted OAuth and content extraction.",
+  "description": "AI-assistant for managing bookmarks and syncing with Notion",
   "permissions": [
     "bookmarks",
     "storage",
@@ -20,7 +20,19 @@
     "type": "module"
   },
   "action": {
-    "default_title": "Bookmark Notion Sync"
+    "default_title": "Bookmark Assistant",
+    "default_icon": {
+      "16": "assets/favicon/favicon-16x16.png",
+      "32": "assets/favicon/favicon-32x32.png",
+      "48": "assets/favicon/android-chrome-192x192.png",
+      "128": "assets/favicon/android-chrome-512x512.png"
+    }
+  },
+  "icons": {
+    "16": "assets/favicon/favicon-16x16.png",
+    "32": "assets/favicon/favicon-32x32.png",
+    "48": "assets/favicon/android-chrome-192x192.png",
+    "128": "assets/favicon/android-chrome-512x512.png"
   },
   "options_page": "options.html",
   "web_accessible_resources": [

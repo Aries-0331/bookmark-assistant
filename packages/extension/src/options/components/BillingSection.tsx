@@ -13,6 +13,8 @@ import {
 import type { Plan } from '../types';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
+import { FREE_DAILY_LIMIT, FREE_INTERVAL_HOURS, PRO_MIN_INTERVAL_MINUTES } from '../store';
+import { useAppStore } from '../store';
 
 function classNames(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(' ');
@@ -23,15 +25,17 @@ type FeatureItem = {
   text: string;
 };
 
+// minutes constant imported from store for consistency
+
 const PLAN_FEATURES: Record<'free' | 'pro', FeatureItem[]> = {
   free: [
-    { icon: BookmarkIcon, text: '50 bookmarks per day' },
-    { icon: Timer, text: '12-hour minimum interval' },
+    { icon: BookmarkIcon, text: `${FREE_DAILY_LIMIT} bookmarks per day` },
+    { icon: Timer, text: `${FREE_INTERVAL_HOURS}-hour fixed interval` },
     { icon: Mail, text: 'Email support within 48 hours' },
   ],
   pro: [
     { icon: BookmarkIcon, text: 'Unlimited bookmarks' },
-    { icon: Timer, text: 'Customize the synchronization interval' },
+    { icon: Timer, text: `Configurable sync interval (min ${PRO_MIN_INTERVAL_MINUTES} minutes)` },
     { icon: Mail, text: 'Priority support within 12 hours' },
     { icon: SlidersHorizontal, text: 'Advanced sync options' },
     { icon: Database, text: 'Bulk operations' },
@@ -50,6 +54,8 @@ export function BillingSection({
 }) {
   const [yearly, setYearly] = useState(false);
   const isPro = plan === 'pro';
+  const { getPricing } = useAppStore();
+  const { monthly: MONTHLY_PRICE, yearlyDiscount: YEARLY_DISCOUNT } = getPricing();
 
   // Derive URLs from env if no handlers provided
   const base = (
@@ -73,9 +79,7 @@ export function BillingSection({
     window.open(manageUrl, '_blank', 'noopener');
   };
 
-  const MONTHLY_PRICE = 10;
-  const YEARLY_DISCOUNT = 0.4;
-  const originalAnnual = MONTHLY_PRICE * 12; // 120
+  const originalAnnual = MONTHLY_PRICE * 12;
   const discountedAnnual = Math.round(originalAnnual * (1 - YEARLY_DISCOUNT));
   const formatCurrency = (n: number) =>
     `$${new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n)}`;

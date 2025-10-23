@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { serverAPI } from '../lib/server-api';
 import { Sidebar } from './components/Sidebar';
 import { PageHeader } from './components/SectionCard';
 import { OverviewSection } from './components/OverviewSection';
@@ -9,13 +8,24 @@ import { AboutSection } from './components/AboutSection';
 import { FAQSection, TutorialsSection } from './components/Placeholders';
 import { BillingSection } from './components/BillingSection';
 import { useHashRoute } from './router';
-import type { Plan, Tab, SyncStatus } from './types';
+import type { SyncStatus } from './types';
+import { useAppStore } from './store';
+import { ALLOW_OAUTH, SHOW_BILLING } from './features';
 export default function Options() {
   const { route, navigate } = useHashRoute();
-  const [plan, setPlan] = useState<Plan>('free');
-  const isPro = plan === 'pro';
+  const {
+    plan,
+    isPro,
+    autoSync: autoSyncStore,
+    intervalHours,
+    initFromStorage,
+    saveSyncSettings: saveSyncSettingsStore,
+    fetchEntitlements: fetchEntitlementsStore,
+    setPlan,
+    fetchPublicConfig,
+  } = useAppStore();
   // UI state
-  const [active, setActive] = useState<Tab>('oauth');
+  // connection method is a binary choice now (decided by build flags)
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // derive connection from status; no separate connected state needed
@@ -29,8 +39,8 @@ export default function Options() {
   const [bookmarkCount, setBookmarkCount] = useState<number>(0);
   const [token, setToken] = useState('');
   const [databaseId, setDatabaseId] = useState('');
-  const [autoSync, setAutoSync] = useState<boolean>(false);
-  const [interval, setInterval] = useState<number>(12);
+  const [autoSync, setAutoSync] = useState<boolean>(autoSyncStore);
+  const [interval, setInterval] = useState<number>(intervalHours);
 
   useEffect(() => {
     let isMounted = true;
@@ -162,55 +172,34 @@ export default function Options() {
     } catch {}
   }, []);
 
-  // Fetch entitlements from server once session is present
+  // Initialize store and entitlements once
   useEffect(() => {
     (async () => {
-      // Debug-only plan override: skip server and use toggle when present
-      if (import.meta.env.DEV && (window as any).__DEV_PLAN__) {
-        const devPlan = (window as any).__DEV_PLAN__ as Plan;
-        setPlan(devPlan);
-        setActive(devPlan === 'pro' ? 'oauth' : 'manual');
-        // Listen for changes from the dev toggle
-        const onDevPlan = (e: any) => {
-          const p = e?.detail?.plan as Plan | undefined;
-          if (p === 'free' || p === 'pro') {
-            setPlan(p);
-            setActive(p === 'pro' ? 'oauth' : 'manual');
-          }
-        };
-        window.addEventListener('dev:plan-change', onDevPlan);
-        return () => window.removeEventListener('dev:plan-change', onDevPlan);
-      }
-      try {
-        const { session_token } = await chrome.storage.local.get(['session_token']);
-        if (!session_token) return;
-        const ent = await serverAPI.getEntitlements();
-        setPlan(ent.plan);
-        setActive(ent.plan === 'pro' ? 'oauth' : 'manual');
-      } catch (e) {
-        // If entitlements fail (e.g., no server), default to 'free'
-        setPlan('free');
-        setActive('manual');
-      }
+      await fetchPublicConfig();
+      await fetchEntitlementsStore();
+      await initFromStorage();
+      // default method depends on build flags; Pro status no longer gates OAuth
     })();
+    if (import.meta.env.DEV) {
+      const onDevPlan = (e: any) => {
+        const p = e?.detail?.plan as 'free' | 'pro' | undefined;
+        if (p === 'free' || p === 'pro') {
+          setPlan(p);
+          // connection method no longer switches by plan
+        }
+      };
+      window.addEventListener('dev:plan-change', onDevPlan);
+      return () => window.removeEventListener('dev:plan-change', onDevPlan);
+    }
   }, []);
 
-  // Normalize sync interval when on Free plan: force 12 hours (720 minutes)
+  // Reflect store changes into local UI state
   useEffect(() => {
-    (async () => {
-      if (plan !== 'free') return;
-      try {
-        const { sync_interval_hours } = await chrome.storage.local.get(['sync_interval_hours']);
-        const current = Number(sync_interval_hours) || interval;
-        if (current !== 12) {
-          await chrome.storage.local.set({ sync_interval_hours: 12 });
-          setInterval(12);
-        } else if (interval !== 12) {
-          setInterval(12);
-        }
-      } catch {}
-    })();
-  }, [plan]);
+    setAutoSync(autoSyncStore);
+  }, [autoSyncStore]);
+  useEffect(() => {
+    setInterval(intervalHours);
+  }, [intervalHours]);
 
   // no-op memo removed after refactor; saving is passed to child components directly
 
@@ -222,11 +211,8 @@ export default function Options() {
       const res = await chrome.runtime.sendMessage({ type: 'NOTION_OAUTH' });
       if (res?.ok) {
         setStatus((prev) => ({ ...prev, isConnected: true }));
-        // Refresh entitlements after login
-        try {
-          const ent = await serverAPI.getEntitlements();
-          setPlan(ent.plan);
-        } catch {}
+        // Refresh entitlements after login (store will enforce)
+        await fetchEntitlementsStore();
       } else {
         setError(res?.error || 'OAuth failed');
       }
@@ -311,19 +297,8 @@ export default function Options() {
   };
 
   const saveSyncSettings = async (nextAuto?: boolean, nextInterval?: number) => {
-    const valAuto = typeof nextAuto === 'boolean' ? nextAuto : autoSync;
-    // Enforce 12h for Free plan, otherwise apply min validation
-    let valInterval: number;
-    if (plan === 'free') {
-      valInterval = 720;
-    } else {
-      const min = 5;
-      const raw = typeof nextInterval === 'number' ? nextInterval : interval;
-      valInterval = Math.max(min, Math.floor(raw));
-    }
     try {
-      await chrome.storage.local.set({ auto_sync: valAuto, sync_interval_minutes: valInterval });
-      setInterval(valInterval);
+      await saveSyncSettingsStore(nextAuto, nextInterval);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save sync settings');
     }
@@ -352,9 +327,7 @@ export default function Options() {
             <>
               <OverviewSection status={status} plan={plan} bookmarkCount={bookmarkCount} />
               <ConnectionSection
-                isPro={isPro}
-                active={active}
-                setActive={setActive}
+                mode={ALLOW_OAUTH ? 'oauth' : 'manual'}
                 status={status}
                 saving={saving}
                 error={error}
@@ -373,11 +346,11 @@ export default function Options() {
                 interval={interval}
                 onIntervalChange={onIntervalChange}
                 onIntervalBlur={onIntervalBlur}
-                isPro={isPro}
+                isPro={isPro()}
               />
             </>
           )}
-          {route === 'billing' && <BillingSection plan={plan} />}
+          {route === 'billing' && SHOW_BILLING && <BillingSection plan={plan} />}
           {route === 'tutorials' && <TutorialsSection plan={plan} />}
           {route === 'faq' && <FAQSection />}
           {route === 'about' && <AboutSection version={version} />}
