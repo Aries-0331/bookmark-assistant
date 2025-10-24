@@ -1,5 +1,5 @@
 {
-  "name": "@bookmark-sync/server",
+  "name": "@bookmark-assistant/server",
   "version": "1.0.0",
   "description": "Secure OAuth server for Bookmark Assistant Chrome extension",
   "main": "dist/index.js",

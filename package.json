@@ -8,16 +8,16 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "pnpm -F @bookmark-sync/extension dev",
-    "dev:server": "pnpm -F @bookmark-sync/server dev",
-    "build": "pnpm -F @bookmark-sync/extension build",
-    "build:server": "pnpm -F @bookmark-sync/server build",
+    "dev": "pnpm -F @bookmark-assistant/extension dev",
+    "dev:server": "pnpm -F @bookmark-assistant/server dev",
+    "build": "pnpm -F @bookmark-assistant/extension build",
+    "build:server": "pnpm -F @bookmark-assistant/server build",
     "build:all": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "clean": "pnpm -r clean",
     "clean:legacy": "bash scripts/cleanup-legacy-dist.sh",
-    "start:server": "pnpm -F @bookmark-sync/server start"
+    "start:server": "pnpm -F @bookmark-assistant/server start"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -28,7 +28,7 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "author": "Your Name",
+  "author": "Aries",
   "license": "MIT",
   "repository": {
     "type": "git",

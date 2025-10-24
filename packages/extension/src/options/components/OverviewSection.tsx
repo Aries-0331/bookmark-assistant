@@ -62,11 +62,7 @@ export function OverviewSection({
             {status.isConnected ? relativeTime(status.lastSync) : '-'}
           </span>
         </div>
-        {status.error && (
-          <div className="mt-2 p-2 rounded border bg-red-50 border-red-200 text-xs text-red-600">
-            {status.error}
-          </div>
-        )}
+        {/* Errors are displayed via top-center toasts */}
       </div>
     </SectionCard>
   );

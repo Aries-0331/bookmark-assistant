@@ -1,5 +1,5 @@
 {
-  "name": "@bookmark-sync/shared",
+  "name": "@bookmark-assistant/shared",
   "version": "1.0.0",
   "private": true,
   "type": "module",

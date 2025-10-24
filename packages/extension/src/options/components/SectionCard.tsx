@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import logoUrl from '../../assets/logo.png';
+import logoUrl from '../../assets/logo3.png';
 import { Crown } from 'lucide-react';
 
 export function SectionCard({

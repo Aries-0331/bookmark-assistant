@@ -37,7 +37,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@bookmark-sync/shared/': new URL('../shared/src/', import.meta.url).pathname,
+      '@bookmark-assistant/shared/': new URL('../shared/src/', import.meta.url).pathname,
     },
   },
   css: {

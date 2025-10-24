@@ -11,7 +11,9 @@ import { useHashRoute } from './router';
 import type { SyncStatus } from './types';
 import { useAppStore } from './store';
 import { ALLOW_OAUTH, SHOW_BILLING } from './features';
+import { useToast } from './components/Toast';
 export default function Options() {
+  const { show } = useToast();
   const { route, navigate } = useHashRoute();
   const {
     plan,
@@ -201,8 +203,6 @@ export default function Options() {
     setInterval(intervalHours);
   }, [intervalHours]);
 
-  // no-op memo removed after refactor; saving is passed to child components directly
-
   // actions
   const connectOAuth = async () => {
     setSaving(true);
@@ -213,11 +213,22 @@ export default function Options() {
         setStatus((prev) => ({ ...prev, isConnected: true }));
         // Refresh entitlements after login (store will enforce)
         await fetchEntitlementsStore();
+        show({
+          variant: 'success',
+          title: 'Connected successfully!',
+          description: 'Your Notion workspace is now connected.',
+        });
       } else {
         setError(res?.error || 'OAuth failed');
+        show({
+          variant: 'error',
+          title: 'Connection failed',
+          description: res?.error,
+        });
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'OAuth failed');
+      show({ variant: 'error', title: 'Connection failed', description: String(e) });
     } finally {
       setSaving(false);
     }
@@ -227,6 +238,11 @@ export default function Options() {
     setStatus((prev) => ({ ...prev, isLoading: false, error: undefined, isConnected: false }));
     await chrome.runtime.sendMessage({ type: 'LOGOUT' });
     setPlan('free');
+    show({
+      variant: 'info',
+      title: 'Disconnected',
+      description: 'Your Notion connection has been removed.',
+    });
   };
 
   const saveManual = async () => {
@@ -237,15 +253,25 @@ export default function Options() {
         notion_token: token.trim(),
         notion_database_id: databaseId.trim(),
       });
+      show({
+        variant: 'success',
+        title: 'Saved',
+        description: 'Credentials saved. You can sync now.',
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save token');
+      show({
+        variant: 'error',
+        title: 'Save failed',
+        description: e instanceof Error ? e.message : 'Unknown error',
+      });
     } finally {
       setSaving(false);
     }
   };
 
   const handleSyncAllBookmarks = async () => {
-    if (!status.isConnected) return;
+    if (!status.isConnected || status.isLoading) return;
     setStatus((prev) => ({ ...prev, isLoading: true, error: undefined }));
     try {
       const response = await chrome.runtime.sendMessage({ type: 'SYNC_ALL_BOOKMARKS' });
@@ -255,6 +281,7 @@ export default function Options() {
           error: response?.error || 'Failed to start sync',
           isLoading: false,
         }));
+        show({ variant: 'error', title: 'Sync failed to start', description: response?.error });
         return;
       }
       const pollInterval = 1000;
@@ -281,6 +308,11 @@ export default function Options() {
             isLoading: false,
             error: 'Sync taking longer than expected. It may still continue in the background.',
           }));
+          show({
+            variant: 'warning',
+            title: 'Sync is taking longer than expected',
+            description: 'It may still continue in the background.',
+          });
           return;
         }
         setTimeout(poll, pollInterval);
@@ -293,6 +325,11 @@ export default function Options() {
         error: error instanceof Error ? error.message : 'Unknown error',
         isLoading: false,
       }));
+      show({
+        variant: 'error',
+        title: 'Sync failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   };
 

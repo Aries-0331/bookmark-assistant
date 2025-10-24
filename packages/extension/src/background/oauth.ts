@@ -31,7 +31,6 @@ export async function launchNotionOAuth() {
   });
 
   const authUrl = `https://api.notion.com/v1/oauth/authorize?${authParams.toString()}`;
-  console.log('🔗 OAuth URL:', authUrl);
 
   return new Promise<string>((resolve, reject) => {
     chrome.identity.launchWebAuthFlow(
@@ -51,8 +50,6 @@ export async function launchNotionOAuth() {
           );
         }
 
-        console.log('🔗 OAuth Redirect:', redirectedTo);
-
         try {
           const url = new URL(redirectedTo);
           const code = url.searchParams.get('code');
@@ -66,7 +63,6 @@ export async function launchNotionOAuth() {
             return reject(new Error('No authorization code returned'));
           }
 
-          console.log('✅ OAuth code received');
           resolve(code);
         } catch (parseError) {
           return reject(new Error(`Failed to parse redirect URL: ${parseError}`));

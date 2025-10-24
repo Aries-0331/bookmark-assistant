@@ -45,13 +45,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         }
       };
       try {
-        // Prevent concurrent syncs
-        const { sync_in_progress } = await chrome.storage.local.get(['sync_in_progress']);
-        if (sync_in_progress) {
-          console.warn('⚠️ Sync request ignored: a sync is already in progress');
-          sendResponse({ success: false, error: 'Sync already in progress' });
-          return;
-        }
         const bookmarkTree = await chrome.bookmarks.getTree();
         const flat = bookmarkTree[0]?.children || [];
 

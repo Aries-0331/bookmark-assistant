@@ -1,13 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import '../index.css';
 import Options from './options';
 import { AppProvider } from './store';
+import { ToastProvider } from './components/Toast';
+
+import '../index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AppProvider>
-      <Options />
+      <ToastProvider>
+        <Options />
+      </ToastProvider>
     </AppProvider>
   </React.StrictMode>
 );
