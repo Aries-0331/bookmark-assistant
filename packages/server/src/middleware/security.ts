@@ -5,6 +5,8 @@ import { rateLimit } from 'express-rate-limit';
 import { config } from '../config';
 import { auditLog } from '../utils';
 
+import type { RequestHandler as RateLimitRequestHandler } from 'express';
+
 /**
  * CORS configuration
  * Only allows requests from authorized origins
@@ -50,7 +52,7 @@ export const corsMiddleware = cors({
  * Rate limiting for authentication endpoints
  * More restrictive to prevent brute force attacks
  */
-export const authRateLimit = rateLimit({
+export const authRateLimit: RateLimitRequestHandler = rateLimit({
   windowMs: config.rateLimits.auth.windowMs,
   max: config.rateLimits.auth.max,
   message: {
@@ -79,7 +81,7 @@ export const authRateLimit = rateLimit({
  * Rate limiting for API endpoints
  * More generous for regular API usage
  */
-export const apiRateLimit = rateLimit({
+export const apiRateLimit: RateLimitRequestHandler = rateLimit({
   windowMs: config.rateLimits.api.windowMs,
   max: config.rateLimits.api.max,
   message: {
@@ -107,7 +109,11 @@ export const apiRateLimit = rateLimit({
 /**
  * Create custom rate limiter with specific configuration
  */
-export const createRateLimit = (windowMs: number, max: number, message: string) => {
+export const createRateLimit: (
+  windowMs: number,
+  max: number,
+  message: string
+) => RateLimitRequestHandler = (windowMs, max, message) => {
   return rateLimit({
     windowMs,
     max,
