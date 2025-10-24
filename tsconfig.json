@@ -1,25 +1,7 @@
 {
   "files": [],
   "references": [
-    {
-      "path": "packages/shared"
-    },
-    {
-      "path": "packages/extension"
-    }
-  ],
-  "compilerOptions": {
-    "strict": false,
-    "noImplicitAny": false,
-    "skipLibCheck": true,
-    "types": [
-      "chrome",
-      "node"
-    ],
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "jsx": "react-jsx"
-  }
+    { "path": "packages/extension" },
+    { "path": "packages/server" }
+  ]
 }

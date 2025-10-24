@@ -1,8 +1,7 @@
 /// <reference types="chrome" />
 /// <reference types="vite/client" />
 import React, { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
-import type { PublicConfig } from '@bookmark-sync/shared';
-import type { Plan } from './types';
+import type { Plan, PublicConfig } from './types';
 
 export const FREE_DAILY_LIMIT = 50;
 export const FREE_INTERVAL_HOURS = 12;
@@ -137,9 +136,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const getPricing = () => {
     return {
-      currency: publicConfig?.currency ?? 'USD',
-      monthly: publicConfig?.pricing?.monthly ?? PRICE_MONTHLY_USD,
-      yearlyDiscount: publicConfig?.pricing?.yearlyDiscount ?? DISCOUNT_YEARLY,
+      currency: publicConfig?.pricing.currency ?? 'USD',
+      monthly: publicConfig?.pricing.monthly ?? PRICE_MONTHLY_USD,
+      yearlyDiscount: publicConfig?.pricing.yearlyDiscount ?? DISCOUNT_YEARLY,
     };
   };
 

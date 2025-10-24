@@ -3,11 +3,6 @@
     "composite": true,
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": [
-      "ES2020",
-      "DOM",
-      "DOM.Iterable"
-    ],
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
@@ -20,25 +15,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": [
-      "chrome",
-      "vite/client"
-    ],
-    "paths": {
-      "@bookmark-sync/shared": [
-        "../shared/src"
-      ],
-      "@bookmark-sync/shared/*": [
-        "../shared/src/*"
-      ]
-    }
-  },
-  "include": [
-    "src"
-  ],
-  "references": [
-    {
-      "path": "../shared"
-    }
-  ]
+    "erasableSyntaxOnly": true,
+    "noUncheckedSideEffectImports": true
+  }
 }

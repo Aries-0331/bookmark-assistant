@@ -1,11 +1,7 @@
-// Apply service-worker polyfills first so modules that expect a window-like
-// environment don't throw during import/evaluation in the MV3 service worker.
 import './polyfill';
-
 import { launchNotionOAuth, exchangeCodeForToken, debugOAuthSetup } from './oauth';
 import { validateConfig, debugConfig } from '../lib/config';
 import { serverAPI } from '../lib/server-api';
-import { api } from '../api';
 
 // import './test-oauth-flow'; // Removed in production build
 
@@ -48,12 +44,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         const bookmarkTree = await chrome.bookmarks.getTree();
         const flat = bookmarkTree[0]?.children || [];
 
-        // Mark sync as in progress so UI can render ongoing state
         await setState({ sync_in_progress: true, last_sync_error: null });
 
-        // Await the full sync using edition-aware adapter (Pro delegates to server)
-        // Flatten to BookmarkPayload via the existing helper path used in server-api
-        // For list-of-folders structure from getTree()[0].children, the adapter will format internally.
         const formatted: any[] = [];
         const flatten = (nodes: any[], currentPath = 'Bookmarks') => {
           for (const node of nodes) {
@@ -79,7 +71,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         };
         flatten(flat as any);
 
-        await api.syncBookmarks(formatted);
+        await serverAPI.syncBookmarks(formatted);
 
         await setState({
           last_sync: new Date().toISOString(),

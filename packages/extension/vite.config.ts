@@ -35,11 +35,6 @@ export default defineConfig({
       },
     },
   ],
-  resolve: {
-    alias: {
-      '@bookmark-assistant/shared/': new URL('../shared/src/', import.meta.url).pathname,
-    },
-  },
   css: {
     postcss: {
       plugins: [tailwindcss, autoprefixer],

@@ -10,8 +10,8 @@ import { BillingSection } from './components/BillingSection';
 import { useHashRoute } from './router';
 import type { SyncStatus } from './types';
 import { useAppStore } from './store';
-import { ALLOW_OAUTH, SHOW_BILLING } from './features';
 import { useToast } from './components/Toast';
+
 export default function Options() {
   const { show } = useToast();
   const { route, navigate } = useHashRoute();
@@ -26,21 +26,13 @@ export default function Options() {
     setPlan,
     fetchPublicConfig,
   } = useAppStore();
-  // UI state
-  // connection method is a binary choice now (decided by build flags)
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  // derive connection from status; no separate connected state needed
-  const [version, setVersion] = useState<string>('');
 
-  // data state
+  const [version, setVersion] = useState<string>('');
   const [status, setStatus] = useState<SyncStatus>({
     isConnected: false,
     lastSync: '',
   });
   const [bookmarkCount, setBookmarkCount] = useState<number>(0);
-  const [token, setToken] = useState('');
-  const [databaseId, setDatabaseId] = useState('');
   const [autoSync, setAutoSync] = useState<boolean>(autoSyncStore);
   const [interval, setInterval] = useState<number>(intervalHours);
 
@@ -150,17 +142,12 @@ export default function Options() {
   useEffect(() => {
     (async () => {
       try {
-        const { session_token, notion_token, notion_database_id, auto_sync, sync_interval_hours } =
-          await chrome.storage.local.get([
-            'session_token',
-            'notion_token',
-            'notion_database_id',
-            'auto_sync',
-            'sync_interval_hours',
-          ]);
+        const { session_token, auto_sync, sync_interval_hours } = await chrome.storage.local.get([
+          'session_token',
+          'auto_sync',
+          'sync_interval_hours',
+        ]);
         setStatus((prev) => ({ ...prev, isConnected: !!session_token }));
-        setToken(notion_token || '');
-        setDatabaseId(notion_database_id || '');
         setAutoSync(!!auto_sync);
         setInterval(Number(sync_interval_hours) || 0.5);
       } catch (e) {
@@ -205,8 +192,6 @@ export default function Options() {
 
   // actions
   const connectOAuth = async () => {
-    setSaving(true);
-    setError(null);
     try {
       const res = await chrome.runtime.sendMessage({ type: 'NOTION_OAUTH' });
       if (res?.ok) {
@@ -219,7 +204,6 @@ export default function Options() {
           description: 'Your Notion workspace is now connected.',
         });
       } else {
-        setError(res?.error || 'OAuth failed');
         show({
           variant: 'error',
           title: 'Connection failed',
@@ -227,10 +211,7 @@ export default function Options() {
         });
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'OAuth failed');
       show({ variant: 'error', title: 'Connection failed', description: String(e) });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -243,31 +224,6 @@ export default function Options() {
       title: 'Disconnected',
       description: 'Your Notion connection has been removed.',
     });
-  };
-
-  const saveManual = async () => {
-    setSaving(true);
-    setError(null);
-    try {
-      await chrome.storage.local.set({
-        notion_token: token.trim(),
-        notion_database_id: databaseId.trim(),
-      });
-      show({
-        variant: 'success',
-        title: 'Saved',
-        description: 'Credentials saved. You can sync now.',
-      });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save token');
-      show({
-        variant: 'error',
-        title: 'Save failed',
-        description: e instanceof Error ? e.message : 'Unknown error',
-      });
-    } finally {
-      setSaving(false);
-    }
   };
 
   const handleSyncAllBookmarks = async () => {
@@ -337,7 +293,11 @@ export default function Options() {
     try {
       await saveSyncSettingsStore(nextAuto, nextInterval);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save sync settings');
+      show({
+        variant: 'error',
+        title: 'Failed to save sync settings',
+        description: String(e),
+      });
     }
   };
 
@@ -364,17 +324,9 @@ export default function Options() {
             <>
               <OverviewSection status={status} plan={plan} bookmarkCount={bookmarkCount} />
               <ConnectionSection
-                mode={ALLOW_OAUTH ? 'oauth' : 'manual'}
                 status={status}
-                saving={saving}
-                error={error}
-                token={token}
-                setToken={setToken}
-                databaseId={databaseId}
-                setDatabaseId={setDatabaseId}
                 onConnectOAuth={connectOAuth}
                 onDisconnect={handleDisconnect}
-                onSaveManual={saveManual}
                 onSyncNow={handleSyncAllBookmarks}
               />
               <SyncSettingsSection
@@ -387,7 +339,7 @@ export default function Options() {
               />
             </>
           )}
-          {route === 'billing' && SHOW_BILLING && <BillingSection plan={plan} />}
+          {route === 'billing' && <BillingSection plan={plan} />}
           {route === 'tutorials' && <TutorialsSection plan={plan} />}
           {route === 'faq' && <FAQSection />}
           {route === 'about' && <AboutSection version={version} />}

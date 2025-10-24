@@ -8,11 +8,10 @@
     "build": "tsc -b && vite build --mode development",
     "build:prod": "tsc -b && vite build --mode production",
     "clean": "rm -rf dist",
-    "lint": "eslint src --ext .ts,.tsx",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@bookmark-sync/shared": "workspace:*",
     "@notionhq/client": "^5.0.0",
     "lucide-react": "^0.546.0",
     "react": "^18.2.0",

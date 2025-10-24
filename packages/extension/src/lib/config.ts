@@ -1,14 +1,3 @@
-/**
- * Environment Configuration
- * Centralizes all environment variables for the Chrome extension
- */
-
-// NOTE: Window polyfill removed since @notionhq/client is no longer used in extension
-// Service worker compatibility check
-// if (typeof window === 'undefined' && typeof globalThis !== 'undefined') {
-//   (globalThis as any).window = globalThis;
-// }
-
 export interface AppConfig {
   // Notion Integration
   notion: {
