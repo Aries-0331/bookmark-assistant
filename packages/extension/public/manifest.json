@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Bookmark Notion Sync",
+  "name": "Bookmark Assistant",
   "version": "0.1.0",
+  "description": "AI-assistant for managing bookmarks and syncing with Notion",
   "permissions": [
     "bookmarks",
     "storage",
@@ -15,11 +16,30 @@
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "background.js",
+    "service_worker": "src/background/index.ts",
     "type": "module"
   },
   "action": {
-    "default_popup": "popup.html"
+    "default_title": "Bookmark Assistant",
+    "default_icon": {
+      "16": "assets/favicon/favicon-16x16.png",
+      "32": "assets/favicon/favicon-32x32.png",
+      "48": "assets/favicon/android-chrome-192x192.png",
+      "128": "assets/favicon/android-chrome-512x512.png"
+    }
   },
-  "options_page": "options.html"
+  "icons": {
+    "16": "assets/favicon/favicon-16x16.png",
+    "32": "assets/favicon/favicon-32x32.png",
+    "48": "assets/favicon/android-chrome-192x192.png",
+    "128": "assets/favicon/android-chrome-512x512.png"
+  },
+  "options_page": "options.html",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/index.ts"],
+      "run_at": "document_idle"
+    }
+  ]
 }

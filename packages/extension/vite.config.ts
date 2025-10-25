@@ -2,30 +2,27 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
+import webExtension from '@samrum/vite-plugin-web-extension';
+import manifestJson from './public/manifest.json';
+const manifest: any = manifestJson as any;
 
 export default defineConfig({
   plugins: [
     react(),
+    webExtension({ manifest }),
     // Custom plugin to handle Chrome extension build
     {
       name: 'chrome-extension-build',
       writeBundle() {
-        // Copy HTML files to root with correct names after build
-        import('fs').then(({ copyFileSync, existsSync, cpSync }) => {
+        import('fs').then(({ existsSync, cpSync, copyFileSync }) => {
           import('path').then(({ resolve }) => {
             const distDir = 'dist';
-            if (existsSync(resolve(distDir, 'src/options/options.html'))) {
-              copyFileSync(
-                resolve(distDir, 'src/options/options.html'),
-                resolve(distDir, 'options.html')
-              );
+            const optionsSrc = resolve(distDir, 'src/options/options.html');
+            const optionsDst = resolve(distDir, 'options.html');
+            if (existsSync(optionsSrc)) {
+              copyFileSync(optionsSrc, optionsDst);
             }
-            // Always override the manifest in dist with the one at the package root
-            const rootManifest = resolve('manifest.json');
-            if (existsSync(rootManifest)) {
-              copyFileSync(rootManifest, resolve(distDir, 'manifest.json'));
-            }
-            // Ensure assets are available in dist; Vite will handle public but we copy from src as well
+            // Ensure assets are available in dist; copy from src as they are referenced in manifest
             const assetsDir = resolve('src/assets');
             if (existsSync(assetsDir)) {
               cpSync(assetsDir, resolve(distDir, 'assets'), { recursive: true });
@@ -46,29 +43,11 @@ export default defineConfig({
     rollupOptions: {
       input: {
         options: 'src/options/options.html',
-        background: 'src/background/index.ts',
-        // content script removed in refactor (legacy injector.ts deleted)
-      },
-      output: {
-        // Sanitize filenames to avoid leading underscores (Chrome disallows files like _commonjsHelpers.js)
-        entryFileNames: (chunkInfo) => {
-          const name = (chunkInfo && chunkInfo.name) || 'entry';
-          const safe = name.replace(/^_+/, 'cjs_');
-          return `${safe}.js`;
-        },
-        chunkFileNames: (chunkInfo) => {
-          const name = (chunkInfo && chunkInfo.name) || 'chunk';
-          const safe = name.replace(/^_+/, 'cjs_');
-          return `${safe}.js`;
-        },
-        assetFileNames: 'assets/[name].[ext]',
       },
     },
-    // Ensure the manifest and public assets are copied
     copyPublicDir: true,
-    // Service worker compatibility
     target: 'es2017',
-    minify: false, // Keep disabled for debugging
+    minify: false,
   },
   define: {
     // Clean defines - no window polyfills needed

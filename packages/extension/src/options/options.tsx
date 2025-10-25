@@ -10,6 +10,7 @@ import { BillingSection } from './components/BillingSection';
 import { useHashRoute } from './router';
 import type { SyncStatus } from './types';
 import { useAppStore } from './store';
+import { sendMessage, Messages } from '../shared/messaging';
 import { useToast } from './components/Toast';
 
 export default function Options() {
@@ -193,7 +194,7 @@ export default function Options() {
   // actions
   const connectOAuth = async () => {
     try {
-      const res = await chrome.runtime.sendMessage({ type: 'NOTION_OAUTH' });
+      const res = await sendMessage({ type: Messages.NOTION_OAUTH });
       if (res?.ok) {
         setStatus((prev) => ({ ...prev, isConnected: true }));
         // Refresh entitlements after login (store will enforce)
@@ -217,7 +218,7 @@ export default function Options() {
 
   const handleDisconnect = async () => {
     setStatus((prev) => ({ ...prev, isLoading: false, error: undefined, isConnected: false }));
-    await chrome.runtime.sendMessage({ type: 'LOGOUT' });
+    await sendMessage({ type: Messages.LOGOUT });
     setPlan('free');
     show({
       variant: 'info',
@@ -230,7 +231,7 @@ export default function Options() {
     if (!status.isConnected || status.isLoading) return;
     setStatus((prev) => ({ ...prev, isLoading: true, error: undefined }));
     try {
-      const response = await chrome.runtime.sendMessage({ type: 'SYNC_ALL_BOOKMARKS' });
+      const response = await sendMessage({ type: Messages.SYNC_ALL_BOOKMARKS });
       if (!response?.success) {
         setStatus((prev) => ({
           ...prev,
