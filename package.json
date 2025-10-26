@@ -1,7 +1,7 @@
 {
   "name": "bookmark-assistant",
   "version": "0.1.0",
-  "description": "AI assistant for managing bookmarks and syncing with Notion",
+  "description": "AI assistant for managing bookmarks and syncing to Notion",
   "private": true,
   "packageManager": "pnpm@9.12.0",
   "workspaces": [
@@ -16,16 +16,20 @@
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "clean": "pnpm -r clean",
+    "prepare": "husky",
     "start:server": "pnpm -F @bookmark-assistant/server start"
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
     "@types/node": "^20.10.0",
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
     "eslint": "^9.14.0",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-react-hooks": "^7.0.0",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.4.0",
+    "husky": "^9.0.0",
     "prettier": "^3.0.0",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.46.2",
