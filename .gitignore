@@ -44,3 +44,6 @@ yarn.lock
 # Temporary files
 .temp
 .tmp
+
+# husky
+.husky/
