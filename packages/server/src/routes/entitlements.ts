@@ -13,7 +13,8 @@ router.get('/', validateSession, async (req: AuthenticatedRequest, res: Response
   try {
     // Simple server-wide edition gate for MVP; can be extended to per-user plans later
     const plan = config.edition === 'pro' ? 'pro' : 'free';
-    const features = plan === 'pro' ? ['server-sync', 'oauth', 'ai-tagger'] : ['manual-token'];
+    const features =
+      plan === 'pro' ? ['server-sync', 'oauth', 'auto-sync', 'ai-tagger'] : ['manual-token'];
 
     res.json({ success: true, plan, features });
   } catch (e) {

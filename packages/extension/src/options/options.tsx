@@ -26,6 +26,8 @@ export default function Options() {
     fetchEntitlements: fetchEntitlementsStore,
     setPlan,
     fetchPublicConfig,
+    hasFeature,
+    getEffectiveLimits,
   } = useAppStore();
 
   const [version, setVersion] = useState<string>('');
@@ -34,7 +36,6 @@ export default function Options() {
     lastSync: '',
   });
   const [bookmarkCount, setBookmarkCount] = useState<number>(0);
-  const [autoSync, setAutoSync] = useState<boolean>(autoSyncStore);
   const [interval, setInterval] = useState<number>(intervalHours);
 
   useEffect(() => {
@@ -139,18 +140,13 @@ export default function Options() {
     };
   }, []);
 
-  // init
+  // init (connection status + version only; store initializes settings)
   useEffect(() => {
     (async () => {
       try {
-        const { session_token, auto_sync, sync_interval_hours } = await chrome.storage.local.get([
-          'session_token',
-          'auto_sync',
-          'sync_interval_hours',
-        ]);
+        const { session_token } = await chrome.storage.local.get(['session_token']);
         setStatus((prev) => ({ ...prev, isConnected: !!session_token }));
-        setAutoSync(!!auto_sync);
-        setInterval(Number(sync_interval_hours) || 0.5);
+        // settings are initialized via store; avoid local duplication here
       } catch (e) {
         console.error(e);
       }
@@ -183,10 +179,7 @@ export default function Options() {
     }
   }, []);
 
-  // Reflect store changes into local UI state
-  useEffect(() => {
-    setAutoSync(autoSyncStore);
-  }, [autoSyncStore]);
+  // Reflect store changes into local UI state (interval is staged for input)
   useEffect(() => {
     setInterval(intervalHours);
   }, [intervalHours]);
@@ -303,8 +296,8 @@ export default function Options() {
   };
 
   const onToggleAuto = async () => {
-    const next = !autoSync;
-    setAutoSync(next);
+    if (!hasFeature('auto-sync')) return;
+    const next = !autoSyncStore;
     await saveSyncSettings(next, undefined);
   };
   const onIntervalChange = (v: string) => {
@@ -331,12 +324,14 @@ export default function Options() {
                 onSyncNow={handleSyncAllBookmarks}
               />
               <SyncSettingsSection
-                autoSync={autoSync}
+                autoSync={autoSyncStore}
                 onToggleAuto={onToggleAuto}
                 interval={interval}
                 onIntervalChange={onIntervalChange}
                 onIntervalBlur={onIntervalBlur}
                 isPro={isPro()}
+                canAutoSync={hasFeature('auto-sync')}
+                minIntervalHours={getEffectiveLimits().minIntervalHours}
               />
             </>
           )}

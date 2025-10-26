@@ -6,7 +6,12 @@ interface Props {
   interval: number;
   onIntervalChange: (v: string) => void;
   onIntervalBlur: () => void | Promise<void>;
+  // Show Pro badge on the card (feature classification)
   isPro?: boolean;
+  // Whether current user is allowed to use auto-sync
+  canAutoSync?: boolean;
+  // Minimum interval hours coming from server/public config per plan
+  minIntervalHours?: number;
 }
 
 export function SyncSettingsSection({
@@ -16,9 +21,11 @@ export function SyncSettingsSection({
   onIntervalChange,
   onIntervalBlur,
   isPro = false,
+  canAutoSync = false,
+  minIntervalHours = 12,
 }: Props) {
-  const isLocked = !isPro;
-  const displayInterval = isLocked ? 12 : interval;
+  const isLocked = !canAutoSync;
+  const displayInterval = isLocked ? minIntervalHours : interval;
   return (
     <SectionCard
       id="sync"
@@ -54,7 +61,7 @@ export function SyncSettingsSection({
             <span className="text-gray-600">Sync Interval (hours)</span>
             <input
               type="number"
-              min={0.5}
+              min={minIntervalHours}
               value={displayInterval}
               onChange={(e) => onIntervalChange(e.target.value)}
               onBlur={onIntervalBlur}
@@ -64,7 +71,8 @@ export function SyncSettingsSection({
             />
           </label>
           <div id="sync-interval-note" className="text-[11px] text-gray-500 mt-1">
-            Minimum: 0.5 hours{isLocked ? ' · Free plan uses a fixed 12-hour interval' : ''}
+            Minimum: {minIntervalHours} hours
+            {isLocked ? ` · Free plan uses a fixed ${minIntervalHours}-hour interval` : ''}
           </div>
         </div>
       </div>
