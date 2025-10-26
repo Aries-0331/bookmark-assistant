@@ -10,6 +10,12 @@ import { auditLog, sanitizeError, validateBookmark, createBatches, sleep } from 
 
 const router: import('express').Router = Router();
 
+// Per-user sync guards to prevent spammy manual triggers
+const syncGuards = new Map<string, { inProgress: boolean; lastStart: number }>();
+// Per-user daily counters (UTC day); for production scale, persist in a store (Redis/DB)
+const syncDailyCounters = new Map<string, { date: string; count: number }>();
+const FREE_DAILY_SYNC_LIMIT = 50;
+
 type DiffOutcome = {
   toCreate: BookmarkItem[];
   skippedExisting: number;
@@ -60,13 +66,67 @@ type SyncResult =
  */
 router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (config.edition !== 'pro') {
-      return res.status(403).json({
-        error: 'Forbidden',
-        message: 'Server-side bookmark sync is a Pro feature',
+    const userId = req.user!.userId;
+    // Throttle rapid re-clicks and block concurrent syncs per user
+    const now = Date.now();
+    const guard = syncGuards.get(userId) || { inProgress: false, lastStart: 0 };
+    const isProEdition = config.edition === 'pro';
+    const minCooldownMs = isProEdition ? 5000 : 30000; // 5s for Pro, 30s for Free
+
+    if (guard.inProgress) {
+      auditLog('sync_already_in_progress', userId, {});
+      return res.status(409).json({
+        error: 'Conflict',
+        message: 'A sync is already in progress. Please wait for it to finish.',
       });
     }
-    const userId = req.user!.userId;
+    // Daily cap for Free users
+    if (!isProEdition) {
+      const dayKey = new Date().toISOString().slice(0, 10); // UTC YYYY-MM-DD
+      const today = syncDailyCounters.get(userId);
+      if (!today || today.date !== dayKey) {
+        syncDailyCounters.set(userId, { date: dayKey, count: 0 });
+      }
+      const entry = syncDailyCounters.get(userId)!;
+      if (entry.count >= FREE_DAILY_SYNC_LIMIT) {
+        const msTillMidnight = (() => {
+          const d = new Date();
+          const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1));
+          return t.getTime() - d.getTime();
+        })();
+        const retryAfter = Math.ceil(msTillMidnight / 1000);
+        res.setHeader('Retry-After', String(retryAfter));
+        auditLog('sync_daily_limit_exceeded', userId, {
+          count: entry.count,
+          limit: FREE_DAILY_SYNC_LIMIT,
+        });
+        return res.status(429).json({
+          error: 'Too Many Requests',
+          message: 'Daily sync limit reached for Free plan. Please try again tomorrow or upgrade to Pro.',
+          retryAfter,
+        });
+      }
+    }
+    const elapsed = now - guard.lastStart;
+    if (elapsed < minCooldownMs) {
+      const retryAfter = Math.ceil((minCooldownMs - elapsed) / 1000);
+      res.setHeader('Retry-After', String(retryAfter));
+      auditLog('sync_cooldown', userId, { retryAfter });
+      return res.status(429).json({
+        error: 'Too Many Requests',
+        message: `Please wait ${retryAfter}s before starting another sync.`,
+        retryAfter,
+      });
+    }
+    guard.inProgress = true;
+    guard.lastStart = now;
+    syncGuards.set(userId, guard);
+    // Count this sync start against the daily cap for Free users
+    if (!isProEdition) {
+      const entry = syncDailyCounters.get(userId)!;
+      entry.count += 1;
+      syncDailyCounters.set(userId, entry);
+    }
     const userData = await userPrisma.find(userId);
     const { dataSourceId, bookmarks, options = {} }: BookmarkSyncRequest = req.body;
 
@@ -181,6 +241,15 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       error: 'Internal Server Error',
       message: 'Failed to sync bookmarks',
     });
+  } finally {
+    const userId = req.user?.userId;
+    if (userId) {
+      const guard = syncGuards.get(userId);
+      if (guard) {
+        guard.inProgress = false;
+        syncGuards.set(userId, guard);
+      }
+    }
   }
 });
 

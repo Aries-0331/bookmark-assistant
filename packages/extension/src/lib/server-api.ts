@@ -71,7 +71,12 @@ class ServerAPIClient {
       const data = (isJson ? await response.json() : { message: await response.text() }) as any;
       if (!response.ok) {
         const message = data?.message || data?.error || `Server error: ${response.status}`;
-        throw new Error(message);
+        const retryAfterHeader = response.headers.get('retry-after');
+        const retryAfterSeconds = retryAfterHeader ? Number(retryAfterHeader) : undefined;
+        const err = new APIError(message, response.status, retryAfterSeconds);
+        // Attach server-provided code if any
+        if (data?.code) (err as any).code = data.code;
+        throw err;
       }
       return data as T;
     } catch (error: any) {
@@ -201,6 +206,20 @@ class ServerAPIClient {
 
 // Export singleton instance
 export const serverAPI = new ServerAPIClient();
+
+// Structured error carrying HTTP status and retry hints
+export class APIError extends Error {
+  status: number;
+  retryAfterSeconds?: number;
+  constructor(message: string, status: number, retryAfterSeconds?: number) {
+    super(message);
+    this.name = 'APIError';
+    this.status = status;
+    this.retryAfterSeconds = Number.isFinite(retryAfterSeconds || NaN)
+      ? (retryAfterSeconds as number)
+      : undefined;
+  }
+}
 
 // Helper function to convert Chrome bookmarks to server format
 export function formatBookmarkForServer(

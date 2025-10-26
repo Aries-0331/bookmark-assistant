@@ -8,10 +8,12 @@ interface Props {
   onConnectOAuth: () => void | Promise<void>;
   onDisconnect: () => void | Promise<void>;
   onSyncNow: () => void | Promise<void>;
+  cooldownSeconds?: number;
 }
 
 export function ConnectionSection(props: Props) {
-  const { status, onConnectOAuth, onDisconnect, onSyncNow } = props;
+  const { status, onConnectOAuth, onDisconnect, onSyncNow, cooldownSeconds = 0 } = props;
+  const inCooldown = typeof cooldownSeconds === 'number' && cooldownSeconds > 0;
 
   return (
     <SectionCard
@@ -38,7 +40,8 @@ export function ConnectionSection(props: Props) {
                 className="flex-1 gap-2"
                 onClick={onSyncNow}
                 isLoading={!!status.isLoading}
-                text="Sync Now"
+                disabled={inCooldown}
+                text={inCooldown ? `Sync in ${cooldownSeconds}s` : 'Sync Now'}
                 loadingText="Syncing…"
                 icon={<RefreshCcw size={16} />}
                 fullWidth={false}

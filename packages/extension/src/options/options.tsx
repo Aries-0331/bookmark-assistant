@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { PageHeader } from './components/SectionCard';
 import { OverviewSection } from './components/OverviewSection';
@@ -37,6 +37,9 @@ export default function Options() {
   });
   const [bookmarkCount, setBookmarkCount] = useState<number>(0);
   const [interval, setInterval] = useState<number>(intervalHours);
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  const [tick, setTick] = useState(0); // drives countdown re-render
+  const tickTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -99,12 +102,17 @@ export default function Options() {
     ) => {
       if (areaName !== 'local') return;
       const hasWatched =
-        'sync_in_progress' in changes || 'last_sync' in changes || 'last_sync_error' in changes;
+        'sync_in_progress' in changes ||
+        'last_sync' in changes ||
+        'last_sync_error' in changes ||
+        'last_sync_summary' in changes ||
+        'sync_cooldown_until' in changes;
       if (!hasWatched) return;
 
       if (storageTimer) window.clearTimeout(storageTimer);
       storageTimer = window.setTimeout(() => {
         if (!isMounted) return;
+        // reflect sync status
         setStatus((prev) => {
           const nextLoading =
             'sync_in_progress' in changes ? !!changes.sync_in_progress.newValue : prev.isLoading;
@@ -121,6 +129,28 @@ export default function Options() {
             return prev;
           return { ...prev, isLoading: nextLoading, lastSync: nextLast, error: nextErr };
         });
+
+        // handle cooldown and summary user feedback
+        if ('sync_cooldown_until' in changes) {
+          const until = Number(changes.sync_cooldown_until.newValue);
+          if (Number.isFinite(until)) {
+            setCooldownUntil(until);
+          } else {
+            setCooldownUntil(null);
+          }
+        }
+        if ('last_sync_summary' in changes) {
+          const summary = changes.last_sync_summary.newValue as string | null | undefined;
+          if (summary === 'no_changes') {
+            show({ variant: 'info', title: 'No changes detected', description: 'Your bookmarks are already in sync.' });
+          } else if (summary === 'cooldown') {
+            show({ variant: 'warning', title: 'Please wait before syncing again', description: 'You hit the cooldown. Try again shortly.' });
+          } else if (summary === 'limit') {
+            show({ variant: 'error', title: 'Daily limit reached', description: 'You’ve reached today’s sync limit on the Free plan.' });
+          } else if (summary === 'in_progress') {
+            show({ variant: 'info', title: 'Sync already in progress' });
+          }
+        }
       }, 80);
     };
     chrome.storage.onChanged.addListener(onChanged);
@@ -144,8 +174,12 @@ export default function Options() {
   useEffect(() => {
     (async () => {
       try {
-        const { session_token } = await chrome.storage.local.get(['session_token']);
+        const { session_token, sync_cooldown_until } = await chrome.storage.local.get([
+          'session_token',
+          'sync_cooldown_until',
+        ]);
         setStatus((prev) => ({ ...prev, isConnected: !!session_token }));
+        if (Number.isFinite(sync_cooldown_until)) setCooldownUntil(Number(sync_cooldown_until));
         // settings are initialized via store; avoid local duplication here
       } catch (e) {
         console.error(e);
@@ -183,6 +217,31 @@ export default function Options() {
   useEffect(() => {
     setInterval(intervalHours);
   }, [intervalHours]);
+
+  // drive countdown ticks while cooldown active
+  useEffect(() => {
+    if (cooldownUntil && cooldownUntil > Date.now()) {
+      if (tickTimerRef.current) window.clearInterval(tickTimerRef.current);
+      tickTimerRef.current = window.setInterval(() => setTick((t) => t + 1), 1000) as any;
+      return () => {
+        if (tickTimerRef.current) {
+          window.clearInterval(tickTimerRef.current);
+          tickTimerRef.current = null;
+        }
+      };
+    } else {
+      if (tickTimerRef.current) {
+        window.clearInterval(tickTimerRef.current);
+        tickTimerRef.current = null;
+      }
+    }
+  }, [cooldownUntil]);
+
+  const remainSeconds = useMemo(() => {
+    if (!cooldownUntil) return 0;
+    const s = Math.ceil((cooldownUntil - Date.now()) / 1000);
+    return s > 0 ? s : 0;
+  }, [cooldownUntil, tick]);
 
   // actions
   const connectOAuth = async () => {
@@ -224,6 +283,10 @@ export default function Options() {
   };
 
   const handleSyncAllBookmarks = async () => {
+    if (remainSeconds > 0) {
+      show({ variant: 'warning', title: `Please wait ${remainSeconds}s`, description: 'You are in cooldown. Try again shortly.' });
+      return;
+    }
     if (!status.isConnected || status.isLoading) return;
     setStatus((prev) => ({ ...prev, isLoading: true, error: undefined }));
     try {
@@ -253,6 +316,11 @@ export default function Options() {
             lastSync: last_sync || new Date().toISOString(),
             error: last_sync_error || undefined,
           }));
+          if (last_sync_error) {
+            show({ variant: 'error', title: 'Sync failed', description: String(last_sync_error) });
+          } else {
+            show({ variant: 'success', title: 'Sync complete' });
+          }
           return;
         }
         if (Date.now() - start > maxDurationMs) {
@@ -325,6 +393,7 @@ export default function Options() {
                 onConnectOAuth={connectOAuth}
                 onDisconnect={handleDisconnect}
                 onSyncNow={handleSyncAllBookmarks}
+                cooldownSeconds={remainSeconds}
               />
               <SyncSettingsSection
                 autoSync={autoSyncStore}
