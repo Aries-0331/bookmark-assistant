@@ -1,7 +1,7 @@
 import { ExternalLink } from 'lucide-react';
 import { SectionCard } from './SectionCard';
 import { formatLastUpdated } from '../utils';
-import logoUrl from '../../assets/logo3.png';
+import logoUrl from '../../assets/logo.png';
 
 export function AboutSection({ version }: { version: string }) {
   const lastUpdated = formatLastUpdated();

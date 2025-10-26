@@ -187,9 +187,10 @@ export default function Options() {
   // actions
   const connectOAuth = async () => {
     try {
+      setStatus((prev) => ({ ...prev, isLoading: true, error: undefined }));
       const res = await sendMessage({ type: Messages.NOTION_OAUTH });
       if (res?.ok) {
-        setStatus((prev) => ({ ...prev, isConnected: true }));
+        setStatus((prev) => ({ ...prev, isConnected: true, isLoading: false }));
         // Refresh entitlements after login (store will enforce)
         await fetchEntitlementsStore();
         show({
@@ -198,6 +199,7 @@ export default function Options() {
           description: 'Your Notion workspace is now connected.',
         });
       } else {
+        setStatus((prev) => ({ ...prev, isLoading: false }));
         show({
           variant: 'error',
           title: 'Connection failed',
@@ -205,6 +207,7 @@ export default function Options() {
         });
       }
     } catch (e) {
+      setStatus((prev) => ({ ...prev, isLoading: false }));
       show({ variant: 'error', title: 'Connection failed', description: String(e) });
     }
   };
