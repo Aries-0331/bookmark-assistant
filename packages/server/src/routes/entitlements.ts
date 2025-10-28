@@ -8,13 +8,13 @@ import { config } from '../config';
 const router: import('express').Router = Router();
 
 type Plan = 'free' | 'pro';
-type Feature = 'oauth' | 'server-sync' | 'auto-sync' | 'ai-tagger';
+type Feature = 'oauth' | 'server-sync' | 'auto-sync' | 'ai-tagger' | 'ai-summarizer';
 
 const FEATURES_BY_PLAN: Record<Plan, Feature[]> = {
   // Free tier supports OAuth connection and on-demand server-side sync (no background auto-sync)
   free: ['oauth', 'server-sync'],
   // Pro unlocks background auto-sync, server-driven sync, and AI features
-  pro: ['oauth', 'server-sync', 'auto-sync', 'ai-tagger'],
+  pro: ['oauth', 'server-sync', 'auto-sync', 'ai-tagger', 'ai-summarizer'],
 };
 
 // GET /entitlements

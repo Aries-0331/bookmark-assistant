@@ -2,6 +2,7 @@
 /// <reference types="vite/client" />
 import React, { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 import type { Plan, PublicConfig } from './types';
+import { serverAPI } from '../lib/server-api';
 
 export const FREE_DAILY_LIMIT = 50;
 export const FREE_INTERVAL_HOURS = 12;
@@ -140,7 +141,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const { session_token } = await chrome.storage.local.get(['session_token']);
       if (!session_token) return;
-      const { serverAPI } = await import('../lib/server-api');
       const ent = await serverAPI.getEntitlements();
       setPlan(ent.plan);
       setFeatures(ent.features || []);

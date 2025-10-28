@@ -104,7 +104,7 @@ addMessageListener({
         return { success: true } as const;
       }
 
-  await serverAPI.syncBookmarks(formatted);
+      await serverAPI.syncBookmarks(formatted);
 
       await setState({
         last_sync: new Date().toISOString(),

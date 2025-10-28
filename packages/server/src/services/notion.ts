@@ -110,7 +110,9 @@ export class NotionService {
   ): Promise<Record<string, any>> {
     const notion = this.getClient(accessToken);
     // Retrieve the data source to access its properties (schema)
-  const ds = (await (notion as any).dataSources.retrieve({ data_source_id: dataSourceId })) as any;
+    const ds = (await (notion as any).dataSources.retrieve({
+      data_source_id: dataSourceId,
+    })) as any;
     const schema = ds?.properties || {};
     const props: Record<string, any> = {};
     const entries = Object.entries<any>(schema) as Array<[string, any]>;
