@@ -90,19 +90,19 @@ addMessageListener({
       };
 
       const fp = await computeFingerprint();
-      const { last_sync_fingerprint: prevFp } = await chrome.storage.local.get([
-        'last_sync_fingerprint',
-      ]);
+      // const { last_sync_fingerprint: prevFp } = await chrome.storage.local.get([
+      //   'last_sync_fingerprint',
+      // ]);
 
-      if (prevFp && prevFp === fp) {
-        // No changes detected; short-circuit and update last_sync timestamps
-        await setState({
-          last_sync: new Date().toISOString(),
-          last_sync_summary: 'no_changes',
-          last_sync_error: null,
-        });
-        return { success: true } as const;
-      }
+      // if (prevFp && prevFp === fp) {
+      //   // No changes detected; short-circuit and update last_sync timestamps
+      //   await setState({
+      //     last_sync: new Date().toISOString(),
+      //     last_sync_summary: 'no_changes',
+      //     last_sync_error: null,
+      //   });
+      //   return { success: true } as const;
+      // }
 
       await serverAPI.syncBookmarks(formatted);
 

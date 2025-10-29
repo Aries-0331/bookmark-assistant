@@ -318,6 +318,7 @@ export class NotionService {
    */
   async existingBookmarkUrls(dataSourceId: string, accessToken: string): Promise<string[]> {
     const notion = this.getClient(accessToken);
+    console.log('notion', notion);
     // Iterate through all pages (pagination) to build map
     let cursor: string | undefined = undefined;
     let existing: string[] = [];
@@ -330,6 +331,7 @@ export class NotionService {
           start_cursor: cursor,
           page_size: 100,
         });
+        console.log('[Notion] dataSources.query response:', resp);
       } catch (e) {
         console.warn('[Notion] dataSources.query failed during duplicate scan:', e);
         break;

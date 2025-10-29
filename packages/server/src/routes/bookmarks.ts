@@ -102,7 +102,8 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
         });
         return res.status(429).json({
           error: 'Too Many Requests',
-          message: 'Daily sync limit reached for Free plan. Please try again tomorrow or upgrade to Pro.',
+          message:
+            'Daily sync limit reached for Free plan. Please try again tomorrow or upgrade to Pro.',
           retryAfter,
         });
       }
@@ -128,8 +129,13 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       syncDailyCounters.set(userId, entry);
     }
     const userData = await userPrisma.find(userId);
+    console.log('[Bookmark Sync] User data fetched:', userData);
     const { dataSourceId, bookmarks, options = {} }: BookmarkSyncRequest = req.body;
-
+    console.log('[Bookmark Sync] Sync request received:', {
+      dataSourceId,
+      bookmarkCount: Array.isArray(bookmarks) ? bookmarks.length : 'invalid',
+      options,
+    });
     if (!userData) {
       return res.status(404).json({
         error: 'Not Found',
@@ -144,8 +150,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       });
     }
 
-    // Determine effective data source ID (required)
-    const effectiveDataSourceId = (dataSourceId as string) || userData.notionDataSourceId;
+    const effectiveDataSourceId = userData.notionDataSourceId;
     if (!effectiveDataSourceId) {
       return res.status(400).json({
         error: 'Bad Request',

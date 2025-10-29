@@ -9,7 +9,7 @@
     "start": "node dist/index.js",
     "test": "jest",
     "clean": "rm -rf dist",
-  "lint": "eslint \"src/**/*.{ts,js}\"",
+    "lint": "eslint \"src/**/*.{ts,js}\"",
     "deploy": "npm run build && node dist/index.js",
     "vercel-build": "prisma generate && tsc",
     "prisma:generate": "prisma generate",
@@ -25,8 +25,8 @@
   "author": "Aries",
   "license": "MIT",
   "dependencies": {
+    "@notionhq/client": "^5.3.0",
     "@prisma/client": "^6.17.1",
-    "@notionhq/client": "^2.2.15",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
