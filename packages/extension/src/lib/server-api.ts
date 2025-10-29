@@ -25,9 +25,9 @@ class ServerAPIClient {
     this.loadSessionToken();
   }
 
-  async getEntitlements(): Promise<{ plan: 'free' | 'pro'; features: string[] }> {
+  async getEntitlements(): Promise<{ isPro: boolean; features: string[] }> {
     const res = await this.makeRequest<any>('/entitlements', { method: 'GET', timeoutMs: 5000 });
-    return { plan: res.plan, features: res.features || [] };
+    return { isPro: res.isPro, features: res.features || [] };
   }
 
   private async loadSessionToken() {

@@ -4,7 +4,8 @@ import { Loader2 } from 'lucide-react';
 type ButtonProps = {
   onClick?: () => void | Promise<void>;
   type?: 'button' | 'submit';
-  isLoading?: boolean;
+  isConnecting?: boolean;
+  isSyncing?: boolean;
   disabled?: boolean;
   text?: string;
   loadingText?: string;
@@ -19,7 +20,8 @@ type ButtonProps = {
 export default function Button({
   onClick,
   type = 'button',
-  isLoading = false,
+  isConnecting = false,
+  isSyncing = false,
   disabled = false,
   text = '',
   loadingText,
@@ -28,7 +30,7 @@ export default function Button({
   ariaLabel,
   title,
 }: ButtonProps) {
-  const isDisabled = disabled || isLoading;
+  const isDisabled = disabled || isSyncing;
   const base =
     'h-12 rounded-xl transition-colors bg-gray-900 hover:bg-gray-700 font-medium text-base text-white inline-flex items-center justify-center p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-900';
 
@@ -37,12 +39,12 @@ export default function Button({
       type={type}
       onClick={onClick}
       disabled={isDisabled}
-      aria-busy={isLoading || undefined}
+      aria-busy={isSyncing || isConnecting || undefined}
       aria-label={ariaLabel || text}
       className={`${className} ${base}`}
       title={title}
     >
-      {isLoading ? (
+      {isSyncing || isConnecting ? (
         <>
           <Loader2 className="w-4 h-4 animate-spin mr-2" />
           {loadingText || 'Working…'}

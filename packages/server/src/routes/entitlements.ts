@@ -7,13 +7,10 @@ import { config } from '../config';
 
 const router: import('express').Router = Router();
 
-type Plan = 'free' | 'pro';
 type Feature = 'oauth' | 'server-sync' | 'auto-sync' | 'ai-tagger' | 'ai-summarizer';
 
-const FEATURES_BY_PLAN: Record<Plan, Feature[]> = {
-  // Free tier supports OAuth connection and on-demand server-side sync (no background auto-sync)
+const IS_PRO_FEATURE: Record<string, Feature[]> = {
   free: ['oauth', 'server-sync'],
-  // Pro unlocks background auto-sync, server-driven sync, and AI features
   pro: ['oauth', 'server-sync', 'auto-sync', 'ai-tagger', 'ai-summarizer'],
 };
 
@@ -22,10 +19,10 @@ const FEATURES_BY_PLAN: Record<Plan, Feature[]> = {
 router.get('/', validateSession, async (req: AuthenticatedRequest, res: Response) => {
   try {
     // Simple server-wide edition gate for MVP; can be extended to per-user plans later
-    const plan: Plan = config.edition === 'pro' ? 'pro' : 'free';
-    const features = FEATURES_BY_PLAN[plan];
+    const isPro = config.isPro;
+    const features = isPro ? IS_PRO_FEATURE['pro'] : IS_PRO_FEATURE['free'];
 
-    res.json({ success: true, plan, features });
+    res.json({ success: true, isPro, features });
   } catch (e) {
     res.status(500).json({ success: false, error: 'Failed to load entitlements' });
   }

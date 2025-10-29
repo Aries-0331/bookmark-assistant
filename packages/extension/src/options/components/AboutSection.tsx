@@ -1,9 +1,11 @@
 import { ExternalLink } from 'lucide-react';
 import { SectionCard } from './SectionCard';
 import { formatLastUpdated } from '../utils';
+import { useAppStore } from '../store';
 import logoUrl from '../../assets/logo.png';
 
-export function AboutSection({ version }: { version: string }) {
+export function AboutSection() {
+  const { version } = useAppStore();
   const lastUpdated = formatLastUpdated();
   return (
     <SectionCard id="about" title="About" description="Information about Notion Bookmark Sync">

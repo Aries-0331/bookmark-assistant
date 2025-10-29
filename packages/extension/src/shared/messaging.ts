@@ -2,7 +2,7 @@
 // Define request/response contracts as a discriminated union
 
 export type MessageMap = {
-  NOTION_OAUTH: { req: {}; res: { ok: boolean; error?: string } };
+  NOTION_OAUTH: { req: {}; res: { success: boolean; error?: string } };
   SYNC_ALL_BOOKMARKS: { req: {}; res: { success: boolean; error?: string } };
   GET_USER_PROFILE: { req: {}; res: { success: boolean; profile?: any; error?: string } };
   LOGOUT: { req: {}; res: { success: boolean; error?: string } };

@@ -1,7 +1,14 @@
 /// <reference types="chrome" />
 /// <reference types="vite/client" />
-import React, { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
-import type { Plan, PublicConfig } from './types';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import type { PublicConfig } from './types';
 import { serverAPI } from '../lib/server-api';
 
 export const FREE_DAILY_LIMIT = 50;
@@ -14,14 +21,20 @@ export const PRICE_MONTHLY_USD = 10; // $/month
 export const DISCOUNT_YEARLY = 0.4; // 40% off the annual total
 
 export type AppState = {
+  // Overview
+  version: string;
+  isConnected: boolean;
+  bookmarkCount: number;
+  lastSync: string;
+
   // Entitlements
-  plan: Plan;
-  setPlan: (p: Plan) => void;
+  isPro: boolean;
   features: string[];
 
   // Sync settings
   autoSync: boolean;
   intervalHours: number;
+  minIntervalHours: number;
   setAutoSync: (v: boolean) => void;
   setIntervalHours: (v: number) => void;
 
@@ -29,7 +42,6 @@ export type AppState = {
   initFromStorage: () => Promise<void>;
   saveSyncSettings: (nextAuto?: boolean, nextIntervalHours?: number) => Promise<void>;
   fetchEntitlements: () => Promise<void>;
-  isPro: () => boolean;
   hasFeature: (f: string) => boolean;
 
   // Config
@@ -91,18 +103,23 @@ function sanitizePublicConfig(json: unknown): PublicConfig | null {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [plan, setPlan] = useState<Plan>('free');
+  const [version, setVersion] = useState<string>('');
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [isPro, setIsPro] = useState<boolean>(false);
+  const [bookmarkCount, setBookmarkCount] = useState<number>(0);
+  const [lastSync, setLastSync] = useState<string>('');
   const [features, setFeatures] = useState<string[]>([]);
   const [autoSync, setAutoSync] = useState(false);
   const [intervalHours, setIntervalHours] = useState<number>(FREE_INTERVAL_HOURS);
+  const [minIntervalHours, setMinIntervalHours] = useState<number>(FREE_INTERVAL_HOURS);
   const [publicConfig, setPublicConfig] = useState<PublicConfig | undefined>(undefined);
 
-  const isPro = () => plan === 'pro';
   const hasFeature = (f: string) => features.includes(f);
 
   const initFromStorage = async () => {
     try {
-      const { auto_sync, sync_interval_hours } = await chrome.storage.local.get([
+      const { last_sync, auto_sync, sync_interval_hours } = await chrome.storage.local.get([
+        'last_sync',
         'auto_sync',
         'sync_interval_hours',
       ]);
@@ -110,11 +127,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { minIntervalHours } = getEffectiveLimits();
       const next = Number.isFinite(interval) ? (interval as number) : minIntervalHours;
       const coerced = Math.max(minIntervalHours, next);
-      // gate auto-sync client-side by feature (server should enforce as well)
+      setLastSync(typeof last_sync === 'string' ? last_sync : '');
       const allowedAuto = !!auto_sync && hasFeature('auto-sync');
       setAutoSync(allowedAuto);
       setIntervalHours(coerced);
-      if (!isPro() && interval !== minIntervalHours) {
+      setMinIntervalHours(minIntervalHours);
+      if (!isPro && interval !== minIntervalHours) {
         await chrome.storage.local.set({ sync_interval_hours: minIntervalHours });
       }
     } catch {}
@@ -126,7 +144,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const raw = typeof nextIntervalHours === 'number' ? nextIntervalHours : intervalHours;
     const { minIntervalHours } = getEffectiveLimits();
     const rounded = Math.floor(raw * 100) / 100;
-    const interval = isPro() ? Math.max(minIntervalHours, rounded) : minIntervalHours;
+    const interval = isPro ? Math.max(minIntervalHours, rounded) : minIntervalHours;
     await chrome.storage.local.set({ auto_sync: auto, sync_interval_hours: interval });
     setAutoSync(auto);
     setIntervalHours(interval);
@@ -134,19 +152,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const fetchEntitlements = async () => {
     if (import.meta.env.DEV && (window as any).__DEV_PLAN__) {
-      setPlan((window as any).__DEV_PLAN__ as Plan);
+      setIsPro((window as any).__DEV_PLAN__ === 'pro');
       setFeatures((window as any).__DEV_FEATURES__ ?? []);
       return;
     }
     try {
       const { session_token } = await chrome.storage.local.get(['session_token']);
-      if (!session_token) return;
+      if (!session_token) {
+        setIsConnected(false);
+        return;
+      }
+      setIsConnected(true);
       const ent = await serverAPI.getEntitlements();
-      setPlan(ent.plan);
+      setIsPro(ent.isPro);
       setFeatures(ent.features || []);
-      await initFromStorage();
     } catch {
-      setPlan('free');
+      setIsPro(false);
       setFeatures([]);
     }
   };
@@ -185,10 +206,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const getEffectiveLimits = () => {
-    const dailyLimit = isPro()
+    const dailyLimit = isPro
       ? (publicConfig?.limits?.pro?.dailyLimit ?? FREE_DAILY_LIMIT)
       : (publicConfig?.limits?.free?.dailyLimit ?? FREE_DAILY_LIMIT);
-    const minIntervalHours = isPro()
+    const minIntervalHours = isPro
       ? (publicConfig?.limits?.pro?.minIntervalHours ?? PRO_MIN_INTERVAL_HOURS)
       : (publicConfig?.limits?.free?.minIntervalHours ?? FREE_INTERVAL_HOURS);
     return { dailyLimit, minIntervalHours };
@@ -202,19 +223,59 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   };
 
+  useEffect(() => {
+    try {
+      const mf = chrome.runtime.getManifest?.();
+      if (mf?.version) setVersion(mf.version);
+    } catch {}
+  }, []);
+
+  // Initialize store and entitlements once
+  useEffect(() => {
+    (async () => {
+      await fetchPublicConfig();
+      await fetchEntitlements();
+      await initFromStorage();
+    })();
+  }, []);
+
+  // Count bookmarks for overview
+  useEffect(() => {
+    (async () => {
+      try {
+        const tree = await chrome.bookmarks.getTree();
+        let count = 0;
+        function countBookmarks(nodes: chrome.bookmarks.BookmarkTreeNode[]) {
+          for (const node of nodes) {
+            if (!node.children) {
+              count += 1;
+            } else {
+              countBookmarks(node.children);
+            }
+          }
+        }
+        countBookmarks(tree);
+        setBookmarkCount(count);
+      } catch {}
+    })();
+  }, []);
+
   const value = useMemo<AppState>(
     () => ({
-      plan,
-      setPlan,
+      version,
+      isConnected,
+      bookmarkCount,
+      lastSync,
+      isPro,
       features,
       autoSync,
       intervalHours,
+      minIntervalHours,
       setAutoSync,
       setIntervalHours,
       initFromStorage,
       saveSyncSettings,
       fetchEntitlements,
-      isPro,
       hasFeature,
       publicConfig,
       fetchPublicConfig,
@@ -222,7 +283,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       getPricing,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [plan, features, autoSync, intervalHours, publicConfig]
+    [isPro, features, autoSync, intervalHours, publicConfig]
   );
 
   return React.createElement(AppContext.Provider, { value }, children);

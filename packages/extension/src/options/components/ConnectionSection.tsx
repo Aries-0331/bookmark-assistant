@@ -1,19 +1,44 @@
 import { Shield, RefreshCcw, Unplug } from 'lucide-react';
 import Button from '../button';
 import { SectionCard } from './SectionCard';
-import { SyncStatus } from '../types';
+import { useAppStore } from '../store';
+import { useState } from 'react';
+import { Messages, sendMessage } from '../../shared/messaging';
+import { useToast } from './Toast';
 
-interface Props {
-  status: SyncStatus;
-  onConnectOAuth: () => void | Promise<void>;
-  onDisconnect: () => void | Promise<void>;
-  onSyncNow: () => void | Promise<void>;
-  cooldownSeconds?: number;
-}
+export function ConnectionSection() {
+  const [isConnecting, setIsConnecting] = useState<boolean>(false);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
-export function ConnectionSection(props: Props) {
-  const { status, onConnectOAuth, onDisconnect, onSyncNow, cooldownSeconds = 0 } = props;
-  const inCooldown = typeof cooldownSeconds === 'number' && cooldownSeconds > 0;
+  const { show } = useToast();
+  const { isConnected } = useAppStore();
+
+  const onConnectOAuth = async () => {
+    try {
+      setIsConnecting(true);
+      await sendMessage({ type: Messages.NOTION_OAUTH });
+      setIsConnecting(false);
+    } catch (e) {
+      setIsConnecting(false);
+      show({ variant: 'error', title: 'Connection failed', description: String(e) });
+    }
+  };
+
+  const onDisconnect = async () => {
+    setIsSyncing(false);
+    await sendMessage({ type: Messages.LOGOUT });
+    show({
+      variant: 'info',
+      title: 'Disconnected',
+      description: 'Your Notion connection has been removed.',
+    });
+  };
+
+  const onSyncNow = async () => {
+    if (!isConnected || isSyncing) return;
+    setIsSyncing(true);
+    await sendMessage({ type: Messages.SYNC_ALL_BOOKMARKS });
+  };
 
   return (
     <SectionCard
@@ -34,14 +59,13 @@ export function ConnectionSection(props: Props) {
           </div>
         </div>
         <div className="mt-3">
-          {status.isConnected ? (
+          {isConnected ? (
             <div className="w-full flex gap-2">
               <Button
                 className="flex-1 gap-2"
                 onClick={onSyncNow}
-                isLoading={!!status.isLoading}
-                disabled={inCooldown}
-                text={inCooldown ? `Sync in ${cooldownSeconds}s` : 'Sync Now'}
+                isSyncing={isSyncing}
+                text="Sync Now"
                 loadingText="Syncing…"
                 icon={<RefreshCcw size={16} />}
                 fullWidth={false}
@@ -58,7 +82,7 @@ export function ConnectionSection(props: Props) {
             <Button
               className="w-full"
               onClick={onConnectOAuth}
-              isLoading={status.isLoading}
+              isConnecting={isConnecting}
               text="Connect to Notion"
               loadingText="Connecting…"
             />

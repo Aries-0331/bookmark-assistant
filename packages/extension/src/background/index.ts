@@ -20,7 +20,7 @@ addMessageListener({
   [Messages.NOTION_OAUTH]: async () => {
     const code = await launchNotionOAuth();
     await exchangeCodeForToken(code);
-    return { ok: true };
+    return { success: true };
   },
   [Messages.SYNC_ALL_BOOKMARKS]: async () => {
     const setState = async (patch: Record<string, any>) => {
@@ -31,6 +31,8 @@ addMessageListener({
       }
     };
     try {
+      const startedAt = Date.now();
+      const MIN_PROGRESS_MS = 1200; // keep UI spinner visible to avoid flicker / rapid re-clicks
       const bookmarkTree = await chrome.bookmarks.getTree();
       const flat = bookmarkTree[0]?.children || [];
 
@@ -90,19 +92,34 @@ addMessageListener({
       };
 
       const fp = await computeFingerprint();
-      // const { last_sync_fingerprint: prevFp } = await chrome.storage.local.get([
-      //   'last_sync_fingerprint',
-      // ]);
-
-      // if (prevFp && prevFp === fp) {
-      //   // No changes detected; short-circuit and update last_sync timestamps
-      //   await setState({
-      //     last_sync: new Date().toISOString(),
-      //     last_sync_summary: 'no_changes',
-      //     last_sync_error: null,
-      //   });
-      //   return { success: true } as const;
-      // }
+      const {
+        last_sync_fingerprint: prevFp,
+        last_sync_count: prevCount,
+        last_sync_hash: prevHash,
+      } = await chrome.storage.local.get([
+        'last_sync_fingerprint',
+        'last_sync_count',
+        'last_sync_hash',
+      ]);
+      const currentCount = formatted.length;
+      const currentHash = fp;
+      const previousHash = typeof prevHash === 'string' ? prevHash : prevFp;
+      if (
+        typeof prevCount === 'number' &&
+        typeof previousHash === 'string' &&
+        prevCount === currentCount &&
+        previousHash === currentHash
+      ) {
+        // No changes — keep last successful sync timestamp; just notify summary
+        await setState({ last_sync_summary: 'no_changes' });
+        // Ensure minimal progress duration
+        const elapsed = Date.now() - startedAt;
+        if (elapsed < MIN_PROGRESS_MS) {
+          await new Promise((r) => setTimeout(r, MIN_PROGRESS_MS - elapsed));
+        }
+        await setState({ sync_in_progress: false });
+        return { success: true } as const;
+      }
 
       await serverAPI.syncBookmarks(formatted);
 
@@ -110,9 +127,17 @@ addMessageListener({
         last_sync: new Date().toISOString(),
         last_sync_summary: null,
         last_sync_error: null,
+        last_sync_count: currentCount,
+        last_sync_hash: currentHash,
         last_sync_fingerprint: fp,
       });
 
+      // Ensure minimal progress duration before clearing flag
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < MIN_PROGRESS_MS) {
+        await new Promise((r) => setTimeout(r, MIN_PROGRESS_MS - elapsed));
+      }
+      await setState({ sync_in_progress: false });
       return { success: true } as const;
     } catch (err) {
       console.error('❌ Server-side bookmark sync failed:', err);
@@ -135,9 +160,11 @@ addMessageListener({
         last_sync_error: err instanceof Error ? err.message : String(err),
         ...summary,
       });
-      return { success: false, error: String(err) } as const;
-    } finally {
+      try {
+        await new Promise((r) => setTimeout(r, 600));
+      } catch {}
       await setState({ sync_in_progress: false });
+      return { success: false, error: String(err) } as const;
     }
   },
   [Messages.GET_USER_PROFILE]: async () => {

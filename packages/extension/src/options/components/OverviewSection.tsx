@@ -1,18 +1,10 @@
 import { AlertCircle, CheckCircle, Crown, Sparkles } from 'lucide-react';
 import { SectionCard } from './SectionCard';
-import { Plan, SyncStatus } from '../types';
 import { relativeTime } from '../utils';
+import { useAppStore } from '../store';
 
-export function OverviewSection({
-  status,
-  plan,
-  bookmarkCount,
-}: {
-  status: SyncStatus;
-  plan: Plan;
-  bookmarkCount: number;
-}) {
-  const isPro = plan === 'pro';
+export function OverviewSection() {
+  const { isConnected, isPro, bookmarkCount, lastSync } = useAppStore();
   return (
     <SectionCard id="overview" title="Overview">
       <div className="flex justify-between flex-wrap text-gray-600 bg-gray-50 rounded-2xl border border-gray-200 p-4 sm:p-5">
@@ -20,12 +12,12 @@ export function OverviewSection({
           <span>Status</span>
           <span
             className={`inline-flex items-center px-2 py-1 rounded-md text-xs border ${
-              status.isConnected
+              isConnected
                 ? 'text-green-700 bg-green-50 border-green-200'
                 : 'text-red-700 bg-red-50 border-red-200'
             }`}
           >
-            {status.isConnected ? (
+            {isConnected ? (
               <>
                 <CheckCircle className="w-3.5 h-3.5 mr-1" /> Connected
               </>
@@ -52,14 +44,12 @@ export function OverviewSection({
         </div>
         <div className="flex flex-col items-center gap-2 p-2">
           <span>Bookmarks</span>
-          <span className="text-center text-gray-900">
-            {status.isConnected ? bookmarkCount : '-'}
-          </span>
+          <span className="text-center text-gray-900">{isConnected ? bookmarkCount : '-'}</span>
         </div>
         <div className="flex flex-col items-center gap-2 p-2">
           <span>Last sync</span>
           <span className="text-center text-sm text-gray-900">
-            {status.isConnected ? relativeTime(status.lastSync) : '-'}
+            {isConnected ? relativeTime(lastSync) : '-'}
           </span>
         </div>
         {/* Errors are displayed via top-center toasts */}

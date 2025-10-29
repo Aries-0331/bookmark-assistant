@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   Mail,
 } from 'lucide-react';
-import type { Plan } from '../types';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { FREE_DAILY_LIMIT, FREE_INTERVAL_HOURS, PRO_MIN_INTERVAL_MINUTES } from '../store';
@@ -43,18 +42,9 @@ const PLAN_FEATURES: Record<'free' | 'pro', FeatureItem[]> = {
   ],
 };
 
-export function BillingSection({
-  plan,
-  onUpgrade,
-  onManage,
-}: {
-  plan: Plan;
-  onUpgrade?: () => void;
-  onManage?: () => void;
-}) {
+export function BillingSection() {
   const [yearly, setYearly] = useState(false);
-  const isPro = plan === 'pro';
-  const { getPricing } = useAppStore();
+  const { isPro, getPricing } = useAppStore();
   const { monthly: MONTHLY_PRICE, yearlyDiscount: YEARLY_DISCOUNT } = getPricing();
 
   // Derive URLs from env if no handlers provided
@@ -71,11 +61,11 @@ export function BillingSection({
     : 'https://github.com/Aries-0331/bookmarks_to_notion#billing';
 
   const handleUpgrade = () => {
-    if (onUpgrade) return onUpgrade();
+    // if (onUpgrade) return onUpgrade();
     window.open(upgradeUrl, '_blank', 'noopener');
   };
   const handleManage = () => {
-    if (onManage) return onManage();
+    // if (onManage) return onManage();
     window.open(manageUrl, '_blank', 'noopener');
   };
 

@@ -70,8 +70,8 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     // Throttle rapid re-clicks and block concurrent syncs per user
     const now = Date.now();
     const guard = syncGuards.get(userId) || { inProgress: false, lastStart: 0 };
-    const isProEdition = config.edition === 'pro';
-    const minCooldownMs = isProEdition ? 5000 : 30000; // 5s for Pro, 30s for Free
+    const isPro = config.isPro;
+    const minCooldownMs = isPro ? 5000 : 30000; // 5s for Pro, 30s for Free
 
     if (guard.inProgress) {
       auditLog('sync_already_in_progress', userId, {});
@@ -81,7 +81,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       });
     }
     // Daily cap for Free users
-    if (!isProEdition) {
+    if (!isPro) {
       const dayKey = new Date().toISOString().slice(0, 10); // UTC YYYY-MM-DD
       const today = syncDailyCounters.get(userId);
       if (!today || today.date !== dayKey) {
@@ -123,7 +123,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     guard.lastStart = now;
     syncGuards.set(userId, guard);
     // Count this sync start against the daily cap for Free users
-    if (!isProEdition) {
+    if (!isPro) {
       const entry = syncDailyCounters.get(userId)!;
       entry.count += 1;
       syncDailyCounters.set(userId, entry);

@@ -1,11 +1,11 @@
 import { SectionCard } from './SectionCard';
-import type { Plan } from '../types';
 import { ExternalLink } from 'lucide-react';
 import {
   FREE_DAILY_LIMIT,
   FREE_INTERVAL_HOURS,
   PRO_MIN_INTERVAL_HOURS,
   PRO_MIN_INTERVAL_MINUTES,
+  useAppStore,
 } from '../store';
 
 export function BillingSection() {
@@ -226,8 +226,8 @@ export function FAQSection() {
   );
 }
 
-export function TutorialsSection({ plan }: { plan: Plan }) {
-  const isPro = plan === 'pro';
+export function TutorialsSection() {
+  const { isPro } = useAppStore();
   return (
     <SectionCard
       id="tutorials"
