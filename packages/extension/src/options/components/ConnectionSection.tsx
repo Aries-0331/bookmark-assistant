@@ -7,28 +7,8 @@ import { Messages, sendMessage } from '../../utils/message';
 import { useToast } from './Toast';
 
 export function ConnectionSection() {
-  const [isConnecting, setIsConnecting] = useState<boolean>(false);
-  const [isSyncing, setIsSyncing] = useState<boolean>(false);
-
   const { show } = useToast();
-  const { isConnected, fetchEntitlements } = useAppStore();
-
-  const onConnectOAuth = async () => {
-    try {
-      setIsConnecting(true);
-      await sendMessage({ type: Messages.NOTION_OAUTH });
-      await fetchEntitlements();
-      show({
-        variant: 'success',
-        title: 'Connected',
-        description: 'Your Notion account has been successfully connected.',
-      });
-      setIsConnecting(false);
-    } catch (e) {
-      setIsConnecting(false);
-      show({ variant: 'error', title: 'Connection failed', description: String(e) });
-    }
-  };
+  const { isConnecting, isConnected, isSyncing, onConnect, onSync } = useAppStore();
 
   const onDisconnect = async () => {
     setIsSyncing(false);
@@ -87,7 +67,7 @@ export function ConnectionSection() {
           ) : (
             <Button
               className="w-full"
-              onClick={onConnectOAuth}
+              onClick={onConnect}
               isConnecting={isConnecting}
               text="Connect to Notion"
               loadingText="Connecting…"

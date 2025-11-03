@@ -22,6 +22,14 @@ export const CACHE_KEYS = {
   last_sync_fingerprint: 'last_sync_fingerprint',
 } as const;
 
+export const WATCHED_CACHE_KEYS = [
+  CACHE_KEYS.session_token,
+  CACHE_KEYS.sync_in_progress,
+  CACHE_KEYS.last_sync_at,
+  CACHE_KEYS.last_sync_count,
+  CACHE_KEYS.last_sync_fingerprint,
+] as const;
+
 export type CacheKey = keyof typeof CACHE_KEYS;
 
 // Tiny typed helpers around chrome.storage.local

@@ -10,6 +10,9 @@ import React, {
 } from 'react';
 import type { PublicConfig } from '../utils/config';
 import { serverAPI } from '../background/server-api';
+import { useToast } from './components/Toast';
+import { CACHE_KEYS, WATCHED_CACHE_KEYS } from '../utils/cache';
+import { Messages, sendMessage } from '../utils/message';
 
 export const FREE_DAILY_LIMIT = 50;
 export const FREE_INTERVAL_HOURS = 12;
@@ -26,10 +29,10 @@ export type AppState = {
   isConnected: boolean;
   bookmarkCount: number;
   lastSync: string;
-
-  // Entitlements
   isPro: boolean;
-  features: string[];
+
+  // Auth
+  onConnect: () => Promise<void>;
 
   // Sync settings
   autoSync: boolean;
@@ -41,7 +44,6 @@ export type AppState = {
   // Lifecycle
   initFromStorage: () => Promise<void>;
   saveSyncSettings: (nextAuto?: boolean, nextIntervalHours?: number) => Promise<void>;
-  fetchEntitlements: () => Promise<void>;
   hasFeature: (f: string) => boolean;
 
   // Config
@@ -104,6 +106,7 @@ function sanitizePublicConfig(json: unknown): PublicConfig | null {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [version, setVersion] = useState<string>('');
+  const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [isPro, setIsPro] = useState<boolean>(false);
   const [bookmarkCount, setBookmarkCount] = useState<number>(0);
@@ -114,7 +117,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [minIntervalHours, setMinIntervalHours] = useState<number>(FREE_INTERVAL_HOURS);
   const [publicConfig, setPublicConfig] = useState<PublicConfig | undefined>(undefined);
 
+  const { show } = useToast();
+
   const hasFeature = (f: string) => features.includes(f);
+
+  const onConnect = async () => {
+    try {
+      const res = await sendMessage({ type: Messages.NOTION_OAUTH });
+      if (res.success) {
+        setIsConnected(true);
+        show({
+          variant: 'success',
+          title: 'Connected',
+          description: 'Your Notion account has been successfully connected.',
+        });
+      }
+    } catch (e) {
+      show({ variant: 'error', title: 'Connection failed', description: String(e) });
+    }
+  };
 
   const initFromStorage = async () => {
     try {
@@ -148,28 +169,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await chrome.storage.local.set({ auto_sync: auto, sync_interval_hours: interval });
     setAutoSync(auto);
     setIntervalHours(interval);
-  };
-
-  const fetchEntitlements = async () => {
-    if (import.meta.env.DEV && (window as any).__DEV_PLAN__) {
-      setIsPro((window as any).__DEV_PLAN__ === 'pro');
-      setFeatures((window as any).__DEV_FEATURES__ ?? []);
-      return;
-    }
-    try {
-      const { session_token } = await chrome.storage.local.get(['session_token']);
-      if (!session_token) {
-        setIsConnected(false);
-        return;
-      }
-      setIsConnected(true);
-      const ent = await serverAPI.getEntitlements();
-      setIsPro(ent.isPro);
-      setFeatures(ent.features || []);
-    } catch {
-      setIsPro(false);
-      setFeatures([]);
-    }
   };
 
   const fetchPublicConfig = async () => {
@@ -230,42 +229,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, []);
 
-  // Initialize store and entitlements once
-  useEffect(() => {
-    (async () => {
-      await fetchPublicConfig();
-      await fetchEntitlements();
-      await initFromStorage();
-    })();
-  }, []);
-
-  // Keep isConnected and lastSync in sync with background via storage events
+  // Listen to storage changes as an event-driven callback to reflect connection and sync status
   useEffect(() => {
     const onChanged = (
       changes: { [key: string]: chrome.storage.StorageChange },
       areaName: string
     ) => {
       if (areaName !== 'local') return;
-      if ('session_token' in changes) {
-        const has = !!changes.session_token.newValue;
-        setIsConnected(has);
-        if (has) {
-          // Refresh entitlements/features promptly after login
-          fetchEntitlements();
+      const shot = WATCHED_CACHE_KEYS.some((key) => key in changes);
+      if (!shot) return;
+
+      if (changes[CACHE_KEYS.session_token]) {
+        const change = changes[CACHE_KEYS.session_token];
+        const newToken = change.newValue;
+        if (newToken) {
+          setIsConnected(true);
         } else {
-          // Clear entitlements on logout
-          setIsPro(false);
-          setFeatures([]);
+          setIsConnected(false);
         }
       }
-      if ('last_sync' in changes) {
-        const next = changes.last_sync.newValue as string | undefined;
-        setLastSync(typeof next === 'string' ? next : '');
-      }
     };
+
     chrome.storage.onChanged.addListener(onChanged);
     return () => chrome.storage.onChanged.removeListener(onChanged);
-  }, []);
+  }, [show]);
 
   // Count bookmarks for overview
   useEffect(() => {
@@ -291,7 +278,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AppState>(
     () => ({
       version,
+      isConnecting,
       isConnected,
+      onConnect,
       bookmarkCount,
       lastSync,
       isPro,
@@ -303,7 +292,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setIntervalHours,
       initFromStorage,
       saveSyncSettings,
-      fetchEntitlements,
       hasFeature,
       publicConfig,
       fetchPublicConfig,
