@@ -1,9 +1,9 @@
 import { Shield, RefreshCcw, Unplug } from 'lucide-react';
-import Button from '../button';
+import Button from './button';
 import { SectionCard } from './SectionCard';
 import { useAppStore } from '../store';
 import { useState } from 'react';
-import { Messages, sendMessage } from '../../shared/messaging';
+import { Messages, sendMessage } from '../../utils/message';
 import { useToast } from './Toast';
 
 export function ConnectionSection() {
@@ -11,12 +11,18 @@ export function ConnectionSection() {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   const { show } = useToast();
-  const { isConnected } = useAppStore();
+  const { isConnected, fetchEntitlements } = useAppStore();
 
   const onConnectOAuth = async () => {
     try {
       setIsConnecting(true);
       await sendMessage({ type: Messages.NOTION_OAUTH });
+      await fetchEntitlements();
+      show({
+        variant: 'success',
+        title: 'Connected',
+        description: 'Your Notion account has been successfully connected.',
+      });
       setIsConnecting(false);
     } catch (e) {
       setIsConnecting(false);

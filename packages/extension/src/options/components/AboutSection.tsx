@@ -1,6 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 import { SectionCard } from './SectionCard';
-import { formatLastUpdated } from '../utils';
+import { formatLastUpdated } from '../../utils/common';
 import { useAppStore } from '../store';
 import logoUrl from '../../assets/logo.png';
 

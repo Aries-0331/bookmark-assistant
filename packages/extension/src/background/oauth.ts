@@ -1,5 +1,5 @@
-import { config } from '../lib/config';
-import { serverAPI } from '../lib/server-api';
+import { config } from './config';
+import { serverAPI } from './server-api';
 
 // Debug function to help with OAuth setup
 export function debugOAuthSetup() {

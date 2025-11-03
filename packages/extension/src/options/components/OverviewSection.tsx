@@ -1,6 +1,6 @@
 import { AlertCircle, CheckCircle, Crown, Sparkles } from 'lucide-react';
 import { SectionCard } from './SectionCard';
-import { relativeTime } from '../utils';
+import { relativeTime } from '../../utils/common';
 import { useAppStore } from '../store';
 
 export function OverviewSection() {

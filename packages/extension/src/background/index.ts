@@ -1,8 +1,8 @@
 import './polyfill';
 import { launchNotionOAuth, exchangeCodeForToken, debugOAuthSetup } from './oauth';
-import { validateConfig, debugConfig } from '../lib/config';
-import { serverAPI, APIError } from '../lib/server-api';
-import { addMessageListener, Messages } from '../shared/messaging';
+import { validateConfig, debugConfig } from './config';
+import { serverAPI, APIError } from './server-api';
+import { addMessageListener, Messages } from '../utils/message';
 
 // import './test-oauth-flow'; // Removed in production build
 
@@ -126,7 +126,6 @@ addMessageListener({
       await setState({
         last_sync: new Date().toISOString(),
         last_sync_summary: null,
-        last_sync_error: null,
         last_sync_count: currentCount,
         last_sync_hash: currentHash,
         last_sync_fingerprint: fp,

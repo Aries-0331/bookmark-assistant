@@ -8,8 +8,8 @@ import React, {
   useState,
   type ReactNode,
 } from 'react';
-import type { PublicConfig } from './types';
-import { serverAPI } from '../lib/server-api';
+import type { PublicConfig } from '../utils/config';
+import { serverAPI } from '../background/server-api';
 
 export const FREE_DAILY_LIMIT = 50;
 export const FREE_INTERVAL_HOURS = 12;
@@ -237,6 +237,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await fetchEntitlements();
       await initFromStorage();
     })();
+  }, []);
+
+  // Keep isConnected and lastSync in sync with background via storage events
+  useEffect(() => {
+    const onChanged = (
+      changes: { [key: string]: chrome.storage.StorageChange },
+      areaName: string
+    ) => {
+      if (areaName !== 'local') return;
+      if ('session_token' in changes) {
+        const has = !!changes.session_token.newValue;
+        setIsConnected(has);
+        if (has) {
+          // Refresh entitlements/features promptly after login
+          fetchEntitlements();
+        } else {
+          // Clear entitlements on logout
+          setIsPro(false);
+          setFeatures([]);
+        }
+      }
+      if ('last_sync' in changes) {
+        const next = changes.last_sync.newValue as string | undefined;
+        setLastSync(typeof next === 'string' ? next : '');
+      }
+    };
+    chrome.storage.onChanged.addListener(onChanged);
+    return () => chrome.storage.onChanged.removeListener(onChanged);
   }, []);
 
   // Count bookmarks for overview

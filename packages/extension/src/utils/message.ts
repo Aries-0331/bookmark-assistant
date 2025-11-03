@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 // Centralized typed messaging between Options/Content and Background
 // Define request/response contracts as a discriminated union
 

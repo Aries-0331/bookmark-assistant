@@ -1,4 +1,4 @@
-import { serverAPI } from '../lib/server-api';
+import { serverAPI } from './server-api';
 
 export interface BookmarkItem {
   id: string;
