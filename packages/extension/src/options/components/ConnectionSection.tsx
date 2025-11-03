@@ -2,14 +2,29 @@ import { Shield, RefreshCcw, Unplug } from 'lucide-react';
 import Button from './Button';
 import { SectionCard } from './SectionCard';
 import { useAppStore } from '../store';
-import { useState } from 'react';
 import { Messages, sendMessage } from '../../utils/message';
-import { useToast } from './Toast';
+import { useToast } from '../hook/useToast';
 
 export function ConnectionSection() {
   const { show } = useToast();
-  const { isConnecting, isConnected, isSyncing, onConnect, onSync } = useAppStore();
+  const { isConnecting, isConnected, isSyncing, setIsSyncing } = useAppStore();
 
+  const onConnect = async () => {
+    const res = await sendMessage({ type: Messages.NOTION_OAUTH });
+    if (res.success) {
+      show({
+        variant: 'success',
+        title: 'Connected',
+        description: 'Your Notion workspace has been successfully connected.',
+      });
+    } else {
+      show({
+        variant: 'error',
+        title: 'Connection Failed',
+        description: 'Failed to connect to Notion. Please try again.',
+      });
+    }
+  };
   const onDisconnect = async () => {
     setIsSyncing(false);
     await sendMessage({ type: Messages.LOGOUT });
@@ -23,7 +38,11 @@ export function ConnectionSection() {
   const onSyncNow = async () => {
     if (!isConnected || isSyncing) return;
     setIsSyncing(true);
-    await sendMessage({ type: Messages.SYNC_ALL_BOOKMARKS });
+    try {
+      await sendMessage({ type: Messages.SYNC_ALL_BOOKMARKS });
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   return (

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAppStore } from '../store';
 import { SectionCard } from './SectionCard';
-import { useToast } from './Toast';
+import { useToast } from '../hook/useToast';
 
 export function SyncSettingsSection() {
   const [value, setValue] = useState<number>(0);

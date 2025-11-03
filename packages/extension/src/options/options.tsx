@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { PageHeader } from './components/SectionCard';
 import { OverviewSection } from './components/OverviewSection';

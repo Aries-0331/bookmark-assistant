@@ -19,8 +19,7 @@ if (configValidation.warnings.length > 0) {
 addMessageListener({
   [Messages.NOTION_OAUTH]: async () => {
     const code = await launchNotionOAuth();
-    await exchangeCodeForToken(code);
-    return { success: true };
+    return await exchangeCodeForToken(code);
   },
   [Messages.SYNC_ALL_BOOKMARKS]: async () => {
     const setState = async (patch: Record<string, any>) => {

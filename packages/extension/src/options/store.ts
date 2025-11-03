@@ -1,18 +1,9 @@
 /// <reference types="chrome" />
 /// <reference types="vite/client" />
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useEffect, type ReactNode } from 'react';
+import { create } from 'zustand';
 import type { PublicConfig } from '../utils/config';
-import { serverAPI } from '../background/server-api';
-import { useToast } from './components/Toast';
 import { CACHE_KEYS, WATCHED_CACHE_KEYS } from '../utils/cache';
-import { Messages, sendMessage } from '../utils/message';
 
 export const FREE_DAILY_LIMIT = 50;
 export const FREE_INTERVAL_HOURS = 12;
@@ -26,13 +17,15 @@ export const DISCOUNT_YEARLY = 0.4; // 40% off the annual total
 export type AppState = {
   // Overview
   version: string;
+  isConnecting: boolean;
   isConnected: boolean;
+  isSyncing: boolean;
   bookmarkCount: number;
   lastSync: string;
   isPro: boolean;
-
-  // Auth
-  onConnect: () => Promise<void>;
+  features: string[];
+  setIsConnecting: (v: boolean) => void;
+  setIsSyncing: (v: boolean) => void;
 
   // Sync settings
   autoSync: boolean;
@@ -53,16 +46,10 @@ export type AppState = {
   getPricing: () => { currency: string; monthly: number; yearlyDiscount: number };
 };
 
-const AppContext = createContext<AppState | null>(null);
-
 // ------- helpers -------
 const isFiniteNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max);
 
-/**
- * Best-effort validation/sanitization for server-provided PublicConfig
- * Keeps UI resilient against malformed payloads without introducing a runtime dep.
- */
 function sanitizePublicConfig(json: unknown): PublicConfig | null {
   try {
     if (!json || typeof json !== 'object') return null;
@@ -72,7 +59,6 @@ function sanitizePublicConfig(json: unknown): PublicConfig | null {
     const monthly = isFiniteNumber(j?.pricing?.monthly)
       ? Math.max(0, j.pricing.monthly)
       : PRICE_MONTHLY_USD;
-    // allow 0..1 or 0..100; normalize >1 as percent
     const rawDiscount = isFiniteNumber(j?.pricing?.yearlyDiscount)
       ? j.pricing.yearlyDiscount
       : DISCOUNT_YEARLY;
@@ -104,40 +90,26 @@ function sanitizePublicConfig(json: unknown): PublicConfig | null {
   }
 }
 
-export function AppProvider({ children }: { children: ReactNode }) {
-  const [version, setVersion] = useState<string>('');
-  const [isConnecting, setIsConnecting] = useState<boolean>(false);
-  const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [isPro, setIsPro] = useState<boolean>(false);
-  const [bookmarkCount, setBookmarkCount] = useState<number>(0);
-  const [lastSync, setLastSync] = useState<string>('');
-  const [features, setFeatures] = useState<string[]>([]);
-  const [autoSync, setAutoSync] = useState(false);
-  const [intervalHours, setIntervalHours] = useState<number>(FREE_INTERVAL_HOURS);
-  const [minIntervalHours, setMinIntervalHours] = useState<number>(FREE_INTERVAL_HOURS);
-  const [publicConfig, setPublicConfig] = useState<PublicConfig | undefined>(undefined);
+// Zustand store
+export const useAppStore = create<AppState>((set, get) => ({
+  version: '',
+  isConnecting: false,
+  isConnected: false,
+  isSyncing: false,
+  bookmarkCount: 0,
+  lastSync: '',
+  isPro: false,
+  features: [],
+  setIsConnecting: (v: boolean) => set({ isConnecting: v }),
+  setIsSyncing: (v: boolean) => set({ isSyncing: v }),
 
-  const { show } = useToast();
+  autoSync: false,
+  intervalHours: FREE_INTERVAL_HOURS,
+  minIntervalHours: FREE_INTERVAL_HOURS,
+  setAutoSync: (v: boolean) => set({ autoSync: v }),
+  setIntervalHours: (v: number) => set({ intervalHours: v }),
 
-  const hasFeature = (f: string) => features.includes(f);
-
-  const onConnect = async () => {
-    try {
-      const res = await sendMessage({ type: Messages.NOTION_OAUTH });
-      if (res.success) {
-        setIsConnected(true);
-        show({
-          variant: 'success',
-          title: 'Connected',
-          description: 'Your Notion account has been successfully connected.',
-        });
-      }
-    } catch (e) {
-      show({ variant: 'error', title: 'Connection failed', description: String(e) });
-    }
-  };
-
-  const initFromStorage = async () => {
+  initFromStorage: async () => {
     try {
       const { last_sync, auto_sync, sync_interval_hours } = await chrome.storage.local.get([
         'last_sync',
@@ -145,33 +117,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
         'sync_interval_hours',
       ]);
       const interval = Number(sync_interval_hours);
-      const { minIntervalHours } = getEffectiveLimits();
+      const { minIntervalHours } = get().getEffectiveLimits();
       const next = Number.isFinite(interval) ? (interval as number) : minIntervalHours;
       const coerced = Math.max(minIntervalHours, next);
-      setLastSync(typeof last_sync === 'string' ? last_sync : '');
-      const allowedAuto = !!auto_sync && hasFeature('auto-sync');
-      setAutoSync(allowedAuto);
-      setIntervalHours(coerced);
-      setMinIntervalHours(minIntervalHours);
-      if (!isPro && interval !== minIntervalHours) {
+      set({ lastSync: typeof last_sync === 'string' ? last_sync : '' });
+      const allowedAuto = !!auto_sync && get().hasFeature('auto-sync');
+      set({ autoSync: allowedAuto, intervalHours: coerced, minIntervalHours });
+      if (!get().isPro && interval !== minIntervalHours) {
         await chrome.storage.local.set({ sync_interval_hours: minIntervalHours });
       }
     } catch {}
-  };
-
-  const saveSyncSettings = async (nextAuto?: boolean, nextIntervalHours?: number) => {
-    const autoRequested = typeof nextAuto === 'boolean' ? nextAuto : autoSync;
-    const auto = hasFeature('auto-sync') ? autoRequested : false;
-    const raw = typeof nextIntervalHours === 'number' ? nextIntervalHours : intervalHours;
-    const { minIntervalHours } = getEffectiveLimits();
+  },
+  saveSyncSettings: async (nextAuto?: boolean, nextIntervalHours?: number) => {
+    const autoRequested = typeof nextAuto === 'boolean' ? nextAuto : get().autoSync;
+    const auto = get().hasFeature('auto-sync') ? autoRequested : false;
+    const raw = typeof nextIntervalHours === 'number' ? nextIntervalHours : get().intervalHours;
+    const { minIntervalHours } = get().getEffectiveLimits();
     const rounded = Math.floor(raw * 100) / 100;
-    const interval = isPro ? Math.max(minIntervalHours, rounded) : minIntervalHours;
+    const interval = get().isPro ? Math.max(minIntervalHours, rounded) : minIntervalHours;
     await chrome.storage.local.set({ auto_sync: auto, sync_interval_hours: interval });
-    setAutoSync(auto);
-    setIntervalHours(interval);
-  };
+    set({ autoSync: auto, intervalHours: interval });
+  },
+  hasFeature: (f: string) => get().features.includes(f),
 
-  const fetchPublicConfig = async () => {
+  publicConfig: undefined,
+  fetchPublicConfig: async () => {
     try {
       const { public_config_cache } = await chrome.storage.local.get(['public_config_cache']);
       const cache: { etag?: string; ts?: number; data?: PublicConfig } | undefined =
@@ -179,7 +149,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const now = Date.now();
       const FRESH_MS = 6 * 60 * 60 * 1000; // 6h
       if (cache?.data && cache?.ts && now - cache.ts < FRESH_MS) {
-        setPublicConfig(cache.data);
+        set({ publicConfig: cache.data });
         return;
       }
       const base = (import.meta.env.VITE_OAUTH_SERVER_URL || '').replace(/\/$/, '');
@@ -189,47 +159,51 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (cache?.etag) headers['If-None-Match'] = cache.etag;
       const res = await fetch(url, { headers });
       if (res.status === 304 && cache?.data) {
-        setPublicConfig(cache.data);
+        set({ publicConfig: cache.data });
         return;
       }
       if (!res.ok) return;
       const raw = await res.json();
       const data = sanitizePublicConfig(raw);
       if (!data) return;
-      setPublicConfig(data);
+      set({ publicConfig: data });
       const etag = res.headers.get('ETag') || undefined;
       await chrome.storage.local.set({ public_config_cache: { etag, ts: now, data } });
     } catch {
       // soft-fail; use defaults
     }
-  };
-
-  const getEffectiveLimits = () => {
-    const dailyLimit = isPro
-      ? (publicConfig?.limits?.pro?.dailyLimit ?? FREE_DAILY_LIMIT)
-      : (publicConfig?.limits?.free?.dailyLimit ?? FREE_DAILY_LIMIT);
-    const minIntervalHours = isPro
-      ? (publicConfig?.limits?.pro?.minIntervalHours ?? PRO_MIN_INTERVAL_HOURS)
-      : (publicConfig?.limits?.free?.minIntervalHours ?? FREE_INTERVAL_HOURS);
+  },
+  getEffectiveLimits: () => {
+    const st = get();
+    const dailyLimit = st.isPro
+      ? (st.publicConfig?.limits?.pro?.dailyLimit ?? FREE_DAILY_LIMIT)
+      : (st.publicConfig?.limits?.free?.dailyLimit ?? FREE_DAILY_LIMIT);
+    const minIntervalHours = st.isPro
+      ? (st.publicConfig?.limits?.pro?.minIntervalHours ?? PRO_MIN_INTERVAL_HOURS)
+      : (st.publicConfig?.limits?.free?.minIntervalHours ?? FREE_INTERVAL_HOURS);
     return { dailyLimit, minIntervalHours };
-  };
-
-  const getPricing = () => {
+  },
+  getPricing: () => {
+    const st = get();
     return {
-      currency: publicConfig?.pricing.currency ?? 'USD',
-      monthly: publicConfig?.pricing.monthly ?? PRICE_MONTHLY_USD,
-      yearlyDiscount: publicConfig?.pricing.yearlyDiscount ?? DISCOUNT_YEARLY,
+      currency: st.publicConfig?.pricing.currency ?? 'USD',
+      monthly: st.publicConfig?.pricing.monthly ?? PRICE_MONTHLY_USD,
+      yearlyDiscount: st.publicConfig?.pricing.yearlyDiscount ?? DISCOUNT_YEARLY,
     };
-  };
+  },
+}));
 
+// Thin provider to run init effects and listeners
+export function AppProvider({ children }: { children: ReactNode }) {
+  // Version
   useEffect(() => {
     try {
       const mf = chrome.runtime.getManifest?.();
-      if (mf?.version) setVersion(mf.version);
+      if (mf?.version) useAppStore.setState({ version: mf.version });
     } catch {}
   }, []);
 
-  // Listen to storage changes as an event-driven callback to reflect connection and sync status
+  // Reflect connection status from storage token and last sync time
   useEffect(() => {
     const onChanged = (
       changes: { [key: string]: chrome.storage.StorageChange },
@@ -238,75 +212,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (areaName !== 'local') return;
       const shot = WATCHED_CACHE_KEYS.some((key) => key in changes);
       if (!shot) return;
-
       if (changes[CACHE_KEYS.session_token]) {
-        const change = changes[CACHE_KEYS.session_token];
-        const newToken = change.newValue;
-        if (newToken) {
-          setIsConnected(true);
-        } else {
-          setIsConnected(false);
-        }
+        const newToken = changes[CACHE_KEYS.session_token].newValue;
+        useAppStore.setState({ isConnected: !!newToken });
+      }
+      if (changes['last_sync']) {
+        const s = changes['last_sync'].newValue as string | undefined;
+        if (typeof s === 'string') useAppStore.setState({ lastSync: s });
+      }
+      if (changes['sync_in_progress']) {
+        useAppStore.setState({ isSyncing: !!changes['sync_in_progress'].newValue });
       }
     };
-
     chrome.storage.onChanged.addListener(onChanged);
     return () => chrome.storage.onChanged.removeListener(onChanged);
-  }, [show]);
+  }, []);
 
-  // Count bookmarks for overview
+  // Initial bookmark count
   useEffect(() => {
     (async () => {
       try {
         const tree = await chrome.bookmarks.getTree();
         let count = 0;
-        function countBookmarks(nodes: chrome.bookmarks.BookmarkTreeNode[]) {
-          for (const node of nodes) {
-            if (!node.children) {
-              count += 1;
-            } else {
-              countBookmarks(node.children);
-            }
+        function walk(nodes: chrome.bookmarks.BookmarkTreeNode[]) {
+          for (const n of nodes) {
+            if ((n as any).url) count += 1;
+            if (n.children && n.children.length) walk(n.children);
           }
         }
-        countBookmarks(tree);
-        setBookmarkCount(count);
+        walk(tree);
+        useAppStore.setState({ bookmarkCount: count });
       } catch {}
     })();
   }, []);
 
-  const value = useMemo<AppState>(
-    () => ({
-      version,
-      isConnecting,
-      isConnected,
-      onConnect,
-      bookmarkCount,
-      lastSync,
-      isPro,
-      features,
-      autoSync,
-      intervalHours,
-      minIntervalHours,
-      setAutoSync,
-      setIntervalHours,
-      initFromStorage,
-      saveSyncSettings,
-      hasFeature,
-      publicConfig,
-      fetchPublicConfig,
-      getEffectiveLimits,
-      getPricing,
-    }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isPro, features, autoSync, intervalHours, publicConfig]
-  );
+  // Kick off config + settings load
+  useEffect(() => {
+    (async () => {
+      await useAppStore.getState().fetchPublicConfig();
+      await useAppStore.getState().initFromStorage();
+    })();
+  }, []);
 
-  return React.createElement(AppContext.Provider, { value }, children);
-}
-
-export function useAppStore(): AppState {
-  const ctx = useContext(AppContext);
-  if (!ctx) throw new Error('useAppStore must be used within AppProvider');
-  return ctx;
+  return children as any;
 }

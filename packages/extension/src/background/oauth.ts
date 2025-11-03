@@ -72,18 +72,12 @@ export async function launchNotionOAuth() {
   });
 }
 
-export async function exchangeCodeForToken(code: string): Promise<string> {
+export async function exchangeCodeForToken(code: string): Promise<{ success: boolean }> {
   const redirectUri = chrome.identity.getRedirectURL('callback');
 
-  try {
-    await serverAPI.exchangeOAuthCode(code, redirectUri);
-    return 'session_authenticated';
-  } catch (error) {
-    console.error('🔗 OAuth exchange error:', error);
-    throw new Error(
-      `Failed to exchange authorization code: ${
-        error instanceof Error ? error.message : 'Unknown error'
-      }`
-    );
+  const response = await serverAPI.exchangeOAuthCode(code, redirectUri);
+  if (response.sessionToken) {
+    return { success: true };
   }
+  return { success: false };
 }
