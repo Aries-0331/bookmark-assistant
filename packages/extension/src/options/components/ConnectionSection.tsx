@@ -1,5 +1,5 @@
 import { Shield, RefreshCcw, Unplug } from 'lucide-react';
-import Button from './button';
+import Button from './Button';
 import { SectionCard } from './SectionCard';
 import { useAppStore } from '../store';
 import { useState } from 'react';
