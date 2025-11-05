@@ -31,13 +31,44 @@ export function Footer() {
           <div>
             <h4 className="text-base text-gray-900 mb-3">Legal</h4>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li><a className="hover:text-gray-900" href="/privacy">Privacy Policy</a></li>
-              <li><a className="hover:text-gray-900" href="/terms">Terms of Service</a></li>
+              <li>
+                <a
+                  className="hover:text-gray-900"
+                  href="https://www.notion.so/bookmark-assistant/Privacy-Policy-2a24fd51dd3e806eb918cb2f37fefda7"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Privacy Policy
+                </a>
+              </li>
+              <li>
+                <a
+                  className="hover:text-gray-900"
+                  href="https://www.notion.so/bookmark-assistant/Terms-of-Service-2a24fd51dd3e80258c2df46cab36d400"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Terms of Service
+                </a>
+              </li>
+              <li>
+                <a
+                  className="hover:text-gray-900"
+                  href="https://bookmark-assistant.notion.site/Refund-Policy-2a24fd51dd3e80ae9553e0ab34a55bd2"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Refund Policy
+                </a>
+              </li>
             </ul>
           </div>
         </div>
         <div className="pt-8 border-t border-gray-200 text-center text-sm text-gray-600">
-          © 2025 Notion Bookmark Sync. All rights reserved.
+          <div className="mb-2">
+            Powered by <a href="https://www.paddle.com" target="_blank" rel="noreferrer" className="underline hover:text-gray-800">Paddle</a>
+          </div>
+          <div>© 2025 Notion Bookmark Sync. All rights reserved.</div>
         </div>
       </div>
     </footer>
