@@ -1,4 +1,4 @@
-// File: /Users/aries/dev/bookmark-notion-sync/packages/website/app/layout.tsx
+// File: C:\Users\urchi\Desktop\code\bookmarks_to_notion\packages\website\app\layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
