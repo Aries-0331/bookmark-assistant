@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Card, CardBody } from "@/components/ui/card";
 import { Chrome, Lock, RefreshCw } from "lucide-react";
 
@@ -13,7 +12,11 @@ export function HowItWorks() {
     <section id="how" className="py-20 bg-white">
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center">
-          <Badge className="mb-4" variant="neutral">How It Works</Badge>
+          <div className="inline-flex items-center gap-2 mb-4">
+            <div className="h-px w-8 bg-gradient-to-r from-transparent to-green-400"></div>
+            <span className="text-xs tracking-widest text-gray-500 uppercase">Quick Setup</span>
+            <div className="h-px w-8 bg-gradient-to-l from-transparent to-green-400"></div>
+          </div>
           <h2 className="text-4xl font-medium text-gray-900 mb-4">Get started in 3 simple steps</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-16">Setting up takes less than 2 minutes.</p>
         </div>

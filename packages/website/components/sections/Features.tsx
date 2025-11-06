@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Card, CardBody } from "@/components/ui/card";
 import { Zap, BookmarkPlus, RefreshCw, Shield, Code, Cloud } from "lucide-react";
 
@@ -52,7 +51,11 @@ export function Features() {
     <section id="features" className="py-20 bg-gray-50">
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center">
-          <Badge className="mb-4" variant="neutral">Features</Badge>
+          <div className="inline-flex items-center gap-2 mb-4">
+            <div className="h-px w-8 bg-gradient-to-r from-transparent to-blue-400"></div>
+            <span className="text-xs tracking-widest text-gray-500 uppercase">What You Get</span>
+            <div className="h-px w-8 bg-gradient-to-l from-transparent to-blue-400"></div>
+          </div>
           <h2 className="text-4xl font-medium text-gray-900 mb-4">Everything you need to organize</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-16">
             Powerful, practical features that fit your workflow without getting in the way.

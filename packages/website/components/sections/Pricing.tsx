@@ -12,7 +12,11 @@ export function Pricing() {
     <section id="pricing" className="py-20 bg-gray-50">
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center">
-          <Badge className="mb-4" variant="neutral">Pricing</Badge>
+          <div className="inline-flex items-center gap-2 mb-4">
+            <div className="h-px w-8 bg-gradient-to-r from-transparent to-amber-400"></div>
+            <span className="text-xs tracking-widest text-gray-500 uppercase">Plans & Pricing</span>
+            <div className="h-px w-8 bg-gradient-to-l from-transparent to-amber-400"></div>
+          </div>
           <h2 className="text-4xl font-medium text-gray-900 mb-4">Simple, transparent pricing</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-12">Start free, upgrade when you need more power.</p>
 

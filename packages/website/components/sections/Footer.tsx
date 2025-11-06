@@ -1,4 +1,4 @@
-import { NotionBookmarkLogoBlue } from "@/components/icons/NotionBookmarkLogoBlue";
+import { Logo } from "../icons/Logo";
 
 export function Footer() {
   return (
@@ -7,8 +7,8 @@ export function Footer() {
         <div className="grid gap-8 md:grid-cols-4 mb-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <NotionBookmarkLogoBlue className="w-8 h-8" />
-              <span className="text-base text-gray-900">Notion Bookmark Sync</span>
+              <Logo className="w-8 h-8" />
+              <span className="text-base text-gray-900">Bookmark Assistant</span>
             </div>
             <p className="text-sm text-gray-600">Seamlessly sync your Chrome bookmarks to Notion.</p>
           </div>

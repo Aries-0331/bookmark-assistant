@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const FAQS = [
@@ -14,7 +13,11 @@ export function FAQ() {
     <section id="faq" className="py-20 bg-white">
       <div className="mx-auto max-w-3xl px-6">
         <div className="text-center">
-          <Badge className="mb-4" variant="neutral">FAQ</Badge>
+          <div className="inline-flex items-center gap-2 mb-4">
+            <div className="h-px w-8 bg-gradient-to-r from-transparent to-purple-400"></div>
+            <span className="text-xs tracking-widest text-gray-500 uppercase">Support</span>
+            <div className="h-px w-8 bg-gradient-to-l from-transparent to-purple-400"></div>
+          </div>
           <h2 className="text-4xl font-medium text-gray-900 mb-4">Frequently asked questions</h2>
         </div>
         <Accordion className="mt-8">
