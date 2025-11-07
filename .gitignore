@@ -7,20 +7,35 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+.pnp
+.pnp.js
+
+# Build outputs
 dist
 dist-ssr
-*.local
-package-lock.json
-yarn.lock
+build
+out
+.next
+.vercel
 
-# Ignore typescript incremental build files
+# TypeScript
 **/*.tsbuildinfo
 **/tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Cache directories
+.cache
+.parcel-cache
+.turbo
+.vite
+.eslintcache
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
 .DS_Store
 *.suo
@@ -28,22 +43,39 @@ yarn.lock
 *.njsproj
 *.sln
 *.sw?
+*.swp
+*~
 
 # Environment variables
 .env
 .env.*
+!.env.example
+!.env.development
+!.env.production
 .env.*.local
 
-# Keep template and development/production files in git but ignore sensitive data
-# Users should copy .env.example to .env.development and .env.production with real values
-
-# Chrome extension build artifacts
+# Chrome extension
 *.crx
 *.pem
+*.zip
 
 # Temporary files
 .temp
 .tmp
+*.tmp
 
-# husky
-.husky/
+# OS
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Testing
+coverage
+.nyc_output
+*.lcov
+
+# Debug
+.vscode/launch.json
+
+# Husky (git hooks should be committed)
+# .husky/ is commented out - we want to commit hooks
