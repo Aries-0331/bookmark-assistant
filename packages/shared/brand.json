@@ -1,0 +1,27 @@
+{
+  "name": "Bookmark Assistant",
+  "assets": {
+    "logo": {
+      "png": "logo.png",
+      "svg": "logo.svg",
+      "variants": ["logo1.png", "logo2.png", "logo3.png"]
+    },
+    "favicon": {
+      "ico": "favicon/favicon.ico",
+      "svg": "favicon/favicon.svg",
+      "png16": "favicon/favicon-16x16.png",
+      "png32": "favicon/favicon-32x32.png",
+      "png96": "favicon/favicon-96x96.png",
+      "appleTouchIcon": "favicon/apple-touch-icon.png",
+      "androidChrome192": "favicon/android-chrome-192x192.png",
+      "androidChrome512": "favicon/android-chrome-512x512.png",
+      "webAppManifest192": "favicon/web-app-manifest-192x192.png",
+      "webAppManifest512": "favicon/web-app-manifest-512x512.png",
+      "manifest": "favicon/site.webmanifest"
+    }
+  },
+  "colors": {
+    "primary": "#f59e0b",
+    "primaryDark": "#d97706"
+  }
+}

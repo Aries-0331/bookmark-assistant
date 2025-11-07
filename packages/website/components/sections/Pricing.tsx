@@ -3,6 +3,7 @@ import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
+import { SectionEyebrow } from "@/components/ui/SectionEyebrow";
 import { Crown, Sparkles, Check } from "lucide-react";
 
 export function Pricing() {
@@ -12,11 +13,7 @@ export function Pricing() {
     <section id="pricing" className="py-20 bg-gray-50">
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="h-px w-8 bg-gradient-to-r from-transparent to-amber-400"></div>
-            <span className="text-xs tracking-widest text-gray-500 uppercase">Plans & Pricing</span>
-            <div className="h-px w-8 bg-gradient-to-l from-transparent to-amber-400"></div>
-          </div>
+          <SectionEyebrow text="Plans & Pricing" color="amber" />
           <h2 className="text-4xl font-medium text-gray-900 mb-4">Simple, transparent pricing</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-12">Start free, upgrade when you need more power.</p>
 
