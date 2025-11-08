@@ -11,7 +11,7 @@ const variants: Record<Variant, string> = {
   primary: "bg-blue-50 text-blue-700 border border-blue-200",
   neutral: "bg-gray-100 text-gray-700 border border-gray-300",
   success: "bg-green-100 text-green-700",
-  cta: "bg-blue-500 text-white",
+  cta: "bg-gradient-to-r from-amber-500 to-amber-600 text-white",
 };
 
 export function Badge({ className, variant = "neutral", ...props }: BadgeProps) {

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { SectionEyebrow } from "@/components/ui/SectionEyebrow";
-import { Crown, Sparkles, Check } from "lucide-react";
+import { Crown, Sparkle, Sparkles, Check } from "lucide-react";
 
 export function Pricing() {
   const [billing, setBilling] = React.useState<"monthly" | "yearly">("yearly");
@@ -46,7 +46,7 @@ export function Pricing() {
                   <p className="text-sm text-gray-600">For individuals</p>
                 </div>
               </div>
-              <div className="text-5xl text-gray-900 mb-6">$0 <span className="text-base text-gray-600">/month</span></div>
+              <div className="text-4xl text-gray-900 mb-4">$0 <span className="text-base text-gray-600">/month</span></div>
               <Button className="w-full mb-6" size="lg">Get Started Free</Button>
               <ul className="space-y-3">
                 {["50 bookmarks per day", "Manual token authentication", "Basic sync features", "Community support", "Open source mode"].map((t) => (
@@ -63,7 +63,7 @@ export function Pricing() {
 
           {/* Pro */}
           <div className="relative">
-            <Card className="border-2 border-blue-500">
+            <Card className="border-2">
               <CardBody className="p-8">
                 <div className="absolute top-4 right-4">
                   <Badge variant="cta" className="px-2 py-1 text-xs">Most Popular</Badge>
@@ -77,10 +77,7 @@ export function Pricing() {
                     <p className="text-sm text-gray-600">For power users</p>
                   </div>
                 </div>
-                <div className="text-5xl text-gray-900 mb-1">${proPrice} <span className="text-base text-gray-600">/month</span></div>
-                {billing === "yearly" && (
-                  <div className="text-sm text-gray-600 mb-5">Billed $86.40 yearly</div>
-                )}
+                <div className="text-4xl text-gray-900 mb-4">${proPrice} <span className="text-base text-gray-600">/month</span></div>
                 <Button variant="pro" className="w-full mb-6" size="lg">
                   <Crown className="h-4 w-4 mr-2" /> Upgrade to Pro
                 </Button>
@@ -94,6 +91,10 @@ export function Pricing() {
                     </li>
                   ))}
                 </ul>
+                <div className="mt-6 pt-4 border-t border-gray-100 text-sm text-gray-500 flex items-center gap-2">
+                  <Sparkle size={14} />
+                  <span>Payments are securely processed by Paddle</span>
+                </div>
               </CardBody>
             </Card>
           </div>
