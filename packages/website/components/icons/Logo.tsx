@@ -6,7 +6,7 @@ type Props = {
   size?: number;
 };
 
-export function Logo({ className, alt = 'Bookmark Assistant', size = 40 }: Props) {
+export function Logo({ className, alt = 'Bookmark Assistant', size = 48 }: Props) {
   return (
     <Image
       src="/brand/logo.png"
