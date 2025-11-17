@@ -50,7 +50,18 @@ export function ConnectionSection() {
     if (!isConnected || isSyncing) return;
     setIsSyncing(true);
     try {
-      await sendMessage({ type: Messages.SYNC_ALL_BOOKMARKS });
+      // Sync can take a long time, increase timeout to 5 minutes
+      await sendMessage({ type: Messages.SYNC_ALL_BOOKMARKS }, { timeoutMs: 300_000 });
+    } catch (error) {
+      console.error('Sync failed:', error);
+      // Don't show error toast if it's just a timeout - sync may still complete
+      if (error instanceof Error && error.message !== 'REQUEST_TIMEOUT') {
+        show({
+          variant: 'error',
+          title: 'Sync Failed',
+          description: error.message || 'Failed to sync bookmarks',
+        });
+      }
     } finally {
       setIsSyncing(false);
     }

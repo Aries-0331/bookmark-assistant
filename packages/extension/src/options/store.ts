@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from 'react';
 import { create } from 'zustand';
 import type { PublicConfig } from '../utils/config';
 import { CACHE_KEYS, WATCHED_CACHE_KEYS } from '../utils/cache';
+import { sendMessage, Messages } from '../utils/message';
 
 export const FREE_DAILY_LIMIT = 50;
 export const FREE_INTERVAL_HOURS = 12;
@@ -160,8 +161,6 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   refreshEntitlements: async () => {
     try {
-      // Use message passing to background script
-      const { sendMessage, Messages } = await import('../utils/message');
       const response = await sendMessage({ type: Messages.GET_ENTITLEMENTS });
 
       if (response.success && response.isPro !== undefined) {
