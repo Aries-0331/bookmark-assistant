@@ -37,6 +37,14 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
     const tokenData = await notionService.exchangeOAuthCode(code, redirectUri);
     const userId = extensionUserId || `user_${Date.now()}`;
 
+    // Extract user email from Notion owner object if available
+    let userEmail: string | undefined;
+    if (tokenData.owner?.user?.person?.email) {
+      userEmail = tokenData.owner.user.person.email;
+    } else if (tokenData.owner?.user?.email) {
+      userEmail = tokenData.owner.user.email;
+    }
+
     // Store user data securely on server
     const userData: UserData = {
       userId,
@@ -87,6 +95,7 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
       success: true,
       sessionToken,
       userId,
+      userEmail: userEmail || null,
       templateDatabaseId: latest?.templateDatabaseId || null,
       message: 'OAuth exchange successful',
     });

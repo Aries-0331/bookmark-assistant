@@ -10,10 +10,11 @@ import {
   ShieldCheck,
   Mail,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { FREE_DAILY_LIMIT, FREE_INTERVAL_HOURS, PRO_MIN_INTERVAL_MINUTES } from '../store';
 import { useAppStore } from '../store';
+import { openPaddleCheckout, getPriceId } from '../../lib/paddle';
 
 function classNames(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(' ');
@@ -44,28 +45,63 @@ const PLAN_FEATURES: Record<'free' | 'pro', FeatureItem[]> = {
 
 export function BillingSection() {
   const [yearly, setYearly] = useState(false);
-  const { isPro, getPricing } = useAppStore();
+  const [loading, setLoading] = useState(false);
+  const { isPro, getPricing, userId, userEmail, refreshEntitlements } = useAppStore();
   const { monthly: MONTHLY_PRICE, yearlyDiscount: YEARLY_DISCOUNT } = getPricing();
 
-  // Derive URLs from env if no handlers provided
-  const base = (
-    import.meta.env.VITE_BILLING_URL ||
-    import.meta.env.VITE_OAUTH_SERVER_URL ||
-    ''
-  ).replace(/\/$/, '');
-  const upgradeUrl = base
-    ? `${base}/billing/upgrade`
-    : 'https://github.com/Aries-0331/bookmarks_to_notion#pro';
-  const manageUrl = base
-    ? `${base}/billing/portal`
-    : 'https://github.com/Aries-0331/bookmarks_to_notion#billing';
+  // Check for upgrade success in URL and refresh entitlements
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('upgraded') === 'true') {
+      // Remove the param from URL
+      window.history.replaceState({}, '', window.location.pathname);
+      // Refresh entitlements after successful upgrade
+      refreshEntitlements();
+    }
+  }, [refreshEntitlements]);
 
-  const handleUpgrade = () => {
-    // if (onUpgrade) return onUpgrade();
-    window.open(upgradeUrl, '_blank', 'noopener');
+  const handleUpgrade = async () => {
+    try {
+      setLoading(true);
+      const priceId = getPriceId(yearly ? 'yearly' : 'monthly');
+
+      if (!priceId) {
+        console.error('❌ Paddle price ID not configured');
+        alert('Payment system is not configured. Please contact support.');
+        return;
+      }
+
+      if (!userId) {
+        console.error('❌ User ID not found');
+        alert('Please connect to Notion first before upgrading.');
+        return;
+      }
+
+      await openPaddleCheckout({
+        priceId,
+        userId,
+        userEmail: userEmail || undefined,
+        successUrl: chrome.runtime.getURL('options.html?upgraded=true'),
+      });
+    } catch (error) {
+      console.error('❌ Failed to open checkout:', error);
+      alert('Failed to open checkout. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
+
   const handleManage = () => {
-    // if (onManage) return onManage();
+    // Open Paddle customer portal
+    const base = (
+      import.meta.env.VITE_BILLING_URL ||
+      import.meta.env.VITE_OAUTH_SERVER_URL ||
+      ''
+    ).replace(/\/$/, '');
+    const manageUrl = base
+      ? `${base}/billing/portal`
+      : 'https://github.com/Aries-0331/bookmarks_to_notion#billing';
+
     window.open(manageUrl, '_blank', 'noopener');
   };
 
@@ -174,10 +210,12 @@ export function BillingSection() {
             </button>
           ) : (
             <button
-              className="w-full text-sm px-4 py-2 mb-4 rounded-lg bg-amber-600 text-white hover:bg-amber-700 shadow inline-flex items-center justify-center gap-2"
+              className="w-full text-sm px-4 py-2 mb-4 rounded-lg bg-amber-600 text-white hover:bg-amber-700 shadow inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleUpgrade}
+              disabled={loading}
             >
-              <Crown className="w-4 h-4" /> Upgrade to Pro
+              <Crown className="w-4 h-4" />
+              {loading ? 'Loading...' : 'Upgrade to Pro'}
             </button>
           )}
           <ul className="space-y-2 text-sm">

@@ -110,7 +110,7 @@ class ServerAPIClient {
     redirectUri: string
   ): Promise<{
     sessionToken: string;
-    user: { userId: string; templateDatabaseId?: string | null };
+    user: { userId: string; userEmail?: string; templateDatabaseId?: string | null };
   }> {
     try {
       const response = await this.makeRequest<any>('/oauth/exchange', {
@@ -131,6 +131,9 @@ class ServerAPIClient {
         session_token: response.sessionToken,
         user_id: response.userId,
       };
+      if (response.userEmail) {
+        toStore.user_email = response.userEmail;
+      }
       if (response.templateDatabaseId) {
         toStore.oauth_template_database_id = response.templateDatabaseId;
       }
@@ -138,7 +141,11 @@ class ServerAPIClient {
 
       return {
         sessionToken: response.sessionToken,
-        user: { userId: response.userId, templateDatabaseId: response.templateDatabaseId },
+        user: {
+          userId: response.userId,
+          userEmail: response.userEmail,
+          templateDatabaseId: response.templateDatabaseId,
+        },
       };
     } catch (error: any) {
       throw error;

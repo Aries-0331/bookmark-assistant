@@ -1,6 +1,5 @@
 export interface PublicConfig {
   pricing: {
-    currency: string;
     monthly: number;
     yearlyDiscount: number;
   };

@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { UserData } from '../types';
 
-const prisma = new PrismaClient();
+export const prisma = new PrismaClient();
 
 export class UserPrismaRepo {
   async upsert(user: UserData): Promise<void> {

@@ -6,9 +6,103 @@ import { Card, CardBody } from "@/components/ui/card";
 import { SectionEyebrow } from "@/components/ui/SectionEyebrow";
 import { Crown, Sparkle, Sparkles, Check } from "lucide-react";
 
+// Paddle type declarations
+declare global {
+  interface Window {
+    Paddle?: {
+      Environment: {
+        set: (env: 'sandbox' | 'production') => void;
+      };
+      Initialize: (options: { token: string }) => void;
+      Checkout: {
+        open: (options: {
+          items?: Array<{ priceId: string; quantity: number }>;
+          customer?: { email?: string };
+          customData?: Record<string, unknown>;
+          settings?: {
+            successUrl?: string;
+            theme?: 'light' | 'dark';
+          };
+        }) => void;
+      };
+    };
+  }
+}
+
 export function Pricing() {
   const [billing, setBilling] = React.useState<"monthly" | "yearly">("yearly");
+  const [paddleLoaded, setPaddleLoaded] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
   const proPrice = billing === "yearly" ? 7.2 : 9; // example numbers
+
+  // Load Paddle.js on mount
+  React.useEffect(() => {
+    const loadPaddle = async () => {
+      if (window.Paddle) {
+        initializePaddle();
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
+      script.async = true;
+      script.onload = () => {
+        initializePaddle();
+      };
+      document.head.appendChild(script);
+    };
+
+    const initializePaddle = () => {
+      const env = process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || 'sandbox';
+      const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
+
+      if (!token) {
+        console.warn('Paddle client token not configured');
+        return;
+      }
+
+      window.Paddle?.Environment.set(env as 'sandbox' | 'production');
+      window.Paddle?.Initialize({ token });
+      setPaddleLoaded(true);
+      console.log('✅ Paddle initialized:', env);
+    };
+
+    loadPaddle();
+  }, []);
+
+  const handleUpgrade = async () => {
+    if (!window.Paddle) {
+      alert('Payment system is loading. Please try again in a moment.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const priceId = billing === 'yearly'
+        ? process.env.NEXT_PUBLIC_PADDLE_PRO_YEARLY_PRICE_ID
+        : process.env.NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID;
+
+      if (!priceId) {
+        console.error('Paddle price ID not configured');
+        alert('Payment system is not configured. Please contact support.');
+        return;
+      }
+
+      window.Paddle.Checkout.open({
+        items: [{ priceId, quantity: 1 }],
+        settings: {
+          successUrl: `${window.location.origin}/success`,
+          theme: 'light',
+        },
+      });
+    } catch (error) {
+      console.error('Failed to open checkout:', error);
+      alert('Failed to open checkout. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <section id="pricing" className="py-20 bg-gray-50">
       <div className="mx-auto max-w-7xl px-6">
@@ -78,8 +172,15 @@ export function Pricing() {
                   </div>
                 </div>
                 <div className="text-4xl text-gray-900 mb-4">${proPrice} <span className="text-base text-gray-600">/month</span></div>
-                <Button variant="pro" className="w-full mb-6" size="lg">
-                  <Crown className="h-4 w-4 mr-2" /> Upgrade to Pro
+                <Button
+                  variant="pro"
+                  className="w-full mb-6"
+                  size="lg"
+                  onClick={handleUpgrade}
+                  disabled={loading || !paddleLoaded}
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  {loading ? 'Loading...' : 'Upgrade to Pro'}
                 </Button>
                 <ul className="space-y-3">
                   {["Unlimited bookmarks", "OAuth integration", "Auto-sync in background", "Priority support", "Advanced features", "Custom database mapping"].map((t) => (

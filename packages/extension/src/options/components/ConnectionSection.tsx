@@ -7,22 +7,33 @@ import { useToast } from '../hook/useToast';
 
 export function ConnectionSection() {
   const { show } = useToast();
-  const { isConnecting, isConnected, isSyncing, setIsSyncing } = useAppStore();
+  const { isConnecting, isConnected, isSyncing, setIsConnecting, setIsSyncing } = useAppStore();
 
   const onConnect = async () => {
-    const res = await sendMessage({ type: Messages.NOTION_OAUTH });
-    if (res.success) {
-      show({
-        variant: 'success',
-        title: 'Connected',
-        description: 'Your Notion workspace has been successfully connected.',
-      });
-    } else {
+    setIsConnecting(true);
+    try {
+      const res = await sendMessage({ type: Messages.NOTION_OAUTH });
+      if (res.success) {
+        show({
+          variant: 'success',
+          title: 'Connected',
+          description: 'Your Notion workspace has been successfully connected.',
+        });
+      } else {
+        show({
+          variant: 'error',
+          title: 'Connection Failed',
+          description: 'Failed to connect to Notion. Please try again.',
+        });
+      }
+    } catch (error) {
       show({
         variant: 'error',
         title: 'Connection Failed',
-        description: 'Failed to connect to Notion. Please try again.',
+        description: 'An error occurred while connecting to Notion.',
       });
+    } finally {
+      setIsConnecting(false);
     }
   };
   const onDisconnect = async () => {

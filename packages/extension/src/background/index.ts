@@ -174,6 +174,26 @@ addMessageListener({
       return { success: false, error: String(err) } as const;
     }
   },
+  [Messages.GET_ENTITLEMENTS]: async () => {
+    try {
+      const entitlements = await serverAPI.getEntitlements();
+
+      // Store in chrome.storage for sync with UI
+      await chrome.storage.local.set({
+        is_pro: entitlements.isPro,
+        features: entitlements.features,
+      });
+
+      return {
+        success: true,
+        isPro: entitlements.isPro,
+        features: entitlements.features,
+      } as const;
+    } catch (err) {
+      console.error('❌ Failed to get entitlements:', err);
+      return { success: false, error: String(err) } as const;
+    }
+  },
   [Messages.LOGOUT]: async () => {
     try {
       await serverAPI.logout();

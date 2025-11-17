@@ -10,7 +10,8 @@ datasource db {
 }
 
 model User {
-  user_id               String  @id
+  user_id               String   @id
+  email                 String?  @unique
   notion_access_token   String
   notion_refresh_token  String?
   notion_workspace_id   String?
@@ -20,7 +21,19 @@ model User {
   notion_data_source_id String?
   template_database_id  String?
   databases             Json?
+
+  // Paddle Payment Integration
+  plan                  String   @default("free") // "free" | "pro"
+  paddleCustomerId      String?  @unique
+  paddleSubscriptionId  String?  @unique
+  subscriptionStatus    String?  // "trialing" | "active" | "past_due" | "paused" | "canceled"
+  nextBilledAt          DateTime?
+
   last_activity         DateTime @default(now())
   created_at            DateTime @default(now())
   updated_at            DateTime @updatedAt
+
+  @@index([paddleCustomerId])
+  @@index([paddleSubscriptionId])
+  @@index([email])
 }

@@ -2,11 +2,13 @@
 
 import { Router } from 'express';
 import crypto from 'crypto';
+import { config } from '../config';
 import oauthRoutes from './oauth';
 import notionRoutes from './notion';
 import bookmarkRoutes from './bookmarks';
 import userRoutes from './user';
 import entitlementsRoutes from './entitlements';
+import paddleRoutes from './paddle';
 
 const router: import('express').Router = Router();
 
@@ -16,6 +18,7 @@ router.use('/notion', notionRoutes);
 router.use('/bookmarks', bookmarkRoutes);
 router.use('/user', userRoutes);
 router.use('/entitlements', entitlementsRoutes);
+router.use('/', paddleRoutes); // Paddle webhooks at /webhooks/paddle
 
 // Health check endpoint (kept at root level)
 router.get('/health', (req, res) => {
@@ -33,18 +36,17 @@ router.get('/v1/public-config', (req, res) => {
   try {
     const body = {
       pricing: {
-        currency: 'USD',
-        monthly: 10,
-        yearlyDiscount: 0.4,
+        monthly: config.pricing.monthly,
+        yearlyDiscount: config.pricing.yearlyDiscount,
       },
       limits: {
         free: {
-          dailyLimit: 50,
-          minIntervalHours: 12,
+          dailyLimit: config.limits.free.dailyLimit,
+          minIntervalHours: config.limits.free.minIntervalHours,
         },
         pro: {
-          dailyLimit: 1000,
-          minIntervalHours: 0.5,
+          dailyLimit: config.limits.pro.dailyLimit,
+          minIntervalHours: config.limits.pro.minIntervalHours,
         },
       },
     };
@@ -57,7 +59,7 @@ router.get('/v1/public-config', (req, res) => {
     res.setHeader('ETag', etag);
     res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minutes
     res.json(body);
-  } catch (e) {
+  } catch {
     res.status(500).json({ success: false });
   }
 });
@@ -76,7 +78,7 @@ router.post('/client-log', (req, res) => {
 
     console.log('[CLIENT LOG]', JSON.stringify(payload));
     res.json({ success: true });
-  } catch (e) {
+  } catch {
     res.status(400).json({ success: false });
   }
 });

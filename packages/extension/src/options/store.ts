@@ -27,6 +27,11 @@ export type AppState = {
   setIsConnecting: (v: boolean) => void;
   setIsSyncing: (v: boolean) => void;
 
+  // User info
+  userId: string;
+  userEmail: string;
+  setUserInfo: (userId: string, userEmail?: string) => void;
+
   // Sync settings
   autoSync: boolean;
   intervalHours: number;
@@ -38,12 +43,13 @@ export type AppState = {
   initFromStorage: () => Promise<void>;
   saveSyncSettings: (nextAuto?: boolean, nextIntervalHours?: number) => Promise<void>;
   hasFeature: (f: string) => boolean;
+  refreshEntitlements: () => Promise<void>;
 
   // Config
   publicConfig?: PublicConfig;
   fetchPublicConfig: () => Promise<void>;
   getEffectiveLimits: () => { dailyLimit: number; minIntervalHours: number };
-  getPricing: () => { currency: string; monthly: number; yearlyDiscount: number };
+  getPricing: () => { monthly: number; yearlyDiscount: number };
 };
 
 // ------- helpers -------
@@ -55,7 +61,6 @@ function sanitizePublicConfig(json: unknown): PublicConfig | null {
     if (!json || typeof json !== 'object') return null;
     const j: any = json;
 
-    const currency = typeof j?.pricing?.currency === 'string' ? j.pricing.currency : 'USD';
     const monthly = isFiniteNumber(j?.pricing?.monthly)
       ? Math.max(0, j.pricing.monthly)
       : PRICE_MONTHLY_USD;
@@ -79,7 +84,7 @@ function sanitizePublicConfig(json: unknown): PublicConfig | null {
       : PRO_MIN_INTERVAL_HOURS;
 
     return {
-      pricing: { currency, monthly, yearlyDiscount },
+      pricing: { monthly, yearlyDiscount },
       limits: {
         free: { dailyLimit: freeDaily, minIntervalHours: freeMinInt },
         pro: { dailyLimit: proDaily, minIntervalHours: proMinInt },
@@ -100,8 +105,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   lastSync: '',
   isPro: false,
   features: [],
+  userId: '',
+  userEmail: '',
   setIsConnecting: (v: boolean) => set({ isConnecting: v }),
   setIsSyncing: (v: boolean) => set({ isSyncing: v }),
+  setUserInfo: (userId: string, userEmail?: string) => {
+    set({ userId, userEmail: userEmail || '' });
+    // Also persist to storage for Paddle checkout
+    chrome.storage.local.set({
+      user_id: userId,
+      user_email: userEmail || '',
+    });
+  },
 
   autoSync: false,
   intervalHours: FREE_INTERVAL_HOURS,
@@ -111,11 +126,25 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   initFromStorage: async () => {
     try {
-      const { last_sync, auto_sync, sync_interval_hours } = await chrome.storage.local.get([
-        'last_sync',
-        'auto_sync',
-        'sync_interval_hours',
-      ]);
+      const { last_sync, auto_sync, sync_interval_hours, user_id, user_email, is_pro, features } =
+        await chrome.storage.local.get([
+          'last_sync',
+          'auto_sync',
+          'sync_interval_hours',
+          'user_id',
+          'user_email',
+          'is_pro',
+          'features',
+        ]);
+
+      // Load user info
+      if (user_id) set({ userId: user_id });
+      if (user_email) set({ userEmail: user_email });
+
+      // Load entitlements
+      if (typeof is_pro === 'boolean') set({ isPro: is_pro });
+      if (Array.isArray(features)) set({ features });
+
       const interval = Number(sync_interval_hours);
       const { minIntervalHours } = get().getEffectiveLimits();
       const next = Number.isFinite(interval) ? (interval as number) : minIntervalHours;
@@ -127,6 +156,27 @@ export const useAppStore = create<AppState>((set, get) => ({
         await chrome.storage.local.set({ sync_interval_hours: minIntervalHours });
       }
     } catch {}
+  },
+
+  refreshEntitlements: async () => {
+    try {
+      // Use message passing to background script
+      const { sendMessage, Messages } = await import('../utils/message');
+      const response = await sendMessage({ type: Messages.GET_ENTITLEMENTS });
+
+      if (response.success && response.isPro !== undefined) {
+        set({
+          isPro: response.isPro,
+          features: response.features || [],
+        });
+        console.log('✅ Entitlements refreshed:', {
+          isPro: response.isPro,
+          features: response.features,
+        });
+      }
+    } catch (error) {
+      console.error('❌ Failed to refresh entitlements:', error);
+    }
   },
   saveSyncSettings: async (nextAuto?: boolean, nextIntervalHours?: number) => {
     const autoRequested = typeof nextAuto === 'boolean' ? nextAuto : get().autoSync;
@@ -186,7 +236,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   getPricing: () => {
     const st = get();
     return {
-      currency: st.publicConfig?.pricing.currency ?? 'USD',
       monthly: st.publicConfig?.pricing.monthly ?? PRICE_MONTHLY_USD,
       yearlyDiscount: st.publicConfig?.pricing.yearlyDiscount ?? DISCOUNT_YEARLY,
     };
@@ -214,7 +263,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!shot) return;
       if (changes[CACHE_KEYS.session_token]) {
         const newToken = changes[CACHE_KEYS.session_token].newValue;
-        useAppStore.setState({ isConnected: !!newToken });
+        const wasConnected = useAppStore.getState().isConnected;
+        const isNowConnected = !!newToken;
+        useAppStore.setState({ isConnected: isNowConnected });
+
+        // Refresh entitlements when connection state changes to connected
+        if (!wasConnected && isNowConnected) {
+          useAppStore.getState().refreshEntitlements();
+        }
       }
       if (changes['last_sync']) {
         const s = changes['last_sync'].newValue as string | undefined;
@@ -222,6 +278,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       if (changes['sync_in_progress']) {
         useAppStore.setState({ isSyncing: !!changes['sync_in_progress'].newValue });
+      }
+      if (changes['user_id']) {
+        const userId = changes['user_id'].newValue as string | undefined;
+        if (userId) useAppStore.setState({ userId });
+      }
+      if (changes['user_email']) {
+        const userEmail = changes['user_email'].newValue as string | undefined;
+        if (userEmail) useAppStore.setState({ userEmail });
+      }
+      if (changes['is_pro']) {
+        const isPro = changes['is_pro'].newValue as boolean | undefined;
+        if (typeof isPro === 'boolean') useAppStore.setState({ isPro });
+      }
+      if (changes['features']) {
+        const features = changes['features'].newValue as string[] | undefined;
+        if (Array.isArray(features)) useAppStore.setState({ features });
       }
     };
     chrome.storage.onChanged.addListener(onChanged);
@@ -251,6 +323,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (async () => {
       await useAppStore.getState().fetchPublicConfig();
       await useAppStore.getState().initFromStorage();
+
+      // If user is connected, refresh entitlements
+      const { isConnected } = useAppStore.getState();
+      if (isConnected) {
+        await useAppStore.getState().refreshEntitlements();
+      }
     })();
   }, []);
 
