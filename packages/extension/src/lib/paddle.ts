@@ -1,15 +1,17 @@
 // 🎫 Paddle Billing Integration for Extension
 
-import { initializePaddle, Paddle, CheckoutOpenOptions } from '@paddle/paddle-js';
-
 /**
- * Using @paddle/paddle-js NPM package instead of dynamic CDN loading
+ * Chrome Extension Checkout Strategy
+ *
+ * ❌ Problem: @paddle/paddle-js NPM package still loads CDN resources at runtime
+ * ✅ Solution: Use Paddle Checkout API to generate checkout URLs and open in new tab
+ *
  * Benefits:
- * - ✅ No CSP issues (bundled with extension)
- * - ✅ Works offline
- * - ✅ Better TypeScript support
- * - ✅ Instant initialization
- * - ✅ Easier testing and debugging
+ * - ✅ No CSP violations (no iframe/overlay in extension context)
+ * - ✅ Full checkout experience in dedicated browser tab
+ * - ✅ Better mobile support
+ * - ✅ Simpler implementation
+ * - ✅ No Paddle SDK initialization needed
  */
 
 export interface OpenCheckoutOptions {
@@ -19,93 +21,45 @@ export interface OpenCheckoutOptions {
   successUrl?: string;
 }
 
-// Singleton Paddle instance
-let paddleInstance: Paddle | null = null;
-
 /**
- * Initialize Paddle SDK
- * This is called once and cached for subsequent uses
- */
-async function getPaddleInstance(): Promise<Paddle> {
-  if (paddleInstance) {
-    return paddleInstance;
-  }
-
-  const token = import.meta.env.VITE_PADDLE_CLIENT_TOKEN;
-  const environment = import.meta.env.VITE_PADDLE_ENVIRONMENT || 'sandbox';
-
-  if (!token) {
-    throw new Error('VITE_PADDLE_CLIENT_TOKEN is not configured');
-  }
-
-  console.log(`🎫 Initializing Paddle SDK (${environment} mode)...`);
-
-  try {
-    const paddle = await initializePaddle({
-      token,
-      environment: environment as 'sandbox' | 'production',
-      eventCallback: (event) => {
-        console.log('🎫 Paddle event:', event.name, event.data);
-      },
-    });
-
-    if (!paddle) {
-      throw new Error('Paddle initialization returned undefined');
-    }
-
-    paddleInstance = paddle;
-    console.log('✅ Paddle SDK initialized successfully');
-    return paddleInstance;
-  } catch (error) {
-    console.error('❌ Failed to initialize Paddle SDK:', error);
-    throw error;
-  }
-}
-
-/**
- * Open Paddle checkout overlay
- * Uses the NPM package to open an inline checkout experience
+ * Open Paddle checkout in a new browser tab
+ * Uses server-side API to generate checkout URL to avoid CSP issues
  */
 export async function openPaddleCheckout(options: OpenCheckoutOptions): Promise<void> {
   try {
-    const paddle = await getPaddleInstance();
-
+    const serverUrl = import.meta.env.VITE_OAUTH_SERVER_URL || 'http://localhost:3000';
+    
     // Build success URL
     const successUrl =
       options.successUrl || `${chrome.runtime.getURL('options.html')}?upgraded=true`;
 
-    // Build checkout options
-    const checkoutOptions: CheckoutOpenOptions = {
-      items: [
-        {
-          priceId: options.priceId,
-          quantity: 1,
-        },
-      ],
-      customData: {
-        userId: options.userId,
-      },
-      settings: {
-        successUrl,
-        theme: 'light',
-        displayMode: 'overlay',
-        frameTarget: 'paddle-checkout-container',
-        frameInitialHeight: 450,
-        frameStyle: 'width: 100%; min-width: 312px; background-color: transparent; border: none;',
-      },
-    };
+    console.log('🚀 Requesting Paddle checkout URL from server...');
 
-    // Add customer email if provided
-    if (options.userEmail) {
-      checkoutOptions.customer = {
+    // Request checkout URL from server
+    const response = await fetch(`${serverUrl}/api/paddle/checkout-url`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        priceId: options.priceId,
+        userId: options.userId,
         email: options.userEmail,
-      };
+        successUrl,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create checkout URL');
     }
 
-    console.log('🚀 Opening Paddle checkout overlay...', checkoutOptions);
+    const { checkoutUrl } = await response.json();
 
-    // Open checkout
-    await paddle.Checkout.open(checkoutOptions);
+    console.log('✅ Checkout URL received, opening in new tab...');
+
+    // Open checkout in new tab
+    chrome.tabs.create({ url: checkoutUrl });
 
     console.log('✅ Paddle checkout opened successfully');
   } catch (error) {

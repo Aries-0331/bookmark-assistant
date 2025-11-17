@@ -18,7 +18,7 @@ router.use('/notion', notionRoutes);
 router.use('/bookmarks', bookmarkRoutes);
 router.use('/user', userRoutes);
 router.use('/entitlements', entitlementsRoutes);
-router.use('/', paddleRoutes); // Paddle webhooks at /webhooks/paddle
+router.use('/paddle', paddleRoutes); // Paddle routes: /api/paddle/checkout-url and /api/paddle/webhooks/paddle
 
 // Health check endpoint (kept at root level)
 router.get('/health', (req, res) => {

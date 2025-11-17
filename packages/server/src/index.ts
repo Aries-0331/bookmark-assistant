@@ -39,13 +39,13 @@ app.use(corsMiddleware);
 app.use(requestLogger);
 
 // Rate limiting
-app.use('/oauth', authRateLimit);
-app.use('/notion', apiRateLimit);
-app.use('/bookmarks', apiRateLimit);
-app.use('/user', apiRateLimit);
+app.use('/api/oauth', authRateLimit);
+app.use('/api/notion', apiRateLimit);
+app.use('/api/bookmarks', apiRateLimit);
+app.use('/api/user', apiRateLimit);
 
-// Mount all routes
-app.use('/', routes);
+// Mount all routes under /api prefix
+app.use('/api', routes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

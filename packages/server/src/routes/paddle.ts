@@ -1,13 +1,14 @@
 // 🎫 Paddle Webhook Handler
 
 import { Router, Request, Response } from 'express';
+import type { Router as ExpressRouter } from 'express';
 import { Paddle, type Environment } from '@paddle/paddle-node-sdk';
 import { config } from '../config';
 import { prisma } from '../services/userPrisma';
 import { auditLog } from '../utils';
 import type { PaddleWebhookEvent, PaddleCustomData } from '../types/paddle';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 // Initialize Paddle client
 // Paddle SDK expects specific Environment type
@@ -17,6 +18,63 @@ const paddleEnv: Environment = (
 
 const paddle = new Paddle(config.paddle.apiKey, {
   environment: paddleEnv,
+});
+
+/**
+ * Create Paddle Checkout URL
+ * Generates a secure checkout URL for the extension to open in a new tab
+ */
+router.post('/checkout-url', async (req: Request, res: Response) => {
+  try {
+    const { priceId, userId, email, successUrl } = req.body;
+
+    if (!priceId || !userId) {
+      return res.status(400).json({ error: 'Missing required fields: priceId, userId' });
+    }
+
+    console.log('🎫 Creating Paddle checkout URL...', { priceId, userId, email });
+
+    // Create a transaction (checkout session) via Paddle API
+    const transaction = await paddle.transactions.create({
+      items: [
+        {
+          priceId,
+          quantity: 1,
+        },
+      ],
+      customData: {
+        userId,
+      },
+      ...(email && {
+        customerEmail: email,
+      }),
+    });
+
+    // Get the checkout URL from the transaction
+    const checkoutUrl = transaction.checkout?.url;
+
+    if (!checkoutUrl) {
+      throw new Error('Paddle did not return a checkout URL');
+    }
+
+    // Append success URL as query parameter if provided
+    const finalUrl = successUrl
+      ? `${checkoutUrl}&_ptxn_success_url=${encodeURIComponent(successUrl)}`
+      : checkoutUrl;
+
+    console.log('✅ Checkout URL created:', finalUrl);
+
+    return res.json({ checkoutUrl: finalUrl });
+  } catch (error) {
+    console.error('❌ Failed to create checkout URL:', error);
+    auditLog('PADDLE_CHECKOUT', 'FAILED', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return res.status(500).json({
+      error: 'Failed to create checkout URL',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
 });
 
 /**

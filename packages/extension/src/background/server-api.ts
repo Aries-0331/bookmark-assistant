@@ -26,7 +26,7 @@ class ServerAPIClient {
   }
 
   async getEntitlements(): Promise<{ isPro: boolean; features: string[] }> {
-    const res = await this.makeRequest<any>('/entitlements', { method: 'GET', timeoutMs: 5000 });
+    const res = await this.makeRequest<any>('/api/entitlements', { method: 'GET', timeoutMs: 5000 });
     return { isPro: res.isPro, features: res.features || [] };
   }
 
@@ -48,7 +48,7 @@ class ServerAPIClient {
       'X-Extension-ID': chrome.runtime.id,
       ...((options.headers as Record<string, string>) || {}),
     };
-    if (this.sessionToken && !endpoint.includes('/oauth/exchange')) {
+    if (this.sessionToken && !endpoint.includes('/api/oauth/exchange')) {
       headers['Authorization'] = `Bearer ${this.sessionToken}`;
     }
 
@@ -86,7 +86,7 @@ class ServerAPIClient {
         console.warn(`[ServerAPI] Request to ${endpoint} timed out after ${timeoutMs}ms`);
         // Fire-and-forget backend client-log for observability
         try {
-          globalThis.fetch(`${this.baseUrl}/client-log`, {
+          globalThis.fetch(`${this.baseUrl}/api/client-log`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Extension-ID': chrome.runtime.id },
             body: JSON.stringify({
@@ -113,7 +113,7 @@ class ServerAPIClient {
     user: { userId: string; userEmail?: string; templateDatabaseId?: string | null };
   }> {
     try {
-      const response = await this.makeRequest<any>('/oauth/exchange', {
+      const response = await this.makeRequest<any>('/api/oauth/exchange', {
         method: 'POST',
         body: JSON.stringify({
           code,
@@ -162,7 +162,7 @@ class ServerAPIClient {
   }> {
     // Disable client-side timeout for bulk sync to avoid spurious UI errors
     const estimatedTimeout = 0;
-    return await this.makeRequest<any>('/bookmarks/sync', {
+    return await this.makeRequest<any>('/api/bookmarks/sync', {
       method: 'POST',
       body: JSON.stringify({ bookmarks }),
       timeoutMs: estimatedTimeout,
@@ -170,7 +170,7 @@ class ServerAPIClient {
   }
 
   async getUserProfile(): Promise<{ user: any }> {
-    const res = await this.makeRequest<any>('/user/profile');
+    const res = await this.makeRequest<any>('/api/user/profile');
     return { user: res.profile };
   }
 
@@ -189,7 +189,7 @@ class ServerAPIClient {
   // 🚪 Logout
   async logout(): Promise<void> {
     try {
-      await this.makeRequest('/user/logout', { method: 'POST', timeoutMs: 5000 });
+      await this.makeRequest('/api/user/logout', { method: 'POST', timeoutMs: 5000 });
     } catch {}
     this.sessionToken = null;
     await chrome.storage.local.remove([
