@@ -56,7 +56,27 @@ export function Pricing() {
   const [billing, setBilling] = React.useState<'monthly' | 'yearly'>('yearly');
   const [paddleReady, setPaddleReady] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
-  const proPrice = billing === 'yearly' ? 7.2 : 9;
+  const [pricing, setPricing] = React.useState({ monthly: 9, yearlyDiscount: 0.2 });
+
+  // Fetch pricing from server
+  React.useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3333'}/api/v1/public-config`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.pricing) {
+          setPricing({
+            monthly: data.pricing.monthly,
+            yearlyDiscount: data.pricing.yearlyDiscount,
+          });
+        }
+      })
+      .catch((err) => console.warn('Failed to fetch pricing config:', err));
+  }, []);
+
+  const proPrice =
+    billing === 'yearly'
+      ? Number((pricing.monthly * (1 - pricing.yearlyDiscount)).toFixed(2))
+      : pricing.monthly;
 
   // Initialize Paddle on mount and check for transaction ID in URL
   React.useEffect(() => {
@@ -72,7 +92,7 @@ export function Pricing() {
         if (transactionId) {
           console.log('🎫 Opening checkout for transaction:', transactionId);
           console.log('🎯 Success URL:', successUrl);
-          
+
           // Open Paddle checkout with the transaction ID
           paddle.Checkout.open({
             transactionId,
@@ -108,7 +128,7 @@ export function Pricing() {
       paddle.Checkout.open({
         items: [{ priceId, quantity: 1 }],
         settings: {
-          successUrl: `${window.location.origin}/success`,
+          successUrl: `${window.location.origin}/success?source=website`,
           theme: 'light',
           displayMode: 'overlay',
         },
@@ -192,11 +212,13 @@ export function Pricing() {
           <div className="relative">
             <Card className="border-2">
               <CardBody className="p-8">
-                <div className="absolute top-4 right-4">
-                  <Badge variant="cta" className="px-2 py-1 text-xs">
-                    Most Popular
-                  </Badge>
-                </div>
+                {billing === 'yearly' && (
+                  <div className="absolute top-4 right-4">
+                    <Badge variant="cta" className="px-2 py-1 text-xs">
+                      Most Popular
+                    </Badge>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 flex items-center justify-center">
                     <Crown className="h-5 w-5 text-white" />

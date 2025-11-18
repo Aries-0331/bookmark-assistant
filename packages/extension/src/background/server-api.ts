@@ -26,7 +26,10 @@ class ServerAPIClient {
   }
 
   async getEntitlements(): Promise<{ isPro: boolean; features: string[] }> {
-    const res = await this.makeRequest<any>('/api/entitlements', { method: 'GET', timeoutMs: 5000 });
+    const res = await this.makeRequest<any>('/api/entitlements', {
+      method: 'GET',
+      timeoutMs: 5000,
+    });
     return { isPro: res.isPro, features: res.features || [] };
   }
 

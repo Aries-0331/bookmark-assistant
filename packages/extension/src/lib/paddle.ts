@@ -45,6 +45,7 @@ export async function openPaddleCheckout(options: OpenCheckoutOptions): Promise<
         priceId: options.priceId,
         userId: options.userId,
         email: options.userEmail,
+        source: 'extension', // Track that checkout originated from extension
         successUrl,
       }),
     });

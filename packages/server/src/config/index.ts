@@ -34,12 +34,16 @@ export const config = {
     },
   },
 
+  // Website Configuration
+  websiteUrl: process.env.WEBSITE_URL || 'http://localhost:3006',
+
   // CORS Configuration
   allowedOrigins: [
     `chrome-extension://${process.env.ALLOWED_EXTENSION_ID}`,
     'http://localhost:3000', // Next.js website dev server
     'http://localhost:5173', // Vite extension dev server
     'http://localhost:3006', // Alternative Next.js port
+    process.env.WEBSITE_URL || 'http://localhost:3006', // Production website
   ],
 
   // Session Configuration

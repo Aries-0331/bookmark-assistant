@@ -23,16 +23,23 @@ const paddle = new Paddle(config.paddle.apiKey, {
 /**
  * Create Paddle Checkout URL
  * Generates a secure checkout URL for the extension to open in a new tab
+ * Supports both extension and website checkout flows with proper success URL handling
  */
 router.post('/checkout-url', async (req: Request, res: Response) => {
   try {
-    const { priceId, userId, email, successUrl } = req.body;
+    const { priceId, userId, email, source, successUrl } = req.body;
 
     if (!priceId || !userId) {
       return res.status(400).json({ error: 'Missing required fields: priceId, userId' });
     }
 
-    console.log('🎫 Creating Paddle checkout URL...', { priceId, userId, email });
+    const checkoutSource = source || 'website';
+    console.log('🎫 Creating Paddle checkout URL...', {
+      priceId,
+      userId,
+      email,
+      source: checkoutSource,
+    });
 
     // Create a transaction (checkout session) via Paddle API
     const transaction = await paddle.transactions.create({
@@ -44,6 +51,7 @@ router.post('/checkout-url', async (req: Request, res: Response) => {
       ],
       customData: {
         userId,
+        source: checkoutSource, // Track checkout origin
       },
       ...(email && {
         customerEmail: email,
@@ -57,13 +65,25 @@ router.post('/checkout-url', async (req: Request, res: Response) => {
       throw new Error('Paddle did not return a checkout URL');
     }
 
-    // Append success URL as query parameter if provided
-    let finalUrl = checkoutUrl;
-    if (successUrl) {
-      finalUrl = `${finalUrl}&_ptxn_success_url=${encodeURIComponent(successUrl)}`;
+    // Build enhanced success URL with source tracking
+    let enhancedSuccessUrl: string;
+
+    if (checkoutSource === 'extension') {
+      // Extension flow: redirect back to extension after payment
+      const baseUrl = successUrl || 'chrome-extension://extension-id/options.html';
+      const separator = baseUrl.includes('?') ? '&' : '?';
+      enhancedSuccessUrl = `${config.websiteUrl || 'http://localhost:3006'}/success?source=extension&return_to=${encodeURIComponent(baseUrl + separator + 'upgraded=true')}`;
+    } else {
+      // Website flow: redirect to website success page
+      enhancedSuccessUrl =
+        successUrl || `${config.websiteUrl || 'http://localhost:3006'}/success?source=website`;
     }
 
+    // Append success URL to checkout URL
+    const finalUrl = `${checkoutUrl}&_ptxn_success_url=${encodeURIComponent(enhancedSuccessUrl)}`;
+
     console.log('✅ Checkout URL created:', finalUrl);
+    console.log('🎯 Success URL will be:', enhancedSuccessUrl);
 
     return res.json({ checkoutUrl: finalUrl });
   } catch (error) {
@@ -95,7 +115,7 @@ router.post('/checkout-url', async (req: Request, res: Response) => {
 router.post('/webhooks/paddle', async (req: Request, res: Response) => {
   try {
     const signature = req.headers['paddle-signature'] as string;
-    
+
     if (!signature) {
       auditLog('PADDLE_WEBHOOK', 'FAILED', { error: 'Missing signature' });
       return res.status(400).json({ error: 'Missing signature' });

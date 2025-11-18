@@ -15,6 +15,7 @@ import type { LucideIcon } from 'lucide-react';
 import { FREE_DAILY_LIMIT, FREE_INTERVAL_HOURS, PRO_MIN_INTERVAL_MINUTES } from '../store';
 import { useAppStore } from '../store';
 import { openPaddleCheckout, getPriceId } from '../../lib/paddle';
+import { useToast } from '../hook/useToast';
 
 function classNames(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(' ');
@@ -48,6 +49,7 @@ export function BillingSection() {
   const [loading, setLoading] = useState(false);
   const { isPro, getPricing, userId, userEmail, refreshEntitlements } = useAppStore();
   const { monthly: MONTHLY_PRICE, yearlyDiscount: YEARLY_DISCOUNT } = getPricing();
+  const { show: showToast } = useToast();
 
   // Check for upgrade success in URL and refresh entitlements
   useEffect(() => {
@@ -55,10 +57,20 @@ export function BillingSection() {
     if (params.get('upgraded') === 'true') {
       // Remove the param from URL
       window.history.replaceState({}, '', window.location.pathname);
+
+      // Show success toast
+      showToast({
+        title: '🎉 Successfully Upgraded to Pro!',
+        description:
+          'Your Pro subscription is now active. Enjoy unlimited bookmarks and all Pro features!',
+        variant: 'success',
+        duration: 5000,
+      });
+
       // Refresh entitlements after successful upgrade
       refreshEntitlements();
     }
-  }, [refreshEntitlements]);
+  }, [refreshEntitlements, showToast]);
 
   const handleUpgrade = async () => {
     try {
