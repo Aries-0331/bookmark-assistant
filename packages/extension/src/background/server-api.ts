@@ -26,9 +26,10 @@ class ServerAPIClient {
   }
 
   async getEntitlements(): Promise<{ isPro: boolean; features: string[] }> {
+    // No timeout - entitlements check is critical for feature access
     const res = await this.makeRequest<any>('/api/entitlements', {
       method: 'GET',
-      timeoutMs: 5000,
+      timeoutMs: 0, // Disable timeout for critical operation
     });
     return { isPro: res.isPro, features: res.features || [] };
   }
@@ -55,7 +56,9 @@ class ServerAPIClient {
       headers['Authorization'] = `Bearer ${this.sessionToken}`;
     }
 
-    const { timeoutMs = 8000, ...rest } = options as any;
+    // Default timeout: 30s for most operations, 0 (disabled) for critical ops
+    // Critical ops (OAuth, first-time sync) should pass timeoutMs: 0
+    const { timeoutMs = 30000, ...rest } = options as any;
     const controller = new AbortController();
     const useTimeout = typeof timeoutMs === 'number' && timeoutMs > 0;
     const timeout = useTimeout ? setTimeout(() => controller.abort(), timeoutMs) : null;
@@ -85,23 +88,32 @@ class ServerAPIClient {
     } catch (error: any) {
       if (timeout) clearTimeout(timeout);
       if (error?.name === 'AbortError') {
-        // Log timeout to console
-        console.warn(`[ServerAPI] Request to ${endpoint} timed out after ${timeoutMs}ms`);
-        // Fire-and-forget backend client-log for observability
-        try {
-          globalThis.fetch(`${this.baseUrl}/api/client-log`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Extension-ID': chrome.runtime.id },
-            body: JSON.stringify({
-              level: 'warn',
-              message: 'REQUEST_TIMEOUT',
-              meta: { endpoint, timeoutMs },
-            }),
-            cache: 'no-store',
-          });
-        } catch {}
-        // Return a shaped timeout signal to caller; popup suppresses this
-        throw new Error('REQUEST_TIMEOUT');
+        const timeoutSeconds = Math.round(timeoutMs / 1000);
+        console.warn(
+          `[ServerAPI] Request to ${endpoint} timed out after ${timeoutSeconds}s. ` +
+            `This might be due to slow network or server processing.`
+        );
+
+        // Only log non-critical timeouts to backend (don't spam for expected slow operations)
+        if (timeoutMs > 0 && timeoutMs < 30000) {
+          try {
+            globalThis.fetch(`${this.baseUrl}/api/client-log`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Extension-ID': chrome.runtime.id },
+              body: JSON.stringify({
+                level: 'warn',
+                message: 'REQUEST_TIMEOUT',
+                meta: { endpoint, timeoutMs },
+              }),
+              cache: 'no-store',
+            });
+          } catch {}
+        }
+
+        // Provide helpful error message
+        throw new Error(
+          `Request timed out after ${timeoutSeconds}s. Please check your internet connection and try again.`
+        );
       }
       throw error;
     }
@@ -116,8 +128,10 @@ class ServerAPIClient {
     user: { userId: string; userEmail?: string; templateDatabaseId?: string | null };
   }> {
     try {
+      // No timeout for OAuth - this is critical and can be slow due to Notion API calls
       const response = await this.makeRequest<any>('/api/oauth/exchange', {
         method: 'POST',
+        timeoutMs: 0, // Disable timeout for critical OAuth operation
         body: JSON.stringify({
           code,
           redirectUri,

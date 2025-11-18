@@ -93,7 +93,7 @@ export function BillingSection() {
         priceId,
         userId,
         userEmail: userEmail || undefined,
-        successUrl: chrome.runtime.getURL('options.html?upgraded=true'),
+        successUrl: `${import.meta.env.VITE_WEBSITE_URL || ''}/success`,
       });
     } catch (error) {
       console.error('❌ Failed to open checkout:', error);
