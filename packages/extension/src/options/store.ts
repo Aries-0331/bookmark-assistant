@@ -203,7 +203,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
       const base = (import.meta.env.VITE_OAUTH_SERVER_URL || '').replace(/\/$/, '');
       if (!base) return; // optional when running OSS-only
-      const url = `${base}/v1/public-config`;
+      const url = `${base}/api/v1/public-config`;
       const headers: Record<string, string> = {};
       if (cache?.etag) headers['If-None-Match'] = cache.etag;
       const res = await fetch(url, { headers });

@@ -28,7 +28,7 @@ export interface OpenCheckoutOptions {
 export async function openPaddleCheckout(options: OpenCheckoutOptions): Promise<void> {
   try {
     const serverUrl = import.meta.env.VITE_OAUTH_SERVER_URL || 'http://localhost:3000';
-    
+
     // Build success URL
     const successUrl =
       options.successUrl || `${chrome.runtime.getURL('options.html')}?upgraded=true`;

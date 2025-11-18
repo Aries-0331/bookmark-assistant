@@ -58,11 +58,31 @@ export function Pricing() {
   const [loading, setLoading] = React.useState(false);
   const proPrice = billing === 'yearly' ? 7.2 : 9;
 
-  // Initialize Paddle on mount
+  // Initialize Paddle on mount and check for transaction ID in URL
   React.useEffect(() => {
     getPaddleInstance().then((paddle) => {
       if (paddle) {
         setPaddleReady(true);
+
+        // Check if there's a transaction ID in the URL (_ptxn parameter)
+        const urlParams = new URLSearchParams(window.location.search);
+        const transactionId = urlParams.get('_ptxn');
+        const successUrl = urlParams.get('_ptxn_success_url');
+
+        if (transactionId) {
+          console.log('🎫 Opening checkout for transaction:', transactionId);
+          console.log('🎯 Success URL:', successUrl);
+          
+          // Open Paddle checkout with the transaction ID
+          paddle.Checkout.open({
+            transactionId,
+            settings: {
+              theme: 'light',
+              displayMode: 'overlay',
+              ...(successUrl && { successUrl: decodeURIComponent(successUrl) }),
+            },
+          });
+        }
       }
     });
   }, []);
