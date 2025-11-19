@@ -3,6 +3,7 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import { config } from '../config';
+import { paddlePricingService } from '../services';
 import oauthRoutes from './oauth';
 import notionRoutes from './notion';
 import bookmarkRoutes from './bookmarks';
@@ -32,12 +33,16 @@ router.get('/health', (req, res) => {
 });
 
 // Public, cacheable configuration for client display and soft limits
-router.get('/v1/public-config', (req, res) => {
+// Pricing is fetched from Paddle API to ensure consistency with actual payment prices
+router.get('/v1/public-config', async (req, res) => {
   try {
+    // Fetch current pricing from Paddle (with caching)
+    const pricing = await paddlePricingService.getPricing();
+
     const body = {
       pricing: {
-        monthly: config.pricing.monthly,
-        yearlyDiscount: config.pricing.yearlyDiscount,
+        monthly: pricing.monthly,
+        yearlyDiscount: pricing.yearlyDiscount,
       },
       limits: {
         free: {
@@ -59,7 +64,8 @@ router.get('/v1/public-config', (req, res) => {
     res.setHeader('ETag', etag);
     res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minutes
     res.json(body);
-  } catch {
+  } catch (error) {
+    console.error('❌ Error fetching public config:', error);
     res.status(500).json({ success: false });
   }
 });

@@ -61,10 +61,12 @@ export const config = {
   // Template Configuration
   templatePageId: '257d872b594c805a9f580037c0162612',
 
-  // Pricing & Limits Configuration (synced with Paddle and extension)
+  // Pricing & Limits Configuration
+  // Note: Pricing is fetched from Paddle API at runtime to ensure consistency
+  // Fallback values are used only if Paddle API is unavailable
   pricing: {
-    monthly: Number(process.env.PRICING_MONTHLY) || 4.99, // USD per month
-    yearlyDiscount: Number(process.env.PRICING_YEARLY_DISCOUNT) || 0.3, // 30% off
+    monthlyFallback: 4.99, // USD per month - fallback only
+    yearlyDiscountFallback: 0.3, // 30% off - fallback only
   },
 
   limits: {
@@ -125,24 +127,7 @@ export function validateConfig(): void {
     }
   }
 
-  // Validate pricing configuration
-  const pricingVars = ['PRICING_MONTHLY', 'PRICING_YEARLY_DISCOUNT'];
-  const missingPricing = pricingVars.filter((varName) => !process.env[varName]);
-  if (missingPricing.length > 0) {
-    console.warn(
-      `⚠️  Missing pricing configuration: ${missingPricing.join(', ')}. Using defaults.`
-    );
-  }
-
-  // Warn if pricing seems misconfigured
-  const monthly = config.pricing.monthly;
-  const discount = config.pricing.yearlyDiscount;
-  if (monthly <= 0) {
-    console.warn(`⚠️  PRICING_MONTHLY should be > 0 (current: ${monthly})`);
-  }
-  if (discount < 0 || discount >= 1) {
-    console.warn(`⚠️  PRICING_YEARLY_DISCOUNT should be between 0 and 1 (current: ${discount})`);
-  }
+  console.log('✅ Configuration validated successfully');
 }
 
 export default config;

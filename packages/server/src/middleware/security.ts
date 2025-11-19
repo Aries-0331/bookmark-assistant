@@ -34,6 +34,11 @@ export const corsMiddleware = cors({
       }
     }
 
+    // In development, allow ngrok tunnels
+    if (config.nodeEnv === 'development' && origin.endsWith('.ngrok-free.dev')) {
+      return callback(null, true);
+    }
+
     if (allowed) {
       return callback(null, true);
     }

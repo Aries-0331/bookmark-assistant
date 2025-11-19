@@ -56,7 +56,7 @@ export function Pricing() {
   const [billing, setBilling] = React.useState<'monthly' | 'yearly'>('yearly');
   const [paddleReady, setPaddleReady] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
-  const [pricing, setPricing] = React.useState({ monthly: 9, yearlyDiscount: 0.2 });
+  const [pricing, setPricing] = React.useState({ monthly: 4.99, yearlyDiscount: 0.3 });
 
   // Fetch pricing from server
   React.useEffect(() => {

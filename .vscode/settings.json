@@ -40,5 +40,15 @@
   },
 
   // ESLint - only for linting, not formatting
-  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "eslint.options": {
+    "cache": true,
+    "cacheLocation": "node_modules/.cache/eslint/"
+  },
+  "eslint.codeActionsOnSave.mode": "problems",
+
+  // Performance: Increase timeout for slow files
+  "eslint.runtime": null,
+  "eslint.nodePath": null,
+  "eslint.probe": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
 }

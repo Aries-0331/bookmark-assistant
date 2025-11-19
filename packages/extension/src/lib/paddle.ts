@@ -18,7 +18,7 @@ export interface OpenCheckoutOptions {
   priceId: string;
   userEmail?: string;
   userId: string;
-  successUrl?: string;
+  successUrl: string;
 }
 
 /**
@@ -28,10 +28,6 @@ export interface OpenCheckoutOptions {
 export async function openPaddleCheckout(options: OpenCheckoutOptions): Promise<void> {
   try {
     const serverUrl = import.meta.env.VITE_OAUTH_SERVER_URL || 'http://localhost:3000';
-
-    // Build success URL
-    const successUrl =
-      options.successUrl || `${chrome.runtime.getURL('options.html')}?upgraded=true`;
 
     console.log('🚀 Requesting Paddle checkout URL from server...');
 
@@ -46,7 +42,7 @@ export async function openPaddleCheckout(options: OpenCheckoutOptions): Promise<
         userId: options.userId,
         email: options.userEmail,
         source: 'extension', // Track that checkout originated from extension
-        successUrl,
+        successUrl: options.successUrl,
       }),
     });
 
