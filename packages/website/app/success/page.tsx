@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle } from 'lucide-react';
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const source = searchParams.get('source');
@@ -76,5 +76,13 @@ export default function SuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SuccessContent />
+    </Suspense>
   );
 }

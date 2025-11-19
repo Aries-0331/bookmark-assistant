@@ -50,6 +50,7 @@ export class UserPrismaRepo {
       templateDatabaseId: u.template_database_id || undefined,
       databases: (u.databases as any) || [],
       lastActivity: u.last_activity,
+      plan: u.plan,
     };
   }
 

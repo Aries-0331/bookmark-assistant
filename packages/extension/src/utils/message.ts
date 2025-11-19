@@ -6,9 +6,14 @@ export type MessageMap = {
   NOTION_OAUTH: { req: {}; res: { success: boolean; error?: string } };
   SYNC_ALL_BOOKMARKS: { req: {}; res: { success: boolean; error?: string } };
   GET_USER_PROFILE: { req: {}; res: { success: boolean; profile?: any; error?: string } };
-  GET_ENTITLEMENTS: {
+  GET_PRICING: {
     req: {};
-    res: { success: boolean; isPro?: boolean; features?: string[]; error?: string };
+    res: {
+      success: boolean;
+      pricing?: { monthly: number; yearlyDiscount: number };
+      limits?: any;
+      error?: string;
+    };
   };
   LOGOUT: { req: {}; res: { success: boolean; error?: string } };
 };
@@ -23,7 +28,7 @@ export const Messages: { [K in MessageType]: K } = {
   NOTION_OAUTH: 'NOTION_OAUTH',
   SYNC_ALL_BOOKMARKS: 'SYNC_ALL_BOOKMARKS',
   GET_USER_PROFILE: 'GET_USER_PROFILE',
-  GET_ENTITLEMENTS: 'GET_ENTITLEMENTS',
+  GET_PRICING: 'GET_PRICING',
   LOGOUT: 'LOGOUT',
 };
 

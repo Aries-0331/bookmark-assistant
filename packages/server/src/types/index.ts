@@ -14,6 +14,7 @@ export interface UserData {
   botId?: string;
   duplicatedTemplateId?: string;
   lastActivity: Date;
+  plan?: string;
 }
 
 export interface AuthenticatedRequest extends Request {

@@ -9,6 +9,7 @@ import { initializePaddle, Paddle } from '@paddle/paddle-js';
 
 // Singleton Paddle instance
 let paddleInstance: Paddle | null = null;
+let paddlePromise: Promise<Paddle | undefined> | null = null;
 
 /**
  * Get price ID based on billing period
@@ -26,6 +27,10 @@ function getPriceId(billing: 'monthly' | 'yearly'): string {
 
 async function getPaddleInstance(): Promise<Paddle | null> {
   if (paddleInstance) return paddleInstance;
+  if (paddlePromise) {
+    const instance = await paddlePromise;
+    return instance || null;
+  }
 
   const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
   const env = (process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || 'sandbox') as 'sandbox' | 'production';
@@ -36,18 +41,23 @@ async function getPaddleInstance(): Promise<Paddle | null> {
   }
 
   try {
-    paddleInstance =
-      (await initializePaddle({
-        token,
-        environment: env,
-        eventCallback: (event) => {
-          console.log('🎫 Paddle event:', event.name, event.data);
-        },
-      })) ?? null;
-    console.log('✅ Paddle initialized:', env);
-    return paddleInstance;
+    paddlePromise = initializePaddle({
+      token,
+      environment: env,
+      eventCallback: (event) => {
+        console.log('🎫 Paddle event:', event.name, event.data);
+      },
+    });
+
+    const instance = await paddlePromise;
+    if (instance) {
+      paddleInstance = instance;
+      console.log('✅ Paddle initialized:', env);
+    }
+    return instance || null;
   } catch (error) {
     console.error('❌ Failed to initialize Paddle:', error);
+    paddlePromise = null; // Reset promise on failure
     return null;
   }
 }
@@ -56,55 +66,93 @@ export function Pricing() {
   const [billing, setBilling] = React.useState<'monthly' | 'yearly'>('yearly');
   const [paddleReady, setPaddleReady] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
-  const [pricing, setPricing] = React.useState({ monthly: 4.99, yearlyDiscount: 0.3 });
-
-  // Fetch pricing from server
-  React.useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3333'}/api/v1/public-config`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.pricing) {
-          setPricing({
-            monthly: data.pricing.monthly,
-            yearlyDiscount: data.pricing.yearlyDiscount,
-          });
-        }
-      })
-      .catch((err) => console.warn('Failed to fetch pricing config:', err));
-  }, []);
+  const [pricing, setPricing] = React.useState({
+    monthly: 5,
+    yearly: 42,
+    currencySymbol: '$',
+  });
 
   const proPrice =
-    billing === 'yearly'
-      ? Number((pricing.monthly * (1 - pricing.yearlyDiscount)).toFixed(2))
-      : pricing.monthly;
+    billing === 'yearly' ? (pricing.yearly / 12).toFixed(2) : pricing.monthly.toFixed(2);
 
-  // Initialize Paddle on mount and check for transaction ID in URL
+  const discountPercentage = Math.round((1 - pricing.yearly / 12 / pricing.monthly) * 100);
+
+  // Initialize Paddle and fetch pricing
   React.useEffect(() => {
-    getPaddleInstance().then((paddle) => {
-      if (paddle) {
-        setPaddleReady(true);
+    const init = async () => {
+      const paddle = await getPaddleInstance();
+      if (!paddle) return;
+      setPaddleReady(true);
 
-        // Check if there's a transaction ID in the URL (_ptxn parameter)
-        const urlParams = new URLSearchParams(window.location.search);
-        const transactionId = urlParams.get('_ptxn');
-        const successUrl = urlParams.get('_ptxn_success_url');
+      // 1. Check for transaction (existing logic)
+      const urlParams = new URLSearchParams(window.location.search);
+      const transactionId = urlParams.get('_ptxn');
+      const successUrl = urlParams.get('_ptxn_success_url');
 
-        if (transactionId) {
-          console.log('🎫 Opening checkout for transaction:', transactionId);
-          console.log('🎯 Success URL:', successUrl);
+      if (transactionId) {
+        console.log('🎫 Opening checkout for transaction:', transactionId);
+        paddle.Checkout.open({
+          transactionId,
+          settings: {
+            theme: 'light',
+            displayMode: 'overlay',
+            ...(successUrl && { successUrl: decodeURIComponent(successUrl) }),
+          },
+        });
+      }
 
-          // Open Paddle checkout with the transaction ID
-          paddle.Checkout.open({
-            transactionId,
-            settings: {
-              theme: 'light',
-              displayMode: 'overlay',
-              ...(successUrl && { successUrl: decodeURIComponent(successUrl) }),
-            },
+      // 2. Fetch dynamic pricing
+      const monthlyId = process.env.NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID;
+      const yearlyId = process.env.NEXT_PUBLIC_PADDLE_PRO_YEARLY_PRICE_ID;
+
+      if (monthlyId && yearlyId) {
+        try {
+          const preview = await paddle.PricePreview({
+            items: [
+              { priceId: monthlyId, quantity: 1 },
+              { priceId: yearlyId, quantity: 1 },
+            ],
           });
+
+          const monthlyItem = preview.data.details.lineItems.find(
+            (item) => item.price.id === monthlyId
+          );
+          const yearlyItem = preview.data.details.lineItems.find(
+            (item) => item.price.id === yearlyId
+          );
+
+          if (monthlyItem && yearlyItem) {
+            const currencyCode = monthlyItem.price.unitPrice.currencyCode;
+
+            // Paddle returns amounts in minor units (e.g. cents), so we need to divide by 100
+            // unless it's a zero-decimal currency like JPY
+            const isZeroDecimal = ['JPY', 'KRW', 'HUF', 'TWD'].includes(currencyCode);
+            const divisor = isZeroDecimal ? 1 : 100;
+
+            const monthlyAmount = parseFloat(monthlyItem.price.unitPrice.amount) / divisor;
+            const yearlyAmount = parseFloat(yearlyItem.price.unitPrice.amount) / divisor;
+
+            // Simple symbol mapping
+            const formatter = new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: currencyCode,
+            });
+            const parts = formatter.formatToParts(0);
+            const symbol = parts.find((part) => part.type === 'currency')?.value || '$';
+
+            setPricing({
+              monthly: monthlyAmount,
+              yearly: yearlyAmount,
+              currencySymbol: symbol,
+            });
+          }
+        } catch (err) {
+          console.warn('Failed to fetch Paddle pricing:', err);
         }
       }
-    });
+    };
+
+    init();
   }, []);
 
   const handleUpgrade = async () => {
@@ -164,7 +212,7 @@ export function Pricing() {
             >
               Yearly{' '}
               <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                Save 20%
+                Save {discountPercentage}%
               </span>
             </button>
           </div>
@@ -184,7 +232,7 @@ export function Pricing() {
                 </div>
               </div>
               <div className="text-4xl text-gray-900 mb-4">
-                $0 <span className="text-base text-gray-600">/month</span>
+                {pricing.currencySymbol}0 <span className="text-base text-gray-600">/month</span>
               </div>
               <Button className="w-full mb-6" size="lg">
                 Get Started Free
@@ -229,7 +277,8 @@ export function Pricing() {
                   </div>
                 </div>
                 <div className="text-4xl text-gray-900 mb-4">
-                  ${proPrice} <span className="text-base text-gray-600">/month</span>
+                  {pricing.currencySymbol}
+                  {proPrice} <span className="text-base text-gray-600">/month</span>
                 </div>
                 <Button
                   variant="pro"

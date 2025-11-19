@@ -167,30 +167,19 @@ addMessageListener({
   },
   [Messages.GET_USER_PROFILE]: async () => {
     try {
-      const profile = await serverAPI.getUserProfile();
-      return { success: true, profile: profile.user } as const;
+      const { user, isPro } = await serverAPI.getUserProfile();
+      return { success: true, profile: user, isPro } as const;
     } catch (err) {
       console.error('❌ Failed to get user profile:', err);
       return { success: false, error: String(err) } as const;
     }
   },
-  [Messages.GET_ENTITLEMENTS]: async () => {
+  [Messages.GET_PRICING]: async () => {
     try {
-      const entitlements = await serverAPI.getEntitlements();
-
-      // Store in chrome.storage for sync with UI
-      await chrome.storage.local.set({
-        is_pro: entitlements.isPro,
-        features: entitlements.features,
-      });
-
-      return {
-        success: true,
-        isPro: entitlements.isPro,
-        features: entitlements.features,
-      } as const;
+      const { pricing, limits } = await serverAPI.getPricing();
+      return { success: true, pricing, limits } as const;
     } catch (err) {
-      console.error('❌ Failed to get entitlements:', err);
+      console.error('❌ Failed to get pricing:', err);
       return { success: false, error: String(err) } as const;
     }
   },

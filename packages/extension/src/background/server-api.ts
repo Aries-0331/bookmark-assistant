@@ -25,15 +25,6 @@ class ServerAPIClient {
     this.loadSessionToken();
   }
 
-  async getEntitlements(): Promise<{ isPro: boolean; features: string[] }> {
-    // No timeout - entitlements check is critical for feature access
-    const res = await this.makeRequest<any>('/api/entitlements', {
-      method: 'GET',
-      timeoutMs: 0, // Disable timeout for critical operation
-    });
-    return { isPro: res.isPro, features: res.features || [] };
-  }
-
   private async loadSessionToken() {
     const result = await chrome.storage.local.get(['session_token']);
     this.sessionToken = result.session_token || null;
@@ -186,9 +177,17 @@ class ServerAPIClient {
     });
   }
 
-  async getUserProfile(): Promise<{ user: any }> {
+  async getUserProfile(): Promise<{ user: any; isPro: boolean }> {
     const res = await this.makeRequest<any>('/api/user/profile');
-    return { user: res.profile };
+    return { user: res.profile, isPro: res.profile.isPro };
+  }
+
+  async getPricing(): Promise<{ pricing: any; limits: any }> {
+    const res = await this.makeRequest<any>('/api/pricing', {
+      method: 'GET',
+      timeoutMs: 5000,
+    });
+    return { pricing: res.pricing, limits: res.limits };
   }
 
   async isConnected(): Promise<boolean> {

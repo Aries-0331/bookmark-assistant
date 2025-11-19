@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAppStore } from '../store';
+import { useAppStore, FREE_INTERVAL_HOURS, PRO_MIN_INTERVAL_HOURS } from '../store';
 import { SectionCard } from './SectionCard';
 import { useToast } from '../hook/useToast';
 
@@ -7,23 +7,12 @@ export function SyncSettingsSection() {
   const [value, setValue] = useState<number>(0);
 
   const { show } = useToast();
-  const { isPro, autoSync, minIntervalHours, saveSyncSettings } = useAppStore();
-
-  const handleSaveSyncSettings = async (nextAuto?: boolean, nextInterval?: number) => {
-    try {
-      await saveSyncSettings(nextAuto, nextInterval);
-    } catch (e) {
-      show({
-        variant: 'error',
-        title: 'Failed to save sync settings',
-        description: String(e),
-      });
-    }
-  };
+  const { isPro, autoSync, setAutoSync, saveSyncSettings } = useAppStore();
+  const minIntervalHours = isPro ? PRO_MIN_INTERVAL_HOURS : FREE_INTERVAL_HOURS;
 
   const onToggleAuto = async () => {
     const next = !autoSync;
-    await handleSaveSyncSettings(next, undefined);
+    setAutoSync(next);
   };
 
   const onIntervalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,7 +21,15 @@ export function SyncSettingsSection() {
   };
 
   const onIntervalBlur = async () => {
-    await handleSaveSyncSettings(undefined, value);
+    try {
+      await saveSyncSettings(value);
+    } catch (e) {
+      show({
+        variant: 'error',
+        title: 'Failed to save sync settings',
+        description: String(e),
+      });
+    }
   };
 
   return (
@@ -55,9 +52,9 @@ export function SyncSettingsSection() {
             role="switch"
             aria-checked={autoSync}
             onClick={onToggleAuto}
-            className={`w-10 h-6 rounded-full p-0.5  flex items-center transition-colors ${autoSync ? 'bg-gray-900' : 'bg-gray-300'} ${!autoSync ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={!autoSync}
-            title={!autoSync ? 'Upgrade to Pro to enable Auto Sync' : undefined}
+            className={`w-10 h-6 rounded-full p-0.5  flex items-center transition-colors ${autoSync ? 'bg-gray-900' : 'bg-gray-300'} ${!isPro ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={!isPro}
+            title={!isPro ? 'Upgrade to Pro to enable Auto Sync' : undefined}
           >
             <span
               className={`block w-5 h-5 bg-white rounded-full transform transition-transform ${autoSync ? 'translate-x-4' : ''}`}
@@ -71,7 +68,7 @@ export function SyncSettingsSection() {
             <input
               type="number"
               min={minIntervalHours}
-              value={value}
+              value={value || minIntervalHours}
               onChange={onIntervalChange}
               onBlur={onIntervalBlur}
               disabled={!autoSync}
