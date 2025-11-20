@@ -9,6 +9,12 @@ import {
   Database,
   ShieldCheck,
   Mail,
+  CheckCircle,
+  ExternalLink,
+  RefreshCw,
+  CreditCard,
+  Calendar,
+  User,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { LucideIcon } from 'lucide-react';
@@ -16,6 +22,7 @@ import { FREE_DAILY_LIMIT, FREE_INTERVAL_HOURS, PRO_MIN_INTERVAL_MINUTES } from 
 import { useAppStore } from '../store';
 import { openPaddleCheckout, getPriceId } from '../../lib/paddle';
 import { useToast } from '../hook/useToast';
+import { sendMessage, Messages } from '../../utils/message';
 
 function classNames(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(' ');
@@ -117,6 +124,38 @@ export function BillingSection() {
     window.open(manageUrl, '_blank', 'noopener');
   };
 
+  const handleRestore = async () => {
+    const email = window.prompt('Please enter your payment email to restore your purchase:');
+    if (!email) return;
+
+    try {
+      setLoading(true);
+      const res = await sendMessage({ type: Messages.RESTORE_PURCHASE, email });
+      if (res.success) {
+        showToast({
+          title: 'Purchase Restored',
+          description: res.message || 'Your subscription has been restored.',
+          variant: 'success',
+        });
+        refreshEntitlements();
+      } else {
+        showToast({
+          title: 'Restore Failed',
+          description: res.error || 'Could not find a subscription for this email.',
+          variant: 'error',
+        });
+      }
+    } catch (error) {
+      showToast({
+        title: 'Error',
+        description: 'Failed to restore purchase. Please try again later.',
+        variant: 'error',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const originalAnnual = MONTHLY_PRICE * 12;
   const discountedAnnual = Math.round(originalAnnual * (1 - YEARLY_DISCOUNT));
   const formatCurrency = (n: number) =>
@@ -124,6 +163,94 @@ export function BillingSection() {
   const formatCurrencyPerMonth = (n: number) =>
     `$${new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)}`;
   const monthlyFromYearly = discountedAnnual / 12;
+
+  if (isPro) {
+    return (
+      <SectionCard
+        id="billing"
+        title="Subscription Management"
+        description="Manage your Pro subscription and billing details"
+      >
+        <div className="rounded-2xl border border-amber-200 bg-white overflow-hidden shadow-sm">
+          {/* Status Banner */}
+          <div className="bg-orange-50 px-6 py-4 flex items-center justify-between border-b border-amber-100">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-amber-100 rounded-full">
+                <Crown className="w-5 h-5 text-amber-600" />
+              </div>
+              <span className="text-amber-900 font-semibold text-lg">Pro Plan Active</span>
+            </div>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium border border-green-200">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              Active
+            </span>
+          </div>
+
+          {/* Info Grid */}
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1">
+              <div className="text-xs text-gray-500 font-medium uppercase tracking-wider flex items-center gap-1">
+                <CreditCard className="w-3 h-3" /> Current Plan
+              </div>
+              <div className="text-gray-900 font-medium">Pro (Unlimited)</div>
+            </div>
+
+            <div className="space-y-1">
+              <div className="text-xs text-gray-500 font-medium uppercase tracking-wider flex items-center gap-1">
+                <Calendar className="w-3 h-3" /> Next Billing Date
+              </div>
+              <div className="text-gray-900 font-medium">
+                {/* Placeholder as we don't have this data yet */}
+                Managed via Paddle
+              </div>
+            </div>
+
+            <div className="space-y-1 md:col-span-2">
+              <div className="text-xs text-gray-500 font-medium uppercase tracking-wider flex items-center gap-1">
+                <User className="w-3 h-3" /> Linked Email
+              </div>
+              <div className="text-gray-900 font-medium font-mono text-sm bg-gray-50 px-2 py-1 rounded w-fit">
+                {userEmail || 'No email linked'}
+              </div>
+            </div>
+          </div>
+
+          {/* Features */}
+          <div className="px-6 pb-6">
+            <div className="text-sm font-medium text-gray-900 mb-3">Your Pro Features</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {PLAN_FEATURES.pro.map((f, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
+                  <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                  <span>{f.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <button
+              onClick={handleManage}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Manage Subscription
+            </button>
+
+            <button
+              onClick={handleRestore}
+              disabled={loading}
+              className="text-xs text-gray-500 hover:text-amber-600 flex items-center gap-1 transition-colors"
+            >
+              <RefreshCw className={classNames('w-3 h-3', loading && 'animate-spin')} />
+              Sync Issues? Restore Purchase
+            </button>
+          </div>
+        </div>
+      </SectionCard>
+    );
+  }
 
   return (
     <SectionCard

@@ -202,6 +202,14 @@ class ServerAPIClient {
     }
   }
 
+  async restorePurchase(email: string): Promise<{ success: boolean; message?: string }> {
+    return await this.makeRequest<any>('/api/user/restore-purchase', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+      timeoutMs: 10000,
+    });
+  }
+
   // 🚪 Logout
   async logout(): Promise<void> {
     try {

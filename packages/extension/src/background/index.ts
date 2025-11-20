@@ -192,6 +192,15 @@ addMessageListener({
       return { success: false, error: String(err) } as const;
     }
   },
+  [Messages.RESTORE_PURCHASE]: async (req: { email: string }) => {
+    try {
+      const res = await serverAPI.restorePurchase(req.email);
+      return { success: res.success, message: res.message } as const;
+    } catch (err) {
+      console.error('❌ Restore purchase failed:', err);
+      return { success: false, error: String(err) } as const;
+    }
+  },
 });
 
 // Open the options page when the user clicks the extension icon

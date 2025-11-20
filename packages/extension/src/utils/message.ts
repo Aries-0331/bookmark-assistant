@@ -16,6 +16,7 @@ export type MessageMap = {
     };
   };
   LOGOUT: { req: {}; res: { success: boolean; error?: string } };
+  RESTORE_PURCHASE: { req: { email: string }; res: { success: boolean; message?: string; error?: string } };
 };
 
 export type MessageType = keyof MessageMap;
@@ -30,6 +31,7 @@ export const Messages: { [K in MessageType]: K } = {
   GET_USER_PROFILE: 'GET_USER_PROFILE',
   GET_PRICING: 'GET_PRICING',
   LOGOUT: 'LOGOUT',
+  RESTORE_PURCHASE: 'RESTORE_PURCHASE',
 };
 
 export async function sendMessage<T extends MessageType>(
