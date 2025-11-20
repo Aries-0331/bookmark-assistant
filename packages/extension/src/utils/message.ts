@@ -16,7 +16,10 @@ export type MessageMap = {
     };
   };
   LOGOUT: { req: {}; res: { success: boolean; error?: string } };
-  RESTORE_PURCHASE: { req: { email: string }; res: { success: boolean; message?: string; error?: string } };
+  RESTORE_PURCHASE: {
+    req: { email: string };
+    res: { success: boolean; message?: string; error?: string };
+  };
 };
 
 export type MessageType = keyof MessageMap;
