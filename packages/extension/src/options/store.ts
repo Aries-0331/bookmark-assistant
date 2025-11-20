@@ -85,15 +85,28 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   initFromStorage: async () => {
     try {
-      const { last_sync, sync_interval_hours, user_id, user_email, is_pro, cached_pricing } =
-        await chrome.storage.local.get([
-          'last_sync',
-          'sync_interval_hours',
-          'user_id',
-          'user_email',
-          'is_pro',
-          'cached_pricing',
-        ]);
+      const {
+        last_sync,
+        sync_interval_hours,
+        user_id,
+        user_email,
+        is_pro,
+        cached_pricing,
+        session_token,
+      } = await chrome.storage.local.get([
+        'last_sync',
+        'sync_interval_hours',
+        'user_id',
+        'user_email',
+        'is_pro',
+        'cached_pricing',
+        'session_token',
+      ]);
+
+      // Load connection state
+      if (session_token) {
+        set({ isConnected: true });
+      }
 
       // Load user info
       if (user_id) set({ userId: user_id });
@@ -200,22 +213,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       if (changes['last_sync']) {
         const s = changes['last_sync'].newValue as string | undefined;
-        if (typeof s === 'string') useAppStore.setState({ lastSync: s });
+        useAppStore.setState({ lastSync: s || '' });
       }
       if (changes['sync_in_progress']) {
         useAppStore.setState({ isSyncing: !!changes['sync_in_progress'].newValue });
       }
       if (changes['user_id']) {
         const userId = changes['user_id'].newValue as string | undefined;
-        if (userId) useAppStore.setState({ userId });
+        useAppStore.setState({ userId: userId || '' });
       }
       if (changes['user_email']) {
         const userEmail = changes['user_email'].newValue as string | undefined;
-        if (userEmail) useAppStore.setState({ userEmail });
+        useAppStore.setState({ userEmail: userEmail || '' });
       }
       if (changes['is_pro']) {
-        const isPro = changes['is_pro'].newValue as boolean | undefined;
-        if (typeof isPro === 'boolean') useAppStore.setState({ isPro });
+        const isPro = !!changes['is_pro'].newValue;
+        useAppStore.setState({ isPro });
       }
       if (changes['cached_pricing']) {
         const pricing = changes['cached_pricing'].newValue;
@@ -242,6 +255,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         useAppStore.setState({ bookmarkCount: count });
       } catch {}
     })();
+  }, []);
+
+  // Refresh entitlements on visibility change (e.g. returning from payment tab)
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && useAppStore.getState().isConnected) {
+        useAppStore.getState().refreshEntitlements();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
   }, []);
 
   // Kick off config + settings load

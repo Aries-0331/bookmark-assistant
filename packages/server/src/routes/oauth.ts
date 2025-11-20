@@ -2,10 +2,10 @@
 
 import { Router, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { AuthenticatedRequest, OAuthExchangeRequest, UserData } from '../types';
+import { AuthenticatedRequest, OAuthExchangeRequest } from '../types';
 import { validateExtension, validateSession } from '../middleware/auth';
 import { notionService } from '../services/notion';
-import { userPrisma } from '../services/userPrisma';
+import { userPrisma, prisma } from '../services/userPrisma';
 import { config } from '../config';
 import { auditLog, sanitizeError } from '../utils';
 
@@ -17,8 +17,7 @@ const router: import('express').Router = Router();
  */
 router.post('/exchange', validateExtension, async (req, res: Response) => {
   try {
-    const { code, extensionUserId, redirectUri }: OAuthExchangeRequest & { redirectUri?: string } =
-      req.body;
+    const { code, redirectUri }: OAuthExchangeRequest & { redirectUri?: string } = req.body;
 
     if (!code) {
       return res.status(400).json({
@@ -35,34 +34,84 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
     }
     // Exchange code for tokens with Notion
     const tokenData = await notionService.exchangeOAuthCode(code, redirectUri);
-    const userId = extensionUserId || `user_${Date.now()}`;
 
-    // Extract user email from Notion owner object if available
-    let userEmail: string | undefined;
-    if (tokenData.owner?.user?.person?.email) {
-      userEmail = tokenData.owner.user.person.email;
-    } else if (tokenData.owner?.user?.email) {
-      userEmail = tokenData.owner.user.email;
+    // Extract Notion User Info
+    const notionUser = tokenData.owner?.user;
+    const notionUserId = notionUser?.id;
+    const notionEmail = notionUser?.person?.email || notionUser?.email;
+
+    if (!notionUserId) {
+      throw new Error('Failed to get Notion User ID from token exchange');
     }
 
-    // Store user data securely on server
-    const userData: UserData = {
-      userId,
-      notionAccessToken: tokenData.access_token,
-      notionRefreshToken: tokenData.refresh_token,
-      databases: [],
-      lastActivity: new Date(),
-    };
+    console.log(`🔐 OAuth Exchange for Notion User: ${notionUserId} (${notionEmail})`);
 
-    // Persist in DB
-    try {
-      await userPrisma.upsert(userData);
-    } catch (e) {
-      console.warn('Prisma upsert failed:', e);
+    let user: any; // Prisma User model
+
+    // 2. Step 1: Try Login via Notion ID
+    const existingUser = await prisma.user.findUnique({
+      where: { notionUserId },
+    });
+
+    if (existingUser) {
+      console.log(`✅ Found existing user by Notion ID: ${existingUser.id}`);
+      // Update tokens and activity
+      user = await prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
+          notionAccessToken: tokenData.access_token,
+          notionRefreshToken: tokenData.refresh_token || existingUser.notionRefreshToken,
+          notionWorkspaceId: tokenData.workspace_id,
+          lastActivity: new Date(),
+        },
+      });
+    } else {
+      // 3. Step 2: Try Reconciliation via Email (if Step 1 failed)
+      if (notionEmail) {
+        const paidUser = await prisma.user.findUnique({
+          where: { email: notionEmail },
+        });
+
+        if (paidUser) {
+          console.log(
+            `🔗 Found existing paid user by email: ${paidUser.id}. Linking Notion account...`
+          );
+          // MERGE: Link Notion account to existing paid user
+          user = await prisma.user.update({
+            where: { id: paidUser.id },
+            data: {
+              notionUserId: notionUserId,
+              notionAccessToken: tokenData.access_token,
+              notionRefreshToken: tokenData.refresh_token,
+              notionWorkspaceId: tokenData.workspace_id,
+              lastActivity: new Date(),
+            },
+          });
+        } else {
+          console.log(`Mw New user creation for ${notionEmail}`);
+          // CREATE NEW
+          user = await prisma.user.create({
+            data: {
+              email: notionEmail,
+              notionUserId: notionUserId,
+              notionAccessToken: tokenData.access_token,
+              notionRefreshToken: tokenData.refresh_token,
+              notionWorkspaceId: tokenData.workspace_id,
+              plan: 'free',
+            },
+          });
+        }
+      } else {
+        console.warn('⚠️ No email provided by Notion. Cannot reconcile or create user.');
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: 'Email is required from Notion to create an account.',
+        });
+      }
     }
 
-    // Create JWT session token
-    const sessionToken = jwt.sign({ userId, timestamp: Date.now() }, config.jwtSecret, {
+    // Create JWT session token using the internal ID (CUID)
+    const sessionToken = jwt.sign({ userId: user.id, timestamp: Date.now() }, config.jwtSecret, {
       expiresIn: '24h',
     });
 
@@ -74,28 +123,33 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
           dupId,
           tokenData.access_token
         );
-        await userPrisma.setResolvedDatabase(
-          userId,
-          dupId,
-          resolved.databaseId,
-          resolved.dataSourceId || null
-        );
+        // Update user with resolved DB
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            templateDatabaseId: dupId,
+            notionDatabaseId: resolved.databaseId,
+            notionDataSourceId: resolved.dataSourceId || null,
+          },
+        });
       } catch (e) {
         console.warn('Failed to resolve database from duplicated_template_id:', e);
       }
     }
 
-    auditLog('oauth_exchange_success', userId, {
+    auditLog('oauth_exchange_success', user.id, {
       hasRefreshToken: !!tokenData.refresh_token,
+      plan: user.plan,
     });
 
-    // Fetch latest user data (may include resolved template info)
-    const latest = await userPrisma.find(userId);
+    // Fetch latest user data
+    const latest = await prisma.user.findUnique({ where: { id: user.id } });
+
     res.json({
       success: true,
       sessionToken,
-      userId,
-      userEmail: userEmail || null,
+      userId: user.id, // Return internal ID
+      userEmail: latest?.email || null,
       templateDatabaseId: latest?.templateDatabaseId || null,
       message: 'OAuth exchange successful',
     });

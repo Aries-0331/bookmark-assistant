@@ -212,6 +212,8 @@ class ServerAPIClient {
       // auth/session
       'session_token',
       'user_id',
+      'user_email',
+      'is_pro',
       // notion cached data
       'notion_user',
       'notion_database_id',
@@ -219,6 +221,7 @@ class ServerAPIClient {
       'oauth_template_database_id',
       // sync state
       'sync_in_progress',
+      'sync_interval_hours',
       'last_sync',
       'last_sync_results',
       'last_sync_summary',

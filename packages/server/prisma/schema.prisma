@@ -10,30 +10,32 @@ datasource db {
 }
 
 model User {
-  user_id               String   @id
-  email                 String?  @unique
-  notion_access_token   String
-  notion_refresh_token  String?
-  notion_workspace_id   String?
-  bot_id                String?
-  duplicated_template_id String?
-  notion_database_id    String?
-  notion_data_source_id String?
-  template_database_id  String?
-  databases             Json?
+  // --- 1. Identity (Internal System) ---
+  id            String   @id @default(cuid())
+  email         String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  // Paddle Payment Integration
-  plan                  String   @default("free") // "free" | "pro"
-  paddleCustomerId      String?  @unique
-  paddleSubscriptionId  String?  @unique
-  subscriptionStatus    String?  // "trialing" | "active" | "past_due" | "paused" | "canceled"
-  nextBilledAt          DateTime?
+  // --- 2. Payment Status (Paddle) ---
+  plan             String   @default("free") // "free", "pro"
+  paddleCustomerId String?  @unique
+  licenseKey       String?
 
-  last_activity         DateTime @default(now())
-  created_at            DateTime @default(now())
-  updated_at            DateTime @updatedAt
+  // --- 3. Notion Identity (Linked via OAuth) ---
+  notionUserId      String?  @unique
+  notionAccessToken String?
+  notionRefreshToken String?
+  notionWorkspaceId String?
 
-  @@index([paddleCustomerId])
-  @@index([paddleSubscriptionId])
+  // --- 4. App Configuration ---
+  databases            Json?
+  templateDatabaseId   String?
+  notionDatabaseId     String?
+  notionDataSourceId   String?
+  botId                String?
+  duplicatedTemplateId String?
+  lastActivity         DateTime @default(now())
+
   @@index([email])
+  @@index([notionUserId])
 }

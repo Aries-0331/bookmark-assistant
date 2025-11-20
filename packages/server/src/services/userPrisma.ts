@@ -5,64 +5,79 @@ export const prisma = new PrismaClient();
 
 export class UserPrismaRepo {
   async upsert(user: UserData): Promise<void> {
+    const data = {
+      notionUserId: user.userId,
+      notionAccessToken: user.notionAccessToken,
+      notionRefreshToken: user.notionRefreshToken || null,
+      notionWorkspaceId: user.notionWorkspaceId || null,
+      botId: user.botId || null,
+      duplicatedTemplateId: user.duplicatedTemplateId || null,
+      notionDatabaseId: user.notionDatabaseId || null,
+      notionDataSourceId: user.notionDataSourceId || null,
+      templateDatabaseId: user.templateDatabaseId || null,
+      databases: user.databases || [],
+      lastActivity: user.lastActivity,
+    };
+
     await prisma.user.upsert({
-      where: { user_id: user.userId },
+      where: { notionUserId: user.userId },
       create: {
-        user_id: user.userId,
-        notion_access_token: user.notionAccessToken,
-        notion_refresh_token: user.notionRefreshToken || null,
-        notion_workspace_id: user.notionWorkspaceId || null,
-        bot_id: user.botId || null,
-        duplicated_template_id: user.duplicatedTemplateId || null,
-        notion_database_id: user.notionDatabaseId || null,
-        notion_data_source_id: user.notionDataSourceId || null,
-        template_database_id: user.templateDatabaseId || null,
-        databases: user.databases || [],
-        last_activity: user.lastActivity,
+        ...data,
+        email: user.email || `missing_${user.userId}@example.com`, // Fallback if email missing
       },
-      update: {
-        notion_access_token: user.notionAccessToken,
-        notion_refresh_token: user.notionRefreshToken || null,
-        notion_workspace_id: user.notionWorkspaceId || null,
-        bot_id: user.botId || null,
-        duplicated_template_id: user.duplicatedTemplateId || null,
-        notion_database_id: user.notionDatabaseId || null,
-        notion_data_source_id: user.notionDataSourceId || null,
-        template_database_id: user.templateDatabaseId || null,
-        databases: user.databases || [],
-        last_activity: new Date(),
-      },
+      update: data,
     });
   }
 
   async find(userId: string): Promise<UserData | undefined> {
-    const u = await prisma.user.findUnique({ where: { user_id: userId } });
+    // Try finding by CUID first (new system)
+    let u = await prisma.user.findUnique({ where: { id: userId } });
+
+    // Fallback: try finding by notionUserId (legacy system/JWTs)
+    if (!u) {
+      u = await prisma.user.findUnique({ where: { notionUserId: userId } });
+    }
+
     if (!u) return undefined;
     return {
-      userId: u.user_id,
-      notionAccessToken: u.notion_access_token,
-      notionRefreshToken: u.notion_refresh_token || undefined,
-      notionWorkspaceId: u.notion_workspace_id || undefined,
-      botId: u.bot_id || undefined,
-      duplicatedTemplateId: u.duplicated_template_id || undefined,
-      notionDatabaseId: u.notion_database_id || undefined,
-      notionDataSourceId: u.notion_data_source_id || undefined,
-      templateDatabaseId: u.template_database_id || undefined,
+      id: u.id,
+      userId: u.notionUserId || '',
+      email: u.email || undefined,
+      notionAccessToken: u.notionAccessToken || '',
+      notionRefreshToken: u.notionRefreshToken || undefined,
+      notionWorkspaceId: u.notionWorkspaceId || undefined,
+      botId: u.botId || undefined,
+      duplicatedTemplateId: u.duplicatedTemplateId || undefined,
+      notionDatabaseId: u.notionDatabaseId || undefined,
+      notionDataSourceId: u.notionDataSourceId || undefined,
+      templateDatabaseId: u.templateDatabaseId || undefined,
       databases: (u.databases as any) || [],
-      lastActivity: u.last_activity,
+      lastActivity: u.lastActivity,
       plan: u.plan,
     };
   }
 
   async updateTokens(userId: string, access: string, refresh?: string) {
-    await prisma.user.update({
-      where: { user_id: userId },
-      data: {
-        notion_access_token: access,
-        notion_refresh_token: refresh || null,
-        last_activity: new Date(),
-      },
-    });
+    // Try update by CUID or Notion ID
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          notionAccessToken: access,
+          notionRefreshToken: refresh || null,
+          lastActivity: new Date(),
+        },
+      });
+    } catch {
+      await prisma.user.update({
+        where: { notionUserId: userId },
+        data: {
+          notionAccessToken: access,
+          notionRefreshToken: refresh || null,
+          lastActivity: new Date(),
+        },
+      });
+    }
   }
 
   async setResolvedDatabase(
@@ -71,15 +86,24 @@ export class UserPrismaRepo {
     databaseId: string,
     dataSourceId: string | null
   ) {
-    await prisma.user.update({
-      where: { user_id: userId },
-      data: {
-        template_database_id: duplicated_template_id,
-        notion_database_id: databaseId,
-        notion_data_source_id: dataSourceId,
-        last_activity: new Date(),
-      },
-    });
+    const data = {
+      templateDatabaseId: duplicated_template_id,
+      notionDatabaseId: databaseId,
+      notionDataSourceId: dataSourceId,
+      lastActivity: new Date(),
+    };
+
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data,
+      });
+    } catch {
+      await prisma.user.update({
+        where: { notionUserId: userId },
+        data,
+      });
+    }
   }
 }
 

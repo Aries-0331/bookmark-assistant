@@ -3,7 +3,9 @@
 import { Request } from 'express';
 
 export interface UserData {
-  userId: string;
+  id?: string; // Internal ID (CUID)
+  userId: string; // Notion User ID (Legacy name, maps to notionUserId)
+  email?: string; // Required for new schema
   notionAccessToken: string;
   notionRefreshToken?: string;
   databases?: any[];

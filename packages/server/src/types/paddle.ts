@@ -17,6 +17,8 @@ export type PaddleWebhookEventType =
 
 export interface PaddleCustomData {
   userId: string;
+  userEmail?: string;
+  source?: string;
 }
 
 export interface PaddleWebhookEvent {
