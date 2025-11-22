@@ -20,7 +20,7 @@ import {
 import { useState, useEffect } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { useAppStore } from '../store';
-import { openPaddleCheckout, getPriceId } from '../../lib/paddle';
+import { openPaddleCheckout } from '../../lib/paddle';
 import { useToast } from '../hook/useToast';
 import { sendMessage, Messages } from '../../utils/message';
 
@@ -80,14 +80,6 @@ export function BillingSection() {
   const handleUpgrade = async () => {
     try {
       setLoading(true);
-      const priceId = getPriceId(yearly ? 'yearly' : 'monthly');
-
-      if (!priceId) {
-        console.error('❌ Paddle price ID not configured');
-        alert('Payment system is not configured. Please contact support.');
-        return;
-      }
-
       if (!userId) {
         console.error('❌ User ID not found');
         alert('Please connect to Notion first before upgrading.');
@@ -95,7 +87,7 @@ export function BillingSection() {
       }
 
       await openPaddleCheckout({
-        priceId,
+        pricing: yearly ? 'yearly' : 'monthly',
         userId,
         userEmail: userEmail || undefined,
         successUrl: `${import.meta.env.VITE_WEBSITE_URL || ''}/success`,

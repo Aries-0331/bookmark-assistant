@@ -30,19 +30,22 @@ const paddle = new Paddle(config.paddle.apiKey, {
  */
 router.post('/checkout-url', async (req: Request, res: Response) => {
   try {
-    const { priceId, userId, email, source, successUrl } = req.body;
+    const { pricing, userId, email, source, successUrl } = req.body;
 
-    if (!priceId || !userId) {
-      return res.status(400).json({ error: 'Missing required fields: priceId, userId' });
+    if (!pricing || !userId) {
+      return res.status(400).json({ error: 'Missing required fields: pricing, userId' });
     }
 
     const checkoutSource = source || 'website';
     console.log('🎫 Creating Paddle checkout URL...', {
-      priceId,
+      pricing,
       userId,
       email,
       source: checkoutSource,
     });
+
+    const priceId =
+      pricing === 'monthly' ? config.paddle.priceIds.proMonthly : config.paddle.priceIds.proYearly;
 
     // Create a transaction (checkout session) via Paddle API
     const transaction = await paddle.transactions.create({

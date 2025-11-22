@@ -15,7 +15,7 @@
  */
 
 export interface OpenCheckoutOptions {
-  priceId: string;
+  pricing: 'monthly' | 'yearly';
   userEmail?: string;
   userId: string;
   successUrl: string;
@@ -38,7 +38,7 @@ export async function openPaddleCheckout(options: OpenCheckoutOptions): Promise<
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        priceId: options.priceId,
+        pricing: options.pricing,
         userId: options.userId,
         email: options.userEmail,
         source: 'extension', // Track that checkout originated from extension
@@ -63,17 +63,4 @@ export async function openPaddleCheckout(options: OpenCheckoutOptions): Promise<
     console.error('❌ Failed to open Paddle checkout:', error);
     throw error;
   }
-}
-
-/**
- * Get price ID based on billing period
- */
-export function getPriceId(billing: 'monthly' | 'yearly'): string {
-  const monthly = import.meta.env.VITE_PADDLE_PRO_MONTHLY_PRICE_ID;
-  const yearly = import.meta.env.VITE_PADDLE_PRO_YEARLY_PRICE_ID;
-
-  if (billing === 'yearly') {
-    return yearly || monthly || '';
-  }
-  return monthly || '';
 }

@@ -18,19 +18,6 @@ export interface AppConfig {
     version: string;
     debugMode: boolean;
   };
-
-  // Content Extraction
-  extraction: {
-    maxContentLength: number;
-    timeout: number;
-  };
-
-  // Sync Settings
-  sync: {
-    autoSyncEnabled: boolean;
-    batchSize: number;
-    delay: number;
-  };
 }
 
 /**
@@ -82,15 +69,6 @@ export const config: AppConfig = {
     version: getEnvVar('VITE_APP_VERSION', '1.0.0'),
     debugMode: getEnvBoolean('VITE_DEBUG_MODE', true),
   },
-  extraction: {
-    maxContentLength: getEnvNumber('VITE_MAX_CONTENT_LENGTH', 5000),
-    timeout: getEnvNumber('VITE_EXTRACTION_TIMEOUT', 10000),
-  },
-  sync: {
-    autoSyncEnabled: getEnvBoolean('VITE_AUTO_SYNC_ENABLED', true),
-    batchSize: getEnvNumber('VITE_BATCH_SIZE', 10),
-    delay: getEnvNumber('VITE_SYNC_DELAY', 1000),
-  },
 };
 
 /**
@@ -121,22 +99,8 @@ export function validateConfig(): { isValid: boolean; errors: string[]; warnings
   const errors = Array<string>();
   const warnings = Array<string>();
 
-  // Check required Notion credentials
   if (!config.notion.clientId) {
     errors.push('VITE_NOTION_CLIENT_ID is required');
-  }
-  // Client secret intentionally NOT required client-side; server handles confidential exchange
-  // Check AI configuration (optional - only warn)
-  if (!config.ai.openaiApiKey) {
-    warnings.push('VITE_OPENAI_API_KEY not provided - AI features will be disabled');
-  }
-
-  // Validate numeric ranges
-  if (config.extraction.maxContentLength <= 0) {
-    errors.push('VITE_MAX_CONTENT_LENGTH must be greater than 0');
-  }
-  if (config.sync.batchSize <= 0) {
-    errors.push('VITE_BATCH_SIZE must be greater than 0');
   }
 
   return {
@@ -171,13 +135,5 @@ export function debugConfig(): void {
   console.log('Notion:', {
     clientId: config.notion.clientId ? '✅ Set' : '❌ Missing',
   });
-  console.log('AI:', {
-    openaiApiKey: config.ai.openaiApiKey ? '✅ Set' : '❌ Missing',
-    model: config.ai.model,
-    maxTokens: config.ai.maxTokens,
-    enabled: isAIEnabled(),
-  });
-  console.log('Extraction:', config.extraction);
-  console.log('Sync:', config.sync);
   console.groupEnd();
 }
