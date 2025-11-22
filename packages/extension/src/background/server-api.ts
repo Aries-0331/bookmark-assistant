@@ -216,25 +216,9 @@ class ServerAPIClient {
       await this.makeRequest('/api/user/logout', { method: 'POST', timeoutMs: 5000 });
     } catch {}
     this.sessionToken = null;
-    await chrome.storage.local.remove([
-      // auth/session
-      'session_token',
-      'user_id',
-      'user_email',
-      'is_pro',
-      // notion cached data
-      'notion_user',
-      'notion_database_id',
-      'database_name',
-      'oauth_template_database_id',
-      // sync state
-      'sync_in_progress',
-      'sync_interval_hours',
-      'last_sync',
-      'last_sync_results',
-      'last_sync_summary',
-      'last_sync_error',
-    ]);
+
+    // Clear all local storage to ensure no user data persists
+    await chrome.storage.local.clear();
   }
 }
 

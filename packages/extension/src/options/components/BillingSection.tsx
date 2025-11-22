@@ -296,9 +296,9 @@ export function BillingSection() {
             className="w-full text-sm px-4 py-2 mb-4 rounded-lg border border-gray-200 text-gray-500 cursor-default"
             disabled
             aria-disabled
-            title={isPro ? 'Included in all plans' : 'Current plan'}
+            title="Current Plan"
           >
-            {isPro ? 'Included' : 'Current Plan'}
+            "Current Plan"
           </button>
           <ul className="space-y-2 text-sm">
             {PLAN_FEATURES.free.map((f, i) => (
@@ -340,23 +340,14 @@ export function BillingSection() {
             )}
           </div>
           <div className="text-sm text-gray-600 mb-4">Advanced features for power users</div>
-          {isPro ? (
-            <button
-              className="w-full text-sm px-4 py-2 mb-4 rounded-lg border border-amber-300 text-amber-700 bg-amber-100 hover:bg-amber-200"
-              onClick={handleManage}
-            >
-              Manage Plan
-            </button>
-          ) : (
-            <button
-              className="w-full text-sm px-4 py-2 mb-4 rounded-lg bg-amber-600 text-white hover:bg-amber-700 shadow inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={handleUpgrade}
-              disabled={loading}
-            >
-              <Crown className="w-4 h-4" />
-              {loading ? 'Loading...' : 'Upgrade to Pro'}
-            </button>
-          )}
+          <button
+            className="w-full text-sm px-4 py-2 mb-4 rounded-lg bg-amber-600 text-white hover:bg-amber-700 shadow inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleUpgrade}
+            disabled={loading}
+          >
+            <Crown className="w-4 h-4" />
+            {loading ? 'Loading...' : 'Upgrade to Pro'}
+          </button>
           <ul className="space-y-2 text-sm">
             {PLAN_FEATURES.pro.map((f, i) => (
               <li key={i} className="flex items-center gap-2 text-gray-900">

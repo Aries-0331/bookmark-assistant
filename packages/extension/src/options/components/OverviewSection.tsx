@@ -32,7 +32,7 @@ export function OverviewSection() {
           <span>Plan</span>
           {isPro ? (
             <span className="flex items-center gap-1 text-sm font-semibold px-2.5 py-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 border-0 shadow-sm rounded-full">
-              <Crown className="w-3 h-3 bg-gradient-to-r from-amber-500 to-amber-600" />
+              <Crown className="w-3 h-3" />
               Pro
             </span>
           ) : (
