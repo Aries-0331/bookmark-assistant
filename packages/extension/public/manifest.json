@@ -9,12 +9,10 @@
     "identity",
     "activeTab",
     "scripting",
-    "notifications"
+    "notifications",
+    "alarms"
   ],
-  "host_permissions": [
-    "https://api.notion.com/*",
-    "<all_urls>"
-  ],
+  "host_permissions": ["https://api.notion.com/*", "<all_urls>"],
   "background": {
     "service_worker": "src/background/index.ts",
     "type": "module"

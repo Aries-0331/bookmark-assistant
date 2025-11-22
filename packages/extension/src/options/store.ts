@@ -72,7 +72,17 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   autoSync: false,
   intervalHours: FREE_INTERVAL_HOURS,
-  setAutoSync: (v: boolean) => set({ autoSync: v }),
+  setAutoSync: async (v: boolean) => {
+    set({ autoSync: v });
+    await chrome.storage.local.set({ auto_sync: v });
+    // Schedule the auto-sync alarm
+    const intervalHours = get().intervalHours;
+    await sendMessage({
+      type: Messages.SCHEDULE_AUTO_SYNC,
+      enabled: v,
+      intervalHours,
+    });
+  },
   setIntervalHours: (v: number) => set({ intervalHours: v }),
 
   // Default pricing (fallback)
@@ -83,15 +93,23 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   initFromStorage: async () => {
     try {
-      const { last_sync, sync_interval_hours, user_id, user_email, is_pro, session_token } =
-        await chrome.storage.local.get([
-          'last_sync',
-          'sync_interval_hours',
-          'user_id',
-          'user_email',
-          'is_pro',
-          'session_token',
-        ]);
+      const {
+        last_sync,
+        sync_interval_hours,
+        user_id,
+        user_email,
+        is_pro,
+        session_token,
+        auto_sync,
+      } = await chrome.storage.local.get([
+        'last_sync',
+        'sync_interval_hours',
+        'user_id',
+        'user_email',
+        'is_pro',
+        'session_token',
+        'auto_sync',
+      ]);
 
       // Load connection state
       if (session_token) {
@@ -110,10 +128,26 @@ export const useAppStore = create<AppState>((set, get) => ({
       const next = Number.isFinite(interval) ? (interval as number) : minIntervalHours;
       const coerced = Math.max(minIntervalHours, next);
       set({ lastSync: typeof last_sync === 'string' ? last_sync : '' });
-      const allowedAuto = get().isPro;
+
+      // Load auto-sync state (only enabled for Pro users)
+      const allowedAuto = get().isPro && auto_sync === true;
       set({ autoSync: allowedAuto, intervalHours: coerced });
+
       if (!get().isPro && interval !== minIntervalHours) {
         await chrome.storage.local.set({ sync_interval_hours: minIntervalHours });
+      }
+
+      // Reschedule auto-sync alarm if enabled
+      if (allowedAuto) {
+        try {
+          await sendMessage({
+            type: Messages.SCHEDULE_AUTO_SYNC,
+            enabled: true,
+            intervalHours: coerced,
+          });
+        } catch (err) {
+          console.warn('⚠️ Failed to reschedule auto-sync on init:', err);
+        }
       }
     } catch {}
   },
@@ -153,6 +187,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     const interval = get().isPro ? Math.max(minIntervalHours, rounded) : minIntervalHours;
     await chrome.storage.local.set({ sync_interval_hours: interval });
     set({ intervalHours: interval });
+
+    // Reschedule auto-sync if enabled
+    const autoSync = get().autoSync;
+    if (autoSync) {
+      await sendMessage({
+        type: Messages.SCHEDULE_AUTO_SYNC,
+        enabled: true,
+        intervalHours: interval,
+      });
+    }
   },
 
   getEffectiveLimits: () => {

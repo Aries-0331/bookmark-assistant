@@ -21,6 +21,10 @@ export type MessageMap = {
     res: { success: boolean; message?: string; error?: string };
   };
   GET_PORTAL_LINK: { req: {}; res: { success: boolean; url?: string; error?: string } };
+  SCHEDULE_AUTO_SYNC: {
+    req: { enabled: boolean; intervalHours: number };
+    res: { success: boolean; error?: string };
+  };
 };
 
 export type MessageType = keyof MessageMap;
@@ -37,6 +41,7 @@ export const Messages: { [K in MessageType]: K } = {
   LOGOUT: 'LOGOUT',
   RESTORE_PURCHASE: 'RESTORE_PURCHASE',
   GET_PORTAL_LINK: 'GET_PORTAL_LINK',
+  SCHEDULE_AUTO_SYNC: 'SCHEDULE_AUTO_SYNC',
 };
 
 export async function sendMessage<T extends MessageType>(
