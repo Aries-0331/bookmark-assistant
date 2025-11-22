@@ -258,7 +258,7 @@ export function BillingSection() {
     <SectionCard
       id="billing"
       title="Choose Your Plan"
-      description="Unlock the full potential of Notion Bookmark Sync"
+      description="Unlock the full potential of Bookmark Assistant with Pro"
     >
       <div className="flex items-center justify-center gap-2 mb-4">
         <span className={classNames(!yearly && 'text-gray-900', 'text-gray-600')}>Monthly</span>
@@ -300,7 +300,7 @@ export function BillingSection() {
             aria-disabled
             title="Current Plan"
           >
-            "Current Plan"
+            Current Plan
           </button>
           <ul className="space-y-2 text-sm">
             {PLAN_FEATURES.free.map((f, i) => (
