@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { paddlePricingService } from '../services';
-import { config } from '../config';
 
 const router: import('express').Router = Router();
 
@@ -20,16 +19,6 @@ router.get('/', async (req, res) => {
         monthly: pricing.monthly,
         yearlyDiscount: pricing.yearlyDiscount,
       },
-      limits: {
-        free: {
-          dailyLimit: config.limits.free.dailyLimit,
-          minIntervalHours: config.limits.free.minIntervalHours,
-        },
-        pro: {
-          dailyLimit: config.limits.pro.dailyLimit,
-          minIntervalHours: config.limits.pro.minIntervalHours,
-        },
-      },
     });
   } catch (error) {
     console.error('❌ Failed to fetch pricing:', error);
@@ -39,16 +28,6 @@ router.get('/', async (req, res) => {
       pricing: {
         monthly: 5, // Fallback
         yearlyDiscount: 0.3, // Fallback
-      },
-      limits: {
-        free: {
-          dailyLimit: config.limits.free.dailyLimit,
-          minIntervalHours: config.limits.free.minIntervalHours,
-        },
-        pro: {
-          dailyLimit: config.limits.pro.dailyLimit,
-          minIntervalHours: config.limits.pro.minIntervalHours,
-        },
       },
     });
   }

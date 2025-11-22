@@ -4,20 +4,17 @@ import {
   Sparkles,
   Zap,
   Bookmark as BookmarkIcon,
-  Timer,
-  SlidersHorizontal,
-  Database,
-  ShieldCheck,
   Mail,
   CheckCircle,
   ExternalLink,
   CreditCard,
   Calendar,
   User,
+  Timer,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { FREE_DAILY_LIMIT, FREE_INTERVAL_HOURS, PRO_MIN_INTERVAL_MINUTES } from '../store';
+import { FREE_INTERVAL_HOURS } from '../store';
 import { useAppStore } from '../store';
 import { openPaddleCheckout, getPriceId } from '../../lib/paddle';
 import { useToast } from '../hook/useToast';
@@ -32,21 +29,22 @@ type FeatureItem = {
   text: string;
 };
 
-// minutes constant imported from store for consistency
-
 const PLAN_FEATURES: Record<'free' | 'pro', FeatureItem[]> = {
   free: [
-    { icon: BookmarkIcon, text: `${FREE_DAILY_LIMIT} bookmarks per day` },
+    { icon: BookmarkIcon, text: `Up to 1000 bookmarks per day` },
     { icon: Timer, text: `${FREE_INTERVAL_HOURS}-hour fixed interval` },
-    { icon: Mail, text: 'Email support within 48 hours' },
+    { icon: Mail, text: 'Email support' },
   ],
   pro: [
-    { icon: BookmarkIcon, text: 'Unlimited bookmarks' },
-    { icon: Timer, text: `Configurable sync interval (min ${PRO_MIN_INTERVAL_MINUTES} minutes)` },
+    {
+      icon: BookmarkIcon,
+      text: 'Unlimited bookmarks',
+    },
+    {
+      icon: Timer,
+      text: 'Configurable sync interval',
+    },
     { icon: Mail, text: 'Priority support within 12 hours' },
-    { icon: SlidersHorizontal, text: 'Advanced sync options' },
-    { icon: Database, text: 'Bulk operations' },
-    { icon: ShieldCheck, text: 'Ad-free experience' },
   ],
 };
 
@@ -67,8 +65,7 @@ export function BillingSection() {
       // Show success toast
       showToast({
         title: '🎉 Successfully Upgraded to Pro!',
-        description:
-          'Your Pro subscription is now active. Enjoy unlimited bookmarks and all Pro features!',
+        description: 'Your Pro subscription is now active!',
         variant: 'success',
         duration: 5000,
       });

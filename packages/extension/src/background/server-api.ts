@@ -182,12 +182,12 @@ class ServerAPIClient {
     return { user: res.profile, isPro: res.profile.isPro };
   }
 
-  async getPricing(): Promise<{ pricing: any; limits: any }> {
+  async getPricing(): Promise<{ pricing: any }> {
     const res = await this.makeRequest<any>('/api/pricing', {
       method: 'GET',
       timeoutMs: 5000,
     });
-    return { pricing: res.pricing, limits: res.limits };
+    return { pricing: res.pricing };
   }
 
   async isConnected(): Promise<boolean> {

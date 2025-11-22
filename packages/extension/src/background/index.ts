@@ -176,8 +176,8 @@ addMessageListener({
   },
   [Messages.GET_PRICING]: async () => {
     try {
-      const { pricing, limits } = await serverAPI.getPricing();
-      return { success: true, pricing, limits } as const;
+      const { pricing } = await serverAPI.getPricing();
+      return { success: true, pricing } as const;
     } catch (err) {
       console.error('❌ Failed to get pricing:', err);
       return { success: false, error: String(err) } as const;

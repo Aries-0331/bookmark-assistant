@@ -1,7 +1,6 @@
 import { SectionCard } from './SectionCard';
 import { ExternalLink } from 'lucide-react';
 import {
-  FREE_DAILY_LIMIT,
   FREE_INTERVAL_HOURS,
   PRO_MIN_INTERVAL_HOURS,
   PRO_MIN_INTERVAL_MINUTES,
@@ -100,7 +99,7 @@ export function FAQSection() {
       a: (
         <ul className="list-disc pl-5">
           <li>
-            Free: up to {FREE_DAILY_LIMIT} bookmarks/day and a fixed{' '}
+            Free: up to 500 bookmarks/day and a fixed{' '}
             <span className="font-medium">{FREE_INTERVAL_HOURS}‑hour</span> sync interval.
           </li>
           <li>

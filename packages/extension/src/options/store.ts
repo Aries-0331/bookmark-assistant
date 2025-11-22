@@ -5,8 +5,6 @@ import { create } from 'zustand';
 import { CACHE_KEYS, WATCHED_CACHE_KEYS } from '../utils/cache';
 import { sendMessage, Messages } from '../utils/message';
 
-export const FREE_DAILY_LIMIT = 50;
-export const PRO_DAILY_LIMIT = 1000;
 export const FREE_INTERVAL_HOURS = 12;
 export const PRO_MIN_INTERVAL_HOURS = 0.5; // 30 minutes
 export const PRO_MIN_INTERVAL_MINUTES = Math.round(PRO_MIN_INTERVAL_HOURS * 60);
@@ -46,7 +44,7 @@ export type AppState = {
   // Config
   pricing: { monthly: number; yearlyDiscount: number };
   fetchPricing: () => Promise<void>;
-  getEffectiveLimits: () => { dailyLimit: number; minIntervalHours: number };
+  getEffectiveLimits: () => { minIntervalHours: number };
   getPricing: () => { monthly: number; yearlyDiscount: number };
 };
 
@@ -159,9 +157,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   getEffectiveLimits: () => {
     const st = get();
-    const dailyLimit = st.isPro ? PRO_DAILY_LIMIT : FREE_DAILY_LIMIT;
     const minIntervalHours = st.isPro ? PRO_MIN_INTERVAL_HOURS : FREE_INTERVAL_HOURS;
-    return { dailyLimit, minIntervalHours };
+    return { minIntervalHours };
   },
   getPricing: () => {
     return get().pricing;
