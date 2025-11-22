@@ -8,6 +8,8 @@ import { config } from '../config';
 import { prisma } from '../services/userPrisma';
 import { auditLog } from '../utils';
 import type { PaddleWebhookEvent, PaddleCustomData } from '../types/paddle';
+import { validateSession } from '../middleware/auth';
+import { AuthenticatedRequest } from '../types';
 
 const router: ExpressRouter = Router();
 
@@ -194,5 +196,68 @@ router.post('/webhooks/paddle', async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+/**
+ * Create Billing Portal Session
+ * Generates a self-service portal link for the user to manage their subscription
+ */
+router.post(
+  '/portal-session',
+  validateSession,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+
+      // Get user's Paddle Customer ID
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { paddleCustomerId: true, email: true },
+      });
+
+      if (!user?.paddleCustomerId) {
+        return res.status(404).json({
+          success: false,
+          error: 'No active subscription found',
+          message: 'Could not find a linked Paddle customer ID.',
+        });
+      }
+
+      // Create a portal session
+      // Note: Ensure "Customer Portal" is enabled in Paddle Dashboard > Checkout > Customer Portal
+      try {
+        const portalSession = await paddle.customerPortalSessions.create(user.paddleCustomerId, [
+          user.paddleCustomerId,
+        ]);
+
+        if (!portalSession?.urls?.general) {
+          throw new Error('No portal URL returned from Paddle');
+        }
+
+        auditLog('portal_session_created', userId, { customerId: user.paddleCustomerId });
+
+        res.json({
+          success: true,
+          url: portalSession.urls.general,
+        });
+      } catch (paddleError: any) {
+        console.error('Paddle Portal Error:', paddleError);
+        // Fallback: If portal creation fails (e.g. not enabled), return a helpful error
+        // or a generic link if available.
+        return res.status(500).json({
+          success: false,
+          error: 'Portal unavailable',
+          message: 'Could not generate portal link. Please contact support.',
+        });
+      }
+    } catch (error) {
+      console.error('Portal Session Error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal Server Error',
+        message: 'Failed to generate management link',
+      });
+    }
+  }
+);
 
 export default router;

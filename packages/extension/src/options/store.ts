@@ -85,23 +85,15 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   initFromStorage: async () => {
     try {
-      const {
-        last_sync,
-        sync_interval_hours,
-        user_id,
-        user_email,
-        is_pro,
-        cached_pricing,
-        session_token,
-      } = await chrome.storage.local.get([
-        'last_sync',
-        'sync_interval_hours',
-        'user_id',
-        'user_email',
-        'is_pro',
-        'cached_pricing',
-        'session_token',
-      ]);
+      const { last_sync, sync_interval_hours, user_id, user_email, is_pro, session_token } =
+        await chrome.storage.local.get([
+          'last_sync',
+          'sync_interval_hours',
+          'user_id',
+          'user_email',
+          'is_pro',
+          'session_token',
+        ]);
 
       // Load connection state
       if (session_token) {
@@ -114,11 +106,6 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       // Load entitlements
       if (typeof is_pro === 'boolean') set({ isPro: is_pro });
-
-      // Load cached pricing
-      if (cached_pricing) {
-        set({ pricing: cached_pricing });
-      }
 
       const interval = Number(sync_interval_hours);
       const { minIntervalHours } = get().getEffectiveLimits();

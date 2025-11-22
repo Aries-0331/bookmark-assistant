@@ -183,6 +183,15 @@ addMessageListener({
       return { success: false, error: String(err) } as const;
     }
   },
+  [Messages.GET_PORTAL_LINK]: async () => {
+    try {
+      const res = await serverAPI.getPortalLink();
+      return { success: res.success, url: res.url, error: res.error } as const;
+    } catch (err) {
+      console.error('❌ Failed to get portal link:', err);
+      return { success: false, error: String(err) } as const;
+    }
+  },
   [Messages.LOGOUT]: async () => {
     try {
       await serverAPI.logout();

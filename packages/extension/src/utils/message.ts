@@ -20,6 +20,7 @@ export type MessageMap = {
     req: { email: string };
     res: { success: boolean; message?: string; error?: string };
   };
+  GET_PORTAL_LINK: { req: {}; res: { success: boolean; url?: string; error?: string } };
 };
 
 export type MessageType = keyof MessageMap;
@@ -35,6 +36,7 @@ export const Messages: { [K in MessageType]: K } = {
   GET_PRICING: 'GET_PRICING',
   LOGOUT: 'LOGOUT',
   RESTORE_PURCHASE: 'RESTORE_PURCHASE',
+  GET_PORTAL_LINK: 'GET_PORTAL_LINK',
 };
 
 export async function sendMessage<T extends MessageType>(

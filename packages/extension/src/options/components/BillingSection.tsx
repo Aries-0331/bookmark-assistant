@@ -11,7 +11,6 @@ import {
   Mail,
   CheckCircle,
   ExternalLink,
-  RefreshCw,
   CreditCard,
   Calendar,
   User,
@@ -110,49 +109,54 @@ export function BillingSection() {
     }
   };
 
-  const handleManage = () => {
-    // Open Paddle customer portal
-    const base = (
-      import.meta.env.VITE_BILLING_URL ||
-      import.meta.env.VITE_OAUTH_SERVER_URL ||
-      ''
-    ).replace(/\/$/, '');
-    const manageUrl = base
-      ? `${base}/billing/portal`
-      : 'https://github.com/Aries-0331/bookmarks_to_notion#billing';
-
-    window.open(manageUrl, '_blank', 'noopener');
-  };
-
-  const handleRestore = async () => {
-    const email = window.prompt('Please enter your payment email to restore your purchase:');
-    if (!email) return;
-
+  const handleManage = async () => {
     try {
       setLoading(true);
-      const res = await sendMessage({ type: Messages.RESTORE_PURCHASE, email });
-      if (res.success) {
-        showToast({
-          title: 'Purchase Restored',
-          description: res.message || 'Your subscription has been restored.',
-          variant: 'success',
-        });
-        refreshEntitlements();
+      const res = await sendMessage({ type: Messages.GET_PORTAL_LINK });
+      if (res.success && res.url) {
+        window.open(res.url, '_blank', 'noopener');
       } else {
-        showToast({
-          title: 'Restore Failed',
-          description: res.error || 'Could not find a subscription for this email.',
-          variant: 'error',
-        });
+        // Fallback to generic portal or error
+        const base = (
+          import.meta.env.VITE_BILLING_URL ||
+          import.meta.env.VITE_OAUTH_SERVER_URL ||
+          ''
+        ).replace(/\/$/, '');
+        const manageUrl = base
+          ? `${base}/billing/portal`
+          : 'https://github.com/Aries-0331/bookmarks_to_notion#billing';
+
+        console.warn('⚠️ Could not get specific portal link, using fallback:', res.error);
+        window.open(manageUrl, '_blank', 'noopener');
       }
     } catch (error) {
-      showToast({
-        title: 'Error',
-        description: 'Failed to restore purchase. Please try again later.',
-        variant: 'error',
-      });
+      console.error('❌ Failed to open portal:', error);
+      alert('Failed to open subscription management. Please try again later.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRefund = () => {
+    // Simple "Service Ticket" modal logic using window.confirm/prompt for MVP
+    // In a real app, use a proper Modal component
+    const confirmed = window.confirm(
+      "We're sorry to see you go.\n\nWe offer a 7-day money-back guarantee. Would you like to contact support to request a refund?"
+    );
+
+    if (confirmed) {
+      const reason = window.prompt(
+        "Please help us improve. Why are you requesting a refund?\n(e.g., 'Too expensive', 'Bugs', 'Not what I expected')"
+      );
+
+      if (reason !== null) {
+        // User didn't cancel prompt
+        const subject = encodeURIComponent(`Refund Request: ${userEmail || userId}`);
+        const body = encodeURIComponent(
+          `I would like to request a refund for my subscription.\n\nReason: ${reason}\nUser ID: ${userId}\nEmail: ${userEmail || ''}\n\n[Please attach any relevant details]`
+        );
+        window.open(`mailto:aries0331.dev@gmail.com?subject=${subject}&body=${body}`, '_blank');
+      }
     }
   };
 
@@ -239,12 +243,10 @@ export function BillingSection() {
             </button>
 
             <button
-              onClick={handleRestore}
-              disabled={loading}
-              className="text-xs text-gray-500 hover:text-amber-600 flex items-center gap-1 transition-colors"
+              onClick={handleRefund}
+              className="text-[10px] text-gray-400 hover:text-gray-600 underline decoration-dotted"
             >
-              <RefreshCw className={classNames('w-3 h-3', loading && 'animate-spin')} />
-              Sync Issues? Restore Purchase
+              Refund Policy & Request
             </button>
           </div>
         </div>

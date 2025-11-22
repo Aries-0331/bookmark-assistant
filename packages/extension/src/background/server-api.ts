@@ -210,6 +210,13 @@ class ServerAPIClient {
     });
   }
 
+  async getPortalLink(): Promise<{ success: boolean; url?: string; error?: string }> {
+    return await this.makeRequest<any>('/api/paddle/portal-session', {
+      method: 'POST',
+      timeoutMs: 10000,
+    });
+  }
+
   // 🚪 Logout
   async logout(): Promise<void> {
     try {
