@@ -23,25 +23,19 @@ const paddle = new Paddle(config.paddle.apiKey, {
   environment: paddleEnv,
 });
 
-/**
- * Create Paddle Checkout URL
- * Generates a secure checkout URL for the extension to open in a new tab
- * Supports both extension and website checkout flows with proper success URL handling
- */
 router.post('/checkout-url', async (req: Request, res: Response) => {
   try {
-    const { pricing, userId, email, source, successUrl } = req.body;
+    const { pricing, userId, email } = req.body;
 
     if (!pricing || !userId) {
       return res.status(400).json({ error: 'Missing required fields: pricing, userId' });
     }
 
-    const checkoutSource = source || 'website';
-    console.log('🎫 Creating Paddle checkout URL...', {
+    console.log('🎫 Creating Paddle checkout URL (extension only)...', {
       pricing,
       userId,
       email,
-      source: checkoutSource,
+      source: 'extension',
     });
 
     const priceId =
@@ -57,41 +51,24 @@ router.post('/checkout-url', async (req: Request, res: Response) => {
       ],
       customData: {
         userId,
-        source: checkoutSource, // Track checkout origin
+        source: 'extension',
       },
       ...(email && {
         customerEmail: email,
       }),
     });
 
-    // Get the checkout URL from the transaction
-    const checkoutUrl = transaction.checkout?.url;
+    // Get the checkout URL from the transaction (hosted checkout page)
+    const checkoutUrl = (transaction as any).url || transaction.checkout?.url;
 
     if (!checkoutUrl) {
       throw new Error('Paddle did not return a checkout URL');
     }
 
-    // Build enhanced success URL with source tracking
-    let enhancedSuccessUrl: string;
+    console.log('✅ Checkout URL created:', checkoutUrl);
 
-    if (checkoutSource === 'extension') {
-      // Extension flow: redirect back to extension after payment
-      const baseUrl = successUrl || 'chrome-extension://extension-id/options.html';
-      const separator = baseUrl.includes('?') ? '&' : '?';
-      enhancedSuccessUrl = `${config.websiteUrl || 'http://localhost:3006'}/success?source=extension&return_to=${encodeURIComponent(baseUrl + separator + 'upgraded=true')}`;
-    } else {
-      // Website flow: redirect to website success page
-      enhancedSuccessUrl =
-        successUrl || `${config.websiteUrl || 'http://localhost:3006'}/success?source=website`;
-    }
-
-    // Append success URL to checkout URL
-    const finalUrl = `${checkoutUrl}&_ptxn_success_url=${encodeURIComponent(enhancedSuccessUrl)}`;
-
-    console.log('✅ Checkout URL created:', finalUrl);
-    console.log('🎯 Success URL will be:', enhancedSuccessUrl);
-
-    return res.json({ checkoutUrl: finalUrl });
+    // Directly return Paddle hosted checkout URL to the extension
+    return res.json({ checkoutUrl });
   } catch (error) {
     console.error('❌ Failed to create checkout URL:', error);
     auditLog('PADDLE_CHECKOUT', 'FAILED', {
@@ -115,8 +92,6 @@ router.post('/webhooks/paddle', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Missing signature' });
     }
 
-    // In a real app, use paddle.webhooks.unmarshal(rawBody, secret, signature)
-    // Here we assume body is parsed.
     const event = req.body as PaddleWebhookEvent;
     if (!event || !event.data) {
       return res.status(400).json({ error: 'Invalid event structure' });
@@ -136,9 +111,7 @@ router.post('/webhooks/paddle', async (req: Request, res: Response) => {
       ].includes(event.event_type)
     ) {
       const data = event.data;
-      const customData = (data.custom_data || (data as any).customData) as
-        | PaddleCustomData
-        | undefined;
+      const customData = data.custom_data as PaddleCustomData | undefined;
 
       // Determine plan status based on subscription status
       // Paddle statuses: 'active', 'canceled', 'past_due', 'paused', 'trialing'
@@ -155,33 +128,34 @@ router.post('/webhooks/paddle', async (req: Request, res: Response) => {
         hasEmail: !!customData?.userEmail,
       });
 
-      // 1. Extract Email & Passthrough
-      // Paddle data structure varies; check customer object or email field
-      // For subscription events, data.customer might be an ID, need to fetch or rely on email in customData/notification
-      // Assuming we can get email from the payload or customData
-      let email = customData?.userEmail;
+      const email = customData?.userEmail;
 
-      // If email not in customData, try to find it in the event (depends on Paddle API version)
-      // For this implementation, we rely on the email being passed in customData during checkout
-      // or we might need to fetch the customer from Paddle if we only have customer_id.
-      // However, the spec says "Extract email... from the body".
-      // Let's assume it's available or we fallback to customData.
-
-      // 2. Passthrough Check (Internal User ID)
-      const internalUserId = customData?.userId; // This is our internal ID (CUID) or old notionUserId?
-      // The spec says "If passthrough.internalUserId exists, update that user directly."
+      // Internal user id from customData (always CUID in new design)
+      const internalUserId = customData?.userId;
 
       if (internalUserId) {
-        // Update existing user
-        // We need to find by ID. Since we migrated to CUID, 'internalUserId' might be the CUID or the old Notion ID.
-        // Let's assume it's the ID (PK).
         try {
+          // Ensure paddleCustomerId uniqueness: if another user holds this id, clear it there first
+          const existingWithCustomer = await prisma.user.findFirst({
+            where: {
+              paddleCustomerId: data.customer_id,
+              NOT: { id: internalUserId },
+            },
+            select: { id: true },
+          });
+
+          if (existingWithCustomer) {
+            await prisma.user.update({
+              where: { id: existingWithCustomer.id },
+              data: { paddleCustomerId: null },
+            });
+          }
+
           await prisma.user.update({
             where: { id: internalUserId },
             data: {
               plan: newPlan,
               paddleCustomerId: data.customer_id,
-              // Update other fields if needed
             },
           });
           console.log(`✅ Updated user ${internalUserId} to ${newPlan} via webhook (by userId)`);
