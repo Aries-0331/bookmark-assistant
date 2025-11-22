@@ -126,14 +126,34 @@ router.post('/webhooks/paddle', async (req: Request, res: Response) => {
 
     // Only care about subscription changes for now
     if (
-      ['subscription.created', 'subscription.updated', 'subscription.activated'].includes(
-        event.event_type
-      )
+      [
+        'subscription.created',
+        'subscription.updated',
+        'subscription.activated',
+        'subscription.canceled',
+        'subscription.past_due',
+        'subscription.paused',
+      ].includes(event.event_type)
     ) {
       const data = event.data;
       const customData = (data.custom_data || (data as any).customData) as
         | PaddleCustomData
         | undefined;
+
+      // Determine plan status based on subscription status
+      // Paddle statuses: 'active', 'canceled', 'past_due', 'paused', 'trialing'
+      const isActive = data.status ? ['active', 'trialing'].includes(data.status) : false;
+      const newPlan = isActive ? 'pro' : 'free';
+
+      console.log(`🔄 Processing subscription update: ${data.status} -> ${newPlan}`);
+
+      // DEBUG: Log detailed context to debug matching issues
+      console.log('🔍 Webhook Context:', {
+        customerId: data.customer_id,
+        customData,
+        hasInternalUserId: !!customData?.userId,
+        hasEmail: !!customData?.userEmail,
+      });
 
       // 1. Extract Email & Passthrough
       // Paddle data structure varies; check customer object or email field
@@ -159,37 +179,68 @@ router.post('/webhooks/paddle', async (req: Request, res: Response) => {
           await prisma.user.update({
             where: { id: internalUserId },
             data: {
-              plan: 'pro',
+              plan: newPlan,
               paddleCustomerId: data.customer_id,
               // Update other fields if needed
             },
           });
-          console.log(`✅ Updated user ${internalUserId} to PRO via webhook`);
+          console.log(`✅ Updated user ${internalUserId} to ${newPlan} via webhook (by userId)`);
         } catch (e) {
           console.warn(`⚠️ Failed to update user ${internalUserId} from webhook:`, e);
         }
-      } else if (email) {
-        // 3. Email Check: Upsert
-        // "If no passthrough, prisma.user.upsert"
-        const licenseKey = crypto.randomUUID();
-
-        await prisma.user.upsert({
-          where: { email },
-          create: {
-            email,
-            plan: 'pro',
-            paddleCustomerId: data.customer_id,
-            licenseKey,
-            // notionUserId is NULL initially
-          },
-          update: {
-            plan: 'pro',
-            paddleCustomerId: data.customer_id,
-          },
-        });
-        console.log(`✅ Upserted user ${email} to PRO via webhook`);
       } else {
-        console.warn('⚠️ Webhook received but no email or userId found to reconcile.');
+        // Fallback: Try to find user by Paddle Customer ID
+        // This is crucial for updates/cancellations where custom_data might be missing
+        console.log(`🔍 Attempting fallback lookup by Paddle Customer ID: ${data.customer_id}`);
+
+        const userByPaddleId = await prisma.user.findFirst({
+          where: { paddleCustomerId: data.customer_id },
+        });
+
+        if (userByPaddleId) {
+          console.log(`✅ Found user via Customer ID: ${userByPaddleId.id}`);
+          try {
+            await prisma.user.update({
+              where: { id: userByPaddleId.id },
+              data: {
+                plan: newPlan,
+              },
+            });
+            console.log(
+              `✅ Updated user ${userByPaddleId.id} to ${newPlan} via webhook (by paddleCustomerId)`
+            );
+          } catch (e) {
+            console.warn(`⚠️ Failed to update user ${userByPaddleId.id} from webhook:`, e);
+          }
+        } else if (email) {
+          // 3. Email Check: Upsert
+          // "If no passthrough, prisma.user.upsert"
+          const licenseKey = crypto.randomUUID();
+
+          await prisma.user.upsert({
+            where: { email },
+            create: {
+              email,
+              plan: newPlan,
+              paddleCustomerId: data.customer_id,
+              licenseKey,
+              // notionUserId is NULL initially
+            },
+            update: {
+              plan: newPlan,
+              paddleCustomerId: data.customer_id,
+            },
+          });
+          console.log(`✅ Upserted user ${email} to ${newPlan} via webhook (by email)`);
+        } else {
+          console.warn(
+            '⚠️ Webhook received but no email, userId, or known customerId found to reconcile.',
+            {
+              customerId: data.customer_id,
+              customData,
+            }
+          );
+        }
       }
     }
 

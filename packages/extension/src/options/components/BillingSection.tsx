@@ -66,14 +66,31 @@ export function BillingSection() {
 
       // Show success toast
       showToast({
-        title: '🎉 Successfully Upgraded to Pro!',
-        description: 'Your Pro subscription is now active!',
+        title: '🎉 Payment Successful!',
+        description: 'Activating your Pro subscription...',
         variant: 'success',
         duration: 5000,
       });
 
-      // Refresh entitlements after successful upgrade
-      refreshEntitlements();
+      // Refresh entitlements with retries to handle webhook latency
+      const checkEntitlements = async (retries = 3, delay = 2000) => {
+        await refreshEntitlements();
+        const currentIsPro = useAppStore.getState().isPro;
+
+        if (!currentIsPro && retries > 0) {
+          console.log(`⏳ Pro status not active yet, retrying in ${delay}ms... (${retries} left)`);
+          setTimeout(() => checkEntitlements(retries - 1, delay * 1.5), delay);
+        } else if (currentIsPro) {
+          showToast({
+            title: '✅ Pro Activated',
+            description: 'Your Pro features are now ready to use!',
+            variant: 'success',
+            duration: 3000,
+          });
+        }
+      };
+
+      checkEntitlements();
     }
   }, [refreshEntitlements, showToast]);
 
