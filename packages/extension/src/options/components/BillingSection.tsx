@@ -51,7 +51,7 @@ const PLAN_FEATURES: Record<'free' | 'pro', FeatureItem[]> = {
 };
 
 export function BillingSection() {
-  const [yearly, setYearly] = useState(false);
+  const [yearly, setYearly] = useState(true);
   const [loading, setLoading] = useState(false);
   const { isPro, getPricing, userId, userEmail, refreshEntitlements } = useAppStore();
   const { monthly: MONTHLY_PRICE, yearlyDiscount: YEARLY_DISCOUNT } = getPricing();
@@ -299,7 +299,7 @@ export function BillingSection() {
         <div className="rounded-2xl border border-gray-200 bg-white p-5">
           <div className="text-lg font-semibold text-gray-900 mb-1">Free</div>
           <div className="h-7 flex items-center text-sm text-gray-500 mb-1">
-            $0 <span className="text-gray-400">/ month</span>
+            $0<span className="text-gray-400 ml-1">/ month</span>
           </div>
           <div className="text-sm text-gray-600 mb-4">Basic bookmark syncing</div>
           <button
