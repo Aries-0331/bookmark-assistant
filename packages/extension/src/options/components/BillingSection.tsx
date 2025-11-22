@@ -11,10 +11,14 @@ import {
   Calendar,
   User,
   Timer,
+  Tags,
+  FileText,
+  Image,
+  MousePointerClick,
+  RefreshCw,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { FREE_INTERVAL_HOURS } from '../store';
 import { useAppStore } from '../store';
 import { openPaddleCheckout, getPriceId } from '../../lib/paddle';
 import { useToast } from '../hook/useToast';
@@ -31,20 +35,18 @@ type FeatureItem = {
 
 const PLAN_FEATURES: Record<'free' | 'pro', FeatureItem[]> = {
   free: [
-    { icon: BookmarkIcon, text: `Up to 1000 bookmarks per day` },
-    { icon: Timer, text: `${FREE_INTERVAL_HOURS}-hour fixed interval` },
-    { icon: Mail, text: 'Email support' },
+    { icon: BookmarkIcon, text: 'Unlimited bookmarks' },
+    { icon: MousePointerClick, text: 'Manual sync only' },
+    { icon: Mail, text: 'Standard email support' },
   ],
   pro: [
-    {
-      icon: BookmarkIcon,
-      text: 'Unlimited bookmarks',
-    },
-    {
-      icon: Timer,
-      text: 'Configurable sync interval',
-    },
-    { icon: Mail, text: 'Priority support within 12 hours' },
+    { icon: BookmarkIcon, text: 'Unlimited bookmarks' },
+    { icon: RefreshCw, text: 'Automatic background sync' },
+    { icon: Timer, text: 'Customizable sync interval' },
+    { icon: Tags, text: 'AI-powered auto-tagging' },
+    { icon: FileText, text: 'AI content summarization' },
+    { icon: Image, text: 'Bookmark icon support' },
+    { icon: Crown, text: 'Priority email support' },
   ],
 };
 

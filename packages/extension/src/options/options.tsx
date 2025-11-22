@@ -19,9 +19,9 @@ export default function Options() {
         <section className="w-full space-y-6 max-w-3xl">
           {route === 'general' && (
             <>
-              <OverviewSection />
+              <OverviewSection onNavigate={navigate} />
               <ConnectionSection />
-              <SyncSettingsSection />
+              <SyncSettingsSection onNavigate={navigate} />
             </>
           )}
           {route === 'billing' && <BillingSection />}

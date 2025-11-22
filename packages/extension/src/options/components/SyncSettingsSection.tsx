@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useAppStore, FREE_INTERVAL_HOURS, PRO_MIN_INTERVAL_HOURS } from '../store';
 import { SectionCard } from './SectionCard';
 import { useToast } from '../hook/useToast';
+import { RouteId } from '../router';
 
-export function SyncSettingsSection() {
+export function SyncSettingsSection({ onNavigate }: { onNavigate: (to: RouteId) => void }) {
   const [value, setValue] = useState<number>(0);
 
   const { show } = useToast();
@@ -39,6 +40,7 @@ export function SyncSettingsSection() {
       description="Configure how and when your bookmarks are synchronized"
       advanced={true}
       isPro={isPro}
+      onNavigate={onNavigate}
     >
       <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200">
         <div className="flex items-center justify-between py-1">

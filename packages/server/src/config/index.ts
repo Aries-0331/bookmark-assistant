@@ -58,12 +58,6 @@ export const config = {
     delayMs: 334, // ~3 requests per second
   },
 
-  // Template Configuration
-  templatePageId: '257d872b594c805a9f580037c0162612',
-
-  // Pricing & Limits Configuration
-  // Note: Pricing is fetched from Paddle API at runtime to ensure consistency
-  // Fallback values are used only if Paddle API is unavailable
   pricing: {
     monthlyFallback: 4.99, // USD per month - fallback only
     yearlyDiscountFallback: 0.3, // 30% off - fallback only
@@ -71,11 +65,9 @@ export const config = {
 
   limits: {
     free: {
-      dailyLimit: Number(process.env.FREE_DAILY_LIMIT) || 100,
-      minIntervalHours: Number(process.env.FREE_INTERVAL_HOURS) || 12,
+      minIntervalHours: Number(process.env.FREE_INTERVAL_HOURS) || 24,
     },
     pro: {
-      dailyLimit: Number(process.env.PRO_DAILY_LIMIT) || 1000,
       minIntervalHours: Number(process.env.PRO_INTERVAL_HOURS) || 0.5,
     },
   },

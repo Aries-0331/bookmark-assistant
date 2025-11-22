@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import logoUrl from '../../assets/logo.png';
 import { Crown } from 'lucide-react';
+import { RouteId } from '../router';
 
 export function SectionCard({
   id,
@@ -8,6 +9,7 @@ export function SectionCard({
   description,
   advanced = false,
   isPro = false,
+  onNavigate,
   children,
 }: {
   id: string;
@@ -15,6 +17,7 @@ export function SectionCard({
   description?: string;
   advanced?: boolean;
   isPro?: boolean;
+  onNavigate?: (to: RouteId) => void;
   children: ReactNode;
 }) {
   return (
@@ -24,7 +27,12 @@ export function SectionCard({
     >
       <span className="flex items-center gap-2 mb-2">
         <h2 className="text-base font-medium text-gray-900">{title}</h2>
-        {advanced && <Crown className={`w-4 h-4 ${isPro ? 'text-amber-500' : 'text-gray-500'}`} />}
+        {advanced && (
+          <Crown
+            className={`w-4 h-4 cursor-pointer ${isPro ? 'text-amber-500' : 'text-gray-500 hover:text-gray-300'}`}
+            onClick={onNavigate ? () => onNavigate('billing') : undefined}
+          />
+        )}
       </span>
       {description ? <p className="text-sm text-gray-500 mb-3">{description}</p> : null}
       {children}

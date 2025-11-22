@@ -2,8 +2,7 @@
 
 import { Client, APIResponseError } from '@notionhq/client';
 import { config } from '../config';
-import { NotionPageProperties, BookmarkItem } from '../types';
-import { retryRequest, sleep } from '../utils';
+import { BookmarkItem } from '../types';
 
 export class NotionService {
   private getClient(accessToken: string) {

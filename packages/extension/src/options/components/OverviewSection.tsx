@@ -2,11 +2,12 @@ import { AlertCircle, CheckCircle, Crown, Sparkles } from 'lucide-react';
 import { SectionCard } from './SectionCard';
 import { relativeTime } from '../../utils/common';
 import { useAppStore } from '../store';
+import { RouteId } from '../router';
 
-export function OverviewSection() {
+export function OverviewSection({ onNavigate }: { onNavigate: (to: RouteId) => void }) {
   const { isConnected, isPro, bookmarkCount, lastSync } = useAppStore();
   return (
-    <SectionCard id="overview" title="Overview">
+    <SectionCard id="overview" title="Overview" isPro={isPro} onNavigate={onNavigate}>
       <div className="flex justify-between flex-wrap text-gray-600 bg-gray-50 rounded-2xl border border-gray-200 p-4 sm:p-5">
         <div className="flex flex-col items-center gap-2 p-2">
           <span>Status</span>
@@ -36,7 +37,10 @@ export function OverviewSection() {
               Pro
             </span>
           ) : (
-            <span className="flex items-center gap-1 text-sm px-2.5 py-0.5 bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 rounded-full">
+            <span
+              className="flex items-center gap-1 text-sm px-2.5 py-0.5 cursor-pointer bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 rounded-full"
+              onClick={() => onNavigate('billing')}
+            >
               <Sparkles className="w-3 h-3" />
               Free
             </span>
