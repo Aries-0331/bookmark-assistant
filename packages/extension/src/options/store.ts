@@ -5,8 +5,8 @@ import { create } from 'zustand';
 import { CACHE_KEYS, WATCHED_CACHE_KEYS } from '../utils/cache';
 import { sendMessage, Messages } from '../utils/message';
 
-export const FREE_INTERVAL_HOURS = 12;
-export const PRO_MIN_INTERVAL_HOURS = 0.5; // 30 minutes
+export const FREE_INTERVAL_HOURS = 24;
+export const PRO_MIN_INTERVAL_HOURS = 6; // 6 hours
 export const PRO_MIN_INTERVAL_MINUTES = Math.round(PRO_MIN_INTERVAL_HOURS * 60);
 
 // Pricing constants

@@ -15,7 +15,11 @@ const ALARM_NAME = 'bookmarks-auto-sync';
  * @param enabled Whether auto-sync is enabled
  * @param intervalHours Sync interval in hours
  */
-export async function scheduleAutoSync(enabled: boolean, intervalHours: number): Promise<void> {
+export async function scheduleAutoSync(
+  enabled: boolean,
+  intervalHours: number,
+  initialDelayMinutes?: number
+): Promise<void> {
   console.log(`📅 Auto-sync schedule request: enabled=${enabled}, interval=${intervalHours}h`);
 
   // Clear existing alarm first
@@ -34,7 +38,8 @@ export async function scheduleAutoSync(enabled: boolean, intervalHours: number):
   // Create the alarm
   await chrome.alarms.create(ALARM_NAME, {
     periodInMinutes,
-    delayInMinutes: periodInMinutes, // First alarm fires after one period
+    delayInMinutes:
+      typeof initialDelayMinutes === 'number' ? Math.max(1, initialDelayMinutes) : periodInMinutes,
   });
 
   // Persist state
@@ -43,7 +48,11 @@ export async function scheduleAutoSync(enabled: boolean, intervalHours: number):
     auto_sync_interval_minutes: periodInMinutes,
   });
 
-  console.log(`✅ Auto-sync scheduled: every ${periodInMinutes} minutes (${intervalHours}h)`);
+  console.log(
+    `✅ Auto-sync scheduled: every ${periodInMinutes} minutes (next run in ${
+      typeof initialDelayMinutes === 'number' ? initialDelayMinutes : periodInMinutes
+    }m)`
+  );
 }
 
 /**
