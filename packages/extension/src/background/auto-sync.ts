@@ -112,3 +112,46 @@ export function setupAutoSyncListener(onSync: () => Promise<void>): void {
 
   console.log('✅ Auto-sync alarm listener registered');
 }
+
+/**
+ * Restore auto-sync alarm on startup, handling catch-up if needed
+ * @param onSyncNeeded Callback to execute the actual sync
+ */
+export async function restoreAutoSync(onSyncNeeded: () => Promise<any>): Promise<void> {
+  try {
+    const { auto_sync_enabled, auto_sync_interval_minutes, last_sync } =
+      await chrome.storage.local.get([
+        'auto_sync_enabled',
+        'auto_sync_interval_minutes',
+        'last_sync',
+      ]);
+
+    if (auto_sync_enabled && auto_sync_interval_minutes) {
+      const intervalHours = auto_sync_interval_minutes / 60;
+      let initialDelay = auto_sync_interval_minutes;
+
+      // Catch-up logic: check if we missed a sync while browser was closed
+      if (last_sync) {
+        const lastSyncTime = new Date(last_sync).getTime();
+        const now = Date.now();
+        const elapsedMinutes = (now - lastSyncTime) / (1000 * 60);
+
+        if (elapsedMinutes >= auto_sync_interval_minutes) {
+          console.log('⏰ Catch-up sync triggered on startup (missed schedule)');
+          // Run immediately
+          onSyncNeeded().catch((e) => console.error('Catch-up sync failed:', e));
+          // Schedule next one for full interval
+          initialDelay = auto_sync_interval_minutes;
+        } else {
+          // Schedule for remaining time
+          initialDelay = Math.max(1, Math.round(auto_sync_interval_minutes - elapsedMinutes));
+          console.log(`⏰ Catch-up sync scheduled in ${initialDelay} minutes`);
+        }
+      }
+
+      await scheduleAutoSync(true, intervalHours, initialDelay);
+    }
+  } catch (err) {
+    console.warn('⚠️ Failed to restore auto-sync alarm on startup:', err);
+  }
+}

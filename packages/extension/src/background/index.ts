@@ -3,7 +3,7 @@ import { launchNotionOAuth, exchangeCodeForToken, debugOAuthSetup } from './oaut
 import { validateConfig, debugConfig } from './config';
 import { serverAPI, APIError } from './server-api';
 import { addMessageListener, Messages } from '../utils/message';
-import { scheduleAutoSync, setupAutoSyncListener } from './auto-sync';
+import { scheduleAutoSync, setupAutoSyncListener, restoreAutoSync } from './auto-sync';
 
 // import './test-oauth-flow'; // Removed in production build
 
@@ -169,44 +169,7 @@ setupAutoSyncListener(async () => {
 });
 
 // Restore auto-sync alarm on service worker startup
-(async () => {
-  try {
-    const { auto_sync_enabled, auto_sync_interval_minutes, last_sync } =
-      await chrome.storage.local.get([
-        'auto_sync_enabled',
-        'auto_sync_interval_minutes',
-        'last_sync',
-      ]);
-
-    if (auto_sync_enabled && auto_sync_interval_minutes) {
-      const intervalHours = auto_sync_interval_minutes / 60;
-      let initialDelay = auto_sync_interval_minutes;
-
-      // Catch-up logic: check if we missed a sync while browser was closed
-      if (last_sync) {
-        const lastSyncTime = new Date(last_sync).getTime();
-        const now = Date.now();
-        const elapsedMinutes = (now - lastSyncTime) / (1000 * 60);
-
-        if (elapsedMinutes >= auto_sync_interval_minutes) {
-          console.log('⏰ Catch-up sync triggered on startup (missed schedule)');
-          // Run immediately
-          performBookmarkSync().catch((e) => console.error('Catch-up sync failed:', e));
-          // Schedule next one for full interval
-          initialDelay = auto_sync_interval_minutes;
-        } else {
-          // Schedule for remaining time
-          initialDelay = Math.max(1, Math.round(auto_sync_interval_minutes - elapsedMinutes));
-          console.log(`⏰ Catch-up sync scheduled in ${initialDelay} minutes`);
-        }
-      }
-
-      await scheduleAutoSync(true, intervalHours, initialDelay);
-    }
-  } catch (err) {
-    console.warn('⚠️ Failed to restore auto-sync alarm on startup:', err);
-  }
-})();
+restoreAutoSync(performBookmarkSync);
 
 addMessageListener({
   [Messages.NOTION_OAUTH]: async () => {
