@@ -30,12 +30,13 @@ The auto-sync feature automatically synchronizes your bookmarks with Notion at c
 
 ### Plan Limits
 
-- **Free Plan**: 12-hour minimum interval, auto-sync disabled
-- **Pro Plan**: 30-minute (0.5 hour) minimum interval, auto-sync enabled
+- **Free Plan**: 24-hour minimum interval, auto-sync disabled by default
+- **Pro Plan**: 6-hour minimum interval, auto-sync enabled
 
 ### Chrome Alarms API
 
 The extension uses `chrome.alarms` API (not `setInterval`) because:
+
 - Service workers can't use `setInterval` (they're event-driven)
 - Alarms persist across browser restarts
 - Alarms are power-efficient (browser optimizes scheduling)
@@ -43,6 +44,7 @@ The extension uses `chrome.alarms` API (not `setInterval`) because:
 ### Permissions
 
 Required permissions in `manifest.json`:
+
 ```json
 {
   "permissions": ["alarms", "bookmarks", "storage"]
@@ -81,13 +83,14 @@ Required permissions in `manifest.json`:
 ```typescript
 chrome.alarms.create('bookmarks-auto-sync', {
   periodInMinutes: intervalHours * 60,
-  delayInMinutes: intervalHours * 60  // First alarm fires after one period
+  delayInMinutes: intervalHours * 60, // First alarm fires after one period
 });
 ```
 
 ### State Persistence
 
 Auto-sync state is stored in `chrome.storage.local`:
+
 - `auto_sync_enabled`: boolean
 - `auto_sync_interval_minutes`: number
 - `sync_interval_hours`: number
@@ -95,6 +98,7 @@ Auto-sync state is stored in `chrome.storage.local`:
 ### Conflict Prevention
 
 Before triggering auto-sync, the scheduler checks:
+
 1. Auto-sync is still enabled in storage
 2. No manual sync is currently in progress (`sync_in_progress` flag)
 
@@ -107,25 +111,40 @@ Before triggering auto-sync, the scheduler checks:
 ## Testing
 
 1. **Enable auto-sync** as Pro user
-2. **Set interval** to minimum (0.5 hours = 30 minutes)
+2. **Set interval** to minimum (6 hours)
 3. **Wait for first alarm** (check in `chrome://extensions` → "Inspect views: Service Worker" → Console)
 4. **Check logs** for "⏰ Auto-sync alarm triggered"
 5. **Verify sync** completed successfully
 6. **Restart browser** and confirm alarm persists
+7. **Test catch-up strategy**: Close browser past sync interval, reopen, verify immediate sync
+
+## Test Coverage
+
+The auto-sync feature has comprehensive unit test coverage:
+
+- ✅ 7 passing tests in `features.spec.ts`
+- ✅ Scheduling, disabling, minimum intervals
+- ✅ Catch-up strategy (immediate sync if overdue)
+- ✅ Partial delay calculation (if not yet overdue)
+
+Run tests: `pnpm test` or `pnpm test:coverage`
 
 ## Debugging
 
 View auto-sync logs in the background service worker console:
+
 ```
 chrome://extensions → "Inspect views: Service Worker"
 ```
 
 Check alarm status:
+
 ```javascript
 chrome.alarms.getAll((alarms) => console.log(alarms));
 ```
 
 Clear alarms manually (for testing):
+
 ```javascript
 chrome.alarms.clear('bookmarks-auto-sync');
 ```
