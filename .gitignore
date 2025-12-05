@@ -79,3 +79,12 @@ coverage
 
 # Husky (git hooks should be committed)
 # .husky/ is commented out - we want to commit hooks
+
+# Test coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Test artifacts
+test-results/
+playwright-report/

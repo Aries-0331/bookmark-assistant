@@ -9,6 +9,7 @@
     "build:prod": "tsc -b && vite build --mode production",
     "clean": "rm -rf dist",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "test": "vitest run src/features.spec.ts",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
