@@ -5,7 +5,7 @@
  * This module handles:
  * - Creating/clearing sync alarms based on user settings
  * - Triggering automatic bookmark syncs at configured intervals
- * - Respecting plan limits (free: 12h min, pro: 30min min)
+ * - Respecting plan limits (free: 24h min, pro: 6h min)
  */
 
 const ALARM_NAME = 'bookmarks-auto-sync';
