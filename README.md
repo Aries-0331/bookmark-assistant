@@ -50,9 +50,10 @@ Bookmark Assistant bridges the gap between your Chrome bookmarks and Notion work
 | -------------------- | ------------------------------------------------ |
 | **Auto-Sync**        | Background synchronization every 6+ hours        |
 | **Faster Sync**      | Minimum 6-hour interval (vs 24h free)            |
-| **AI Features**      | Access to AI tagging and summarization (roadmap) |
-| **Custom Mapping**   | Multiple database support (planned)              |
 | **Priority Support** | Faster response times                            |
+| **Coming Q1 2025**   | AI tagging, summaries, multi-database (included) |
+
+> 🎁 **Early Access Pricing**: Lock in $5/month before AI features launch and price increases
 
 ---
 

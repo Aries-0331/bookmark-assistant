@@ -47,7 +47,13 @@ export default defineConfig({
     },
     copyPublicDir: true,
     target: 'es2017',
-    minify: false,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
   },
   define: {
     // Clean defines - no window polyfills needed

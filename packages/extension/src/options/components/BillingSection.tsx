@@ -41,12 +41,12 @@ const PLAN_FEATURES: Record<'free' | 'pro', FeatureItem[]> = {
   ],
   pro: [
     { icon: BookmarkIcon, text: 'Unlimited bookmarks' },
-    { icon: RefreshCw, text: 'Automatic background sync' },
-    { icon: Timer, text: 'Customizable sync interval' },
-    { icon: Tags, text: 'AI-powered auto-tagging' },
-    { icon: FileText, text: 'AI content summarization' },
-    { icon: Image, text: 'Bookmark icon support' },
-    { icon: Crown, text: 'Priority email support' },
+    { icon: RefreshCw, text: 'Auto-sync every 6+ hours' },
+    { icon: Timer, text: 'Faster sync intervals' },
+    { icon: Tags, text: 'AI tagging (Q1 2025)' },
+    { icon: FileText, text: 'AI summaries (Q1 2025)' },
+    { icon: Image, text: 'Advanced features (roadmap)' },
+    { icon: Crown, text: 'Priority support' },
   ],
 };
 
@@ -358,6 +358,18 @@ export function BillingSection() {
             <Crown className="w-4 h-4" />
             {loading ? 'Loading...' : 'Upgrade to Pro'}
           </button>
+          
+          {/* Early Access Badge */}
+          <div className="mb-3 px-3 py-2 bg-amber-100 border border-amber-200 rounded-lg">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-amber-900">
+              <Sparkles className="w-3.5 h-3.5" />
+              Early Access Pricing
+            </div>
+            <p className="text-[11px] text-amber-700 mt-0.5">
+              Lock in this price before AI features launch in Q1 2025
+            </p>
+          </div>
+          
           <ul className="space-y-2 text-sm">
             {PLAN_FEATURES.pro.map((f, i) => (
               <li key={i} className="flex items-center gap-2 text-gray-900">
