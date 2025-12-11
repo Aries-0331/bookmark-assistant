@@ -358,7 +358,7 @@ export function BillingSection() {
             <Crown className="w-4 h-4" />
             {loading ? 'Loading...' : 'Upgrade to Pro'}
           </button>
-          
+
           {/* Early Access Badge */}
           <div className="mb-3 px-3 py-2 bg-amber-100 border border-amber-200 rounded-lg">
             <div className="flex items-center gap-1.5 text-xs font-medium text-amber-900">
@@ -369,7 +369,7 @@ export function BillingSection() {
               Lock in this price before AI features launch in Q1 2025
             </p>
           </div>
-          
+
           <ul className="space-y-2 text-sm">
             {PLAN_FEATURES.pro.map((f, i) => (
               <li key={i} className="flex items-center gap-2 text-gray-900">
