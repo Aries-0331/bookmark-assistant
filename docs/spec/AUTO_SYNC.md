@@ -65,59 +65,6 @@ The auto-sync feature automatically synchronizes your bookmarks with Notion at c
 
 ---
 
-## Implementation Components
-
-### Components
-
-1. **Auto-Sync Scheduler** (`src/background/auto-sync.ts`)
-   - Manages Chrome Alarms API for background scheduling
-   - Creates/clears periodic alarms based on user settings
-   - Triggers bookmark sync when alarm fires
-   - Prevents duplicate syncs and respects rate limits
-
-2. **Background Service Worker** (`src/background/index.ts`)
-   - Registers alarm listener on startup
-   - Executes bookmark sync via `performBookmarkSync()` function
-   - Handles SCHEDULE_AUTO_SYNC messages from options page
-
-3. **Options Store** (`src/options/store.ts`)
-   - Manages auto-sync state (enabled/disabled)
-   - Persists interval settings to chrome.storage
-   - Sends schedule messages to background worker when settings change
-   - Restores alarm on extension startup
-
-4. **Settings UI** (`src/options/components/SyncSettingsSection.tsx`)
-   - Toggle switch for enabling/disabling auto-sync
-   - Interval input field (respects plan limits)
-   - Pro feature badge (free users see disabled state)
-
-### Plan Limits
-
-- **Free Plan**: 24-hour minimum interval, auto-sync disabled by default
-- **Pro Plan**: 6-hour minimum interval, auto-sync enabled
-
-### Chrome Alarms API
-
-The extension uses `chrome.alarms` API (not `setInterval`) because:
-
-- Service workers can't use `setInterval` (they're event-driven)
-- Alarms persist across browser restarts
-- Alarms are power-efficient (browser optimizes scheduling)
-
-### Permissions
-
-Required permissions in `manifest.json`:
-
-```json
-{
-  "permissions": ["alarms", "bookmarks", "storage"]
-}
-```
-
----
-
----
-
 ## User Flow
 
 ### 1. Enable Auto-Sync (Pro Users Only)
