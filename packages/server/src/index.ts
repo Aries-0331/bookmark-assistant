@@ -62,18 +62,23 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-// 🎯 Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Bookmark Notion Sync Server running on port ${PORT}`);
-  console.log(`🔐 Environment: ${config.nodeEnv}`);
-  console.log(`🎯 Health check: http://localhost:${PORT}/health`);
+// 🎯 Start server (only when not running on Vercel serverless)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Bookmark Notion Sync Server running on port ${PORT}`);
+    console.log(`🔐 Environment: ${config.nodeEnv}`);
+    console.log(`🎯 Health check: http://localhost:${PORT}/health`);
 
-  auditLog('server_start', 'system', {
-    port: PORT,
-    environment: config.nodeEnv,
-    allowedExtensionId: config.allowedExtensionId,
-    version: '1.0.0',
+    auditLog('server_start', 'system', {
+      port: PORT,
+      environment: config.nodeEnv,
+      allowedExtensionId: config.allowedExtensionId,
+      version: '1.0.0',
+    });
   });
-});
+}
 
-export default app;
+// Vercel serverless handler: delegate requests to Express app
+export default function handler(req: any, res: any) {
+  return (app as any)(req, res);
+}
