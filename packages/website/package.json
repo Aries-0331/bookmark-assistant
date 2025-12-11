@@ -9,7 +9,7 @@
     "prebuild": "node ../../scripts/sync-brand-assets.mjs",
     "build": "next build",
     "start": "next start -p 3006",
-    "lint": "next lint"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
     "@bookmark-assistant/shared": "workspace:*",
