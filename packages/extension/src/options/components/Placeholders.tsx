@@ -40,12 +40,11 @@ export function AdvancedSection() {
 }
 
 export function FAQSection() {
+  // Support URL priority: env var > server /support route > GitHub issues
   const supportUrl =
     import.meta.env.VITE_SUPPORT_URL ||
-    (import.meta.env.VITE_OAUTH_SERVER_URL &&
-      `${import.meta.env.VITE_OAUTH_SERVER_URL.replace(/\/$/, '')}/support`) ||
-    'https://github.com/Aries-0331/bookmarks_to_notion/issues/new/choose';
-  // use minutes constant from store for consistency
+    `${import.meta.env.VITE_OAUTH_SERVER_URL || 'http://localhost:3333'}/support`;
+
   const faqs: { q: string; a: JSX.Element }[] = [
     {
       q: 'Can I cancel anytime?',
@@ -189,7 +188,15 @@ export function FAQSection() {
     {
       q: 'How do I contact support?',
       a: (
-        <p>Reach out via the support link in the app or open an issue on the project repository.</p>
+        <p>
+          Click the "Contact Support" button below, or email us at{' '}
+          <a
+            href="mailto:aries0331.dev@gmail.com"
+            className="text-amber-600 hover:text-amber-700 underline"
+          >
+            aries0331.dev@gmail.com
+          </a>
+        </p>
       ),
     },
   ];

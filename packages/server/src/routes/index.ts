@@ -29,6 +29,12 @@ router.get('/health', (req, res) => {
   });
 });
 
+// Support page endpoint - redirect to GitHub issues or documentation
+router.get('/support', (req, res) => {
+  // Redirect to GitHub issues page for support
+  res.redirect('https://github.com/Aries-0331/bookmarks_to_notion/issues/new/choose');
+});
+
 // Optional lightweight client log endpoint to capture non-critical client events (e.g., request timeouts)
 router.post('/client-log', (req, res) => {
   try {
