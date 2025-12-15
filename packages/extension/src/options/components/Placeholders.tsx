@@ -1,5 +1,4 @@
 import { SectionCard } from './SectionCard';
-import { ExternalLink } from 'lucide-react';
 import {
   FREE_INTERVAL_HOURS,
   PRO_MIN_INTERVAL_HOURS,
@@ -40,11 +39,6 @@ export function AdvancedSection() {
 }
 
 export function FAQSection() {
-  // Support URL priority: env var > server /support route > GitHub issues
-  const supportUrl =
-    import.meta.env.VITE_SUPPORT_URL ||
-    `${import.meta.env.VITE_OAUTH_SERVER_URL || 'http://localhost:3333'}/support`;
-
   const faqs: { q: string; a: JSX.Element }[] = [
     {
       q: 'Can I cancel anytime?',
@@ -189,13 +183,14 @@ export function FAQSection() {
       q: 'How do I contact support?',
       a: (
         <p>
-          Click the "Contact Support" button below, or email us at{' '}
+          Click the "Contact Support" button below, or{' '}
           <a
             href="mailto:aries0331.dev@gmail.com"
             className="text-amber-600 hover:text-amber-700 underline"
           >
-            aries0331.dev@gmail.com
-          </a>
+            email
+          </a>{' '}
+          us
         </p>
       ),
     },
@@ -216,7 +211,7 @@ export function FAQSection() {
           </details>
         ))}
       </div>
-      <div className="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center">
+      {/* <div className="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center">
         <div className="text-gray-700 font-medium mb-4">Have more questions?</div>
         <a
           className="flex w-full max-w-md mx-auto rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-500 items-center justify-center gap-2"
@@ -227,7 +222,7 @@ export function FAQSection() {
           <ExternalLink className="w-4 h-4" />
           Contact Support
         </a>
-      </div>
+      </div> */}
     </SectionCard>
   );
 }
