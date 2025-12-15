@@ -374,7 +374,7 @@ export class NotionService {
         return { databaseId: duplicatedTemplateId, dataSourceId };
       }
     } catch (e: any) {
-      const msg = e?.message || String(e);
+      const _msg = e?.message || String(e);
     }
 
     // 0.5) Try retrieving the page to identify object type and children flag

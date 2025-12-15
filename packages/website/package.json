@@ -9,7 +9,7 @@
     "prebuild": "node ../../scripts/sync-brand-assets.mjs",
     "build": "next build",
     "start": "next start -p 3006",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@bookmark-assistant/shared": "workspace:*",
@@ -26,8 +26,6 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.21",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "14.2.10",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.18",
     "typescript": "^5.9.2"

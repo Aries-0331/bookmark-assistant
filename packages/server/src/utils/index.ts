@@ -8,7 +8,7 @@ import { randomUUID } from 'crypto';
  */
 export const auditLog = (action: string, userId: string, details: any = {}): void => {
   const timestamp = new Date().toISOString();
-  const logEntry: AuditLogEntry = {
+  const _logEntry: AuditLogEntry = {
     timestamp,
     action,
     userId,
@@ -54,7 +54,7 @@ export const sleep = (ms: number): Promise<void> => {
 /**
  * Validate and sanitize bookmark data
  */
-export const validateBookmark = (bookmark: any, index: number) => {
+export const validateBookmark = (bookmark: any, _index: number) => {
   return {
     title: bookmark.title || bookmark.name || 'Untitled Bookmark',
     url: bookmark.url,

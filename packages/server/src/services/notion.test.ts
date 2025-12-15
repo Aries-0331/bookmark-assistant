@@ -2,7 +2,7 @@
  * Unit Tests: Notion Service
  * Tests server-side Notion API integration logic
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, beforeEach, vi } from 'vitest';
 
 // Mock @notionhq/client
 vi.mock('@notionhq/client', () => ({
