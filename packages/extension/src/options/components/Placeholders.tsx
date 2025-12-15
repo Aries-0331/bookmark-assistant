@@ -90,14 +90,14 @@ export function FAQSection() {
     {
       q: "What's the difference between Free and Pro?",
       a: (
-        <ul className="list-disc pl-5">
+        <ul className="list-disc pl-5 space-y-2">
           <li>
-            Free: up to 500 bookmarks/day and a fixed{' '}
-            <span className="font-medium">{FREE_INTERVAL_HOURS}‑hour</span> sync interval.
+            <strong>Free:</strong> 50 bookmarks per sync, manual only, 24-hour interval
           </li>
           <li>
-            Pro: unlimited bookmarks and configurable sync interval (minimum{' '}
-            {PRO_MIN_INTERVAL_MINUTES} minutes).
+            <strong>Pro:</strong> Unlimited bookmarks per sync, automatic background sync every 6+
+            hours, smart deduplication (saves your Notion API quota), priority support, plus
+            upcoming AI tagging & summaries at no extra cost
           </li>
         </ul>
       ),
@@ -106,9 +106,12 @@ export function FAQSection() {
       q: 'How often does it sync?',
       a: (
         <ul className="list-disc pl-5">
-          <li>Free: every {FREE_INTERVAL_HOURS} hours (fixed).</li>
-          <li>Pro: choose your interval ({PRO_MIN_INTERVAL_MINUTES} minutes minimum).</li>
-          <li>You can always trigger a manual “Sync now” from the Options page.</li>
+          <li>Free: Manual sync only, processes up to 50 bookmarks each time</li>
+          <li>
+            Pro: Automatic background sync every {PRO_MIN_INTERVAL_MINUTES} minutes (configurable),
+            unlimited bookmarks
+          </li>
+          <li>You can always trigger a manual "Sync now" from the Options page.</li>
         </ul>
       ),
     },

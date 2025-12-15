@@ -13,7 +13,6 @@ import {
   Timer,
   Tags,
   FileText,
-  Image,
   MousePointerClick,
   RefreshCw,
 } from 'lucide-react';
@@ -35,17 +34,18 @@ type FeatureItem = {
 
 const PLAN_FEATURES: Record<'free' | 'pro', FeatureItem[]> = {
   free: [
-    { icon: BookmarkIcon, text: 'Unlimited bookmarks' },
+    { icon: BookmarkIcon, text: '50 bookmarks per sync' },
     { icon: MousePointerClick, text: 'Manual sync only' },
-    { icon: Mail, text: 'Standard email support' },
+    { icon: Timer, text: '24-hour interval' },
+    { icon: Mail, text: 'Community support' },
   ],
   pro: [
-    { icon: BookmarkIcon, text: 'Unlimited bookmarks' },
-    { icon: RefreshCw, text: 'Auto-sync every 6+ hours' },
-    { icon: Timer, text: 'Faster sync intervals' },
-    { icon: Tags, text: 'AI tagging (Q1 2025)' },
-    { icon: FileText, text: 'AI summaries (Q1 2025)' },
-    { icon: Image, text: 'Advanced features (roadmap)' },
+    { icon: Zap, text: 'Unlimited bookmarks per sync' },
+    { icon: RefreshCw, text: 'Set & forget auto-sync' },
+    { icon: Timer, text: '6-hour minimum interval' },
+    { icon: Sparkles, text: 'Smart fingerprint deduplication' },
+    { icon: Tags, text: 'AI tagging (coming Q1 2025)' },
+    { icon: FileText, text: 'AI summaries (coming Q1 2025)' },
     { icon: Crown, text: 'Priority support' },
   ],
 };

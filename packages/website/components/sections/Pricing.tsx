@@ -239,11 +239,11 @@ export function Pricing() {
               </Button>
               <ul className="space-y-3">
                 {[
-                  '50 bookmarks per day',
-                  'Manual token authentication',
-                  'Basic sync features',
+                  '50 bookmarks per sync',
+                  'Manual sync only',
+                  '24-hour sync interval',
+                  'Basic features',
                   'Community support',
-                  'Open source mode',
                 ].map((t) => (
                   <li key={t} className="flex items-center gap-3">
                     <span className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center">
@@ -292,12 +292,13 @@ export function Pricing() {
                 </Button>
                 <ul className="space-y-3">
                   {[
-                    'Unlimited bookmarks',
-                    'OAuth integration',
-                    'Auto-sync in background',
-                    'Priority support',
-                    'Advanced features',
-                    'Custom database mapping',
+                    '✨ Unlimited bookmarks per sync',
+                    '🤖 Set & forget auto-sync',
+                    '🚀 6-hour minimum interval',
+                    '💎 Smart fingerprint deduplication',
+                    '🏷️ AI tagging (Q1 2025)',
+                    '📝 AI summaries (Q1 2025)',
+                    '👑 Priority support',
                   ].map((t) => (
                     <li key={t} className="flex items-center gap-3">
                       <span className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center">

@@ -66,9 +66,11 @@ export const config = {
   limits: {
     free: {
       minIntervalHours: Number(process.env.FREE_INTERVAL_HOURS) || 24,
+      syncBatchLimit: Number(process.env.FREE_SYNC_BATCH_LIMIT) || 50,
     },
     pro: {
-      minIntervalHours: Number(process.env.PRO_INTERVAL_HOURS) || 0.5,
+      minIntervalHours: Number(process.env.PRO_INTERVAL_HOURS) || 6,
+      syncBatchLimit: Number(process.env.PRO_SYNC_BATCH_LIMIT) || 10000,
     },
   },
 

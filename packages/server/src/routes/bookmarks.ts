@@ -83,6 +83,20 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       });
     }
 
+    // Check plan limits
+    const isPro = userData.plan === 'pro';
+    const syncLimit = isPro ? config.limits.pro.syncBatchLimit : config.limits.free.syncBatchLimit;
+    
+    if (bookmarks.length > syncLimit) {
+      return res.status(403).json({
+        error: 'Sync Limit Exceeded',
+        message: `Free plan is limited to ${config.limits.free.syncBatchLimit} bookmarks per sync. You're trying to sync ${bookmarks.length}. Upgrade to Pro for unlimited syncing.`,
+        limit: syncLimit,
+        attempted: bookmarks.length,
+        isPro,
+      });
+    }
+
     const effectiveDataSourceId = userData.notionDataSourceId;
     if (!effectiveDataSourceId) {
       return res.status(400).json({

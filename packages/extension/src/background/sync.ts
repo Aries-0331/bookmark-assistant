@@ -72,6 +72,18 @@ export async function syncAllBookmarksToNotion() {
       throw new Error('No bookmarks found to sync');
     }
 
+    // Check if user might hit the free tier limit
+    const { is_pro } = await chrome.storage.local.get(['is_pro']);
+    const isPro = !!is_pro;
+    const FREE_LIMIT = 50;
+
+    if (!isPro && bookmarks.length > FREE_LIMIT) {
+      console.warn(
+        `⚠️ Free plan limit: ${bookmarks.length} bookmarks found, only first ${FREE_LIMIT} will be synced`
+      );
+      // Note: Server will enforce the limit, but we can warn here
+    }
+
     // Delegate the bulk sync entirely to the server
     const formatted = bookmarks
       .filter((b) => !!b.url)
@@ -97,8 +109,16 @@ export async function syncAllBookmarksToNotion() {
     });
 
     return result.summary;
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Bulk bookmark sync failed:', error);
+
+    // Check if this is a sync limit error
+    if (error?.message?.includes('Sync Limit Exceeded') || error?.status === 403) {
+      throw new Error(
+        `Free plan is limited to 50 bookmarks per sync. Upgrade to Pro for unlimited syncing.`
+      );
+    }
+
     throw error;
   }
 }
