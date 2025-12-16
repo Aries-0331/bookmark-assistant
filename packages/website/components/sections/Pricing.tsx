@@ -42,7 +42,7 @@ async function getPaddleInstance(): Promise<Paddle | null> {
 
   const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
   const env = (process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || 'sandbox') as 'sandbox' | 'production';
-
+  console.log('🔧 Initializing Paddle with token:', token);
   if (!token) {
     console.warn('⚠️ NEXT_PUBLIC_PADDLE_CLIENT_TOKEN is not configured');
     return null;

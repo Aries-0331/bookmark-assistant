@@ -4,7 +4,7 @@ import { OverviewSection } from './components/OverviewSection';
 import { ConnectionSection } from './components/ConnectionSection';
 import { SyncSettingsSection } from './components/SyncSettingsSection';
 import { AboutSection } from './components/AboutSection';
-import { FAQSection, TutorialsSection } from './components/Placeholders';
+import { FAQSection } from './components/Placeholders';
 import { BillingSection } from './components/BillingSection';
 import { useHashRoute } from './router';
 
@@ -25,7 +25,7 @@ export default function Options() {
             </>
           )}
           {route === 'billing' && <BillingSection />}
-          {route === 'tutorials' && <TutorialsSection />}
+          {/* {route === 'tutorials' && <TutorialsSection />} */}
           {route === 'faq' && <FAQSection />}
           {route === 'about' && <AboutSection />}
         </section>
