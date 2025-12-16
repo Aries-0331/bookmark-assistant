@@ -10,7 +10,7 @@ export type MessageMap = {
     req: {};
     res: {
       success: boolean;
-      pricing?: { monthly: number; yearlyDiscount: number };
+      pricing?: { monthly: number; lifetime: number };
       limits?: any;
       error?: string;
     };

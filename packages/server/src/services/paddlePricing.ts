@@ -5,7 +5,7 @@ import { config } from '../config';
 
 interface PricingData {
   monthly: number;
-  yearlyDiscount: number;
+  lifetime: number;
   lastFetched: number;
 }
 
@@ -44,12 +44,12 @@ class PaddlePricingService {
    * Get pricing data from Paddle API with caching
    * Falls back to config values if Paddle API is unavailable
    */
-  async getPricing(): Promise<{ monthly: number; yearlyDiscount: number }> {
+  async getPricing(): Promise<{ monthly: number; lifetime: number }> {
     // Return cached data if still valid
     if (this.cachedPricing && Date.now() - this.cachedPricing.lastFetched < this.CACHE_TTL) {
       return {
         monthly: this.cachedPricing.monthly,
-        yearlyDiscount: this.cachedPricing.yearlyDiscount,
+        lifetime: this.cachedPricing.lifetime,
       };
     }
 
@@ -72,7 +72,7 @@ class PaddlePricingService {
     // Fallback to config values
     return {
       monthly: config.pricing.monthlyFallback,
-      yearlyDiscount: config.pricing.yearlyDiscountFallback,
+      lifetime: config.pricing.lifetimeFallback,
     };
   }
 
@@ -81,13 +81,13 @@ class PaddlePricingService {
    */
   private async fetchPricingFromPaddle(): Promise<{
     monthly: number;
-    yearlyDiscount: number;
+    lifetime: number;
   } | null> {
     if (!this.paddle) return null;
 
     try {
       const monthlyPriceId = config.paddle.priceIds.proMonthly;
-      const yearlyPriceId = config.paddle.priceIds.proYearly;
+      const lifetimePriceId = config.paddle.priceIds.proLifetime; // Previously yearlyPriceId
 
       if (!monthlyPriceId) {
         console.warn('⚠️  Monthly price ID not configured');
@@ -103,37 +103,33 @@ class PaddlePricingService {
         return null;
       }
 
-      // If no yearly price, use default discount
-      if (!yearlyPriceId) {
+      // If no lifetime price, use default
+      if (!lifetimePriceId) {
         return {
           monthly: monthlyAmount,
-          yearlyDiscount: config.pricing.yearlyDiscountFallback,
+          lifetime: config.pricing.lifetimeFallback,
         };
       }
 
-      // Fetch yearly price and calculate discount
+      // Fetch lifetime price
       try {
-        const yearlyPrice = await this.paddle.prices.get(yearlyPriceId);
-        const yearlyAmount = Number(yearlyPrice.unitPrice?.amount || 0) / 100;
+        const lifetimePrice = await this.paddle.prices.get(lifetimePriceId);
+        const lifetimeAmount = Number(lifetimePrice.unitPrice?.amount || 0) / 100;
 
-        if (yearlyAmount > 0) {
-          // Calculate actual discount: (monthly * 12 - yearly) / (monthly * 12)
-          const expectedAnnualCost = monthlyAmount * 12;
-          const actualDiscount = (expectedAnnualCost - yearlyAmount) / expectedAnnualCost;
-
+        if (lifetimeAmount > 0) {
           return {
             monthly: monthlyAmount,
-            yearlyDiscount: Math.max(0, Math.min(1, actualDiscount)), // Clamp between 0 and 1
+            lifetime: lifetimeAmount,
           };
         }
       } catch (error) {
-        console.warn('⚠️  Failed to fetch yearly price, using default discount:', error);
+        console.warn('⚠️  Failed to fetch lifetime price, using default:', error);
       }
 
-      // Fallback to monthly with default discount
+      // Fallback to monthly with default lifetime price
       return {
         monthly: monthlyAmount,
-        yearlyDiscount: config.pricing.yearlyDiscountFallback,
+        lifetime: config.pricing.lifetimeFallback,
       };
     } catch (error) {
       console.error('❌ Error fetching prices from Paddle:', error);
@@ -148,6 +144,10 @@ class PaddlePricingService {
     this.cachedPricing = null;
     console.log('🔄 Paddle pricing cache cleared');
   }
+
+  /**
+   * Note: yearlyPriceId in config is now used for lifetime purchase
+   */
 }
 
 // Export singleton instance

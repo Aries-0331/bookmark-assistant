@@ -10,8 +10,9 @@ export const PRO_MIN_INTERVAL_HOURS = 6; // 6 hours
 export const PRO_MIN_INTERVAL_MINUTES = Math.round(PRO_MIN_INTERVAL_HOURS * 60);
 
 // Pricing constants
-export const PRICE_MONTHLY_USD = 5; // $/month
-export const DISCOUNT_YEARLY = 0.3; // 30% off the annual total
+export const PRICE_MONTHLY_REGULAR_USD = 5; // Regular $/month
+export const PRICE_MONTHLY_EARLY_BIRD_USD = 2.99; // Early bird $/month
+export const PRICE_LIFETIME_USD = 99; // $ one-time purchase
 
 export type AppState = {
   // Overview
@@ -42,10 +43,10 @@ export type AppState = {
   refreshEntitlements: () => Promise<void>;
 
   // Config
-  pricing: { monthly: number; yearlyDiscount: number };
+  pricing: { monthly: number; lifetime: number };
   fetchPricing: () => Promise<void>;
   getEffectiveLimits: () => { minIntervalHours: number };
-  getPricing: () => { monthly: number; yearlyDiscount: number };
+  getPricing: () => { monthly: number; lifetime: number };
 };
 
 // Zustand store
@@ -87,8 +88,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // Default pricing (fallback)
   pricing: {
-    monthly: PRICE_MONTHLY_USD,
-    yearlyDiscount: DISCOUNT_YEARLY,
+    monthly: PRICE_MONTHLY_EARLY_BIRD_USD,
+    lifetime: PRICE_LIFETIME_USD,
   },
 
   initFromStorage: async () => {

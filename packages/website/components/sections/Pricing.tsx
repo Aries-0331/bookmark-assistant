@@ -15,12 +15,12 @@ let paddlePromise: Promise<Paddle | undefined> | null = null;
  * Get price ID based on billing period
  * Matches the extension pattern for consistency
  */
-function getPriceId(billing: 'monthly' | 'yearly'): string {
+function getPriceId(billing: 'monthly' | 'lifetime'): string {
   const monthly = process.env.NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID;
-  const yearly = process.env.NEXT_PUBLIC_PADDLE_PRO_YEARLY_PRICE_ID;
+  const lifetime = process.env.NEXT_PUBLIC_PADDLE_PRO_LIFETIME_PRICE_ID;
 
-  if (billing === 'yearly') {
-    return yearly || monthly || '';
+  if (billing === 'lifetime') {
+    return lifetime || monthly || '';
   }
   return monthly || '';
 }
@@ -63,19 +63,18 @@ async function getPaddleInstance(): Promise<Paddle | null> {
 }
 
 export function Pricing() {
-  const [billing, setBilling] = React.useState<'monthly' | 'yearly'>('yearly');
+  const [billing, setBilling] = React.useState<'monthly' | 'lifetime'>('lifetime');
   const [paddleReady, setPaddleReady] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [pricing, setPricing] = React.useState({
     monthly: 5,
-    yearly: 42,
+    lifetime: 99,
     currencySymbol: '$',
   });
 
-  const proPrice =
-    billing === 'yearly' ? (pricing.yearly / 12).toFixed(2) : pricing.monthly.toFixed(2);
-
-  const discountPercentage = Math.round((1 - pricing.yearly / 12 / pricing.monthly) * 100);
+  const displayPrice = billing === 'lifetime' ? pricing.lifetime : pricing.monthly;
+  const priceLabel = billing === 'lifetime' ? 'one-time' : '/month';
+  const savingsAmount = pricing.monthly * 12 - pricing.lifetime;
 
   // Initialize Paddle and fetch pricing
   React.useEffect(() => {
@@ -103,25 +102,25 @@ export function Pricing() {
 
       // 2. Fetch dynamic pricing
       const monthlyId = process.env.NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID;
-      const yearlyId = process.env.NEXT_PUBLIC_PADDLE_PRO_YEARLY_PRICE_ID;
+      const lifetimeId = process.env.NEXT_PUBLIC_PADDLE_PRO_LIFETIME_PRICE_ID;
 
-      if (monthlyId && yearlyId) {
+      if (monthlyId && lifetimeId) {
         try {
           const preview = await paddle.PricePreview({
             items: [
               { priceId: monthlyId, quantity: 1 },
-              { priceId: yearlyId, quantity: 1 },
+              { priceId: lifetimeId, quantity: 1 },
             ],
           });
 
           const monthlyItem = preview.data.details.lineItems.find(
             (item) => item.price.id === monthlyId
           );
-          const yearlyItem = preview.data.details.lineItems.find(
-            (item) => item.price.id === yearlyId
+          const lifetimeItem = preview.data.details.lineItems.find(
+            (item) => item.price.id === lifetimeId
           );
 
-          if (monthlyItem && yearlyItem) {
+          if (monthlyItem && lifetimeItem) {
             const currencyCode = monthlyItem.price.unitPrice.currencyCode;
 
             // Paddle returns amounts in minor units (e.g. cents), so we need to divide by 100
@@ -130,7 +129,7 @@ export function Pricing() {
             const divisor = isZeroDecimal ? 1 : 100;
 
             const monthlyAmount = parseFloat(monthlyItem.price.unitPrice.amount) / divisor;
-            const yearlyAmount = parseFloat(yearlyItem.price.unitPrice.amount) / divisor;
+            const lifetimeAmount = parseFloat(lifetimeItem.price.unitPrice.amount) / divisor;
 
             // Simple symbol mapping
             const formatter = new Intl.NumberFormat('en-US', {
@@ -142,7 +141,7 @@ export function Pricing() {
 
             setPricing({
               monthly: monthlyAmount,
-              yearly: yearlyAmount,
+              lifetime: lifetimeAmount,
               currencySymbol: symbol,
             });
           }
@@ -207,13 +206,15 @@ export function Pricing() {
               Monthly
             </button>
             <button
-              className={`px-4 py-2 rounded-md text-base transition flex items-center gap-2 ${billing === 'yearly' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900'}`}
-              onClick={() => setBilling('yearly')}
+              className={`px-4 py-2 rounded-md text-base transition flex items-center gap-2 ${billing === 'lifetime' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}
+              onClick={() => setBilling('lifetime')}
             >
-              Yearly{' '}
-              <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                Save {discountPercentage}%
-              </span>
+              🔥 Lifetime{' '}
+              {savingsAmount > 0 && (
+                <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                  Save ${savingsAmount.toFixed(0)}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -260,10 +261,10 @@ export function Pricing() {
           <div className="relative">
             <Card className="border-2">
               <CardBody className="p-8">
-                {billing === 'yearly' && (
+                {billing === 'lifetime' && (
                   <div className="absolute top-4 right-4">
                     <Badge variant="cta" className="px-2 py-1 text-xs">
-                      Most Popular
+                      🔥 Best Value
                     </Badge>
                   </div>
                 )}
@@ -278,8 +279,14 @@ export function Pricing() {
                 </div>
                 <div className="text-4xl text-gray-900 mb-4">
                   {pricing.currencySymbol}
-                  {proPrice} <span className="text-base text-gray-600">/month</span>
+                  {displayPrice} <span className="text-base text-gray-600">{priceLabel}</span>
                 </div>
+                {billing === 'lifetime' && savingsAmount > 0 && (
+                  <div className="text-sm text-green-700 mb-3">
+                    💰 Save {pricing.currencySymbol}
+                    {savingsAmount.toFixed(0)} vs. 1 year of monthly
+                  </div>
+                )}
                 <Button
                   variant="pro"
                   className="w-full mb-6"

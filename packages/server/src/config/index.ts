@@ -59,8 +59,8 @@ export const config = {
   },
 
   pricing: {
-    monthlyFallback: 4.99, // USD per month - fallback only
-    yearlyDiscountFallback: 0.3, // 30% off - fallback only
+    monthlyFallback: 2.99, // USD per month - fallback only
+    lifetimeFallback: 29.99, // USD one-time - fallback only
   },
 
   limits: {
@@ -81,7 +81,7 @@ export const config = {
     webhookSecret: process.env.PADDLE_WEBHOOK_SECRET || '',
     priceIds: {
       proMonthly: process.env.PADDLE_PRO_MONTHLY_PRICE_ID || '',
-      proYearly: process.env.PADDLE_PRO_YEARLY_PRICE_ID || '',
+      proLifetime: process.env.PADDLE_PRO_LIFETIME_PRICE_ID || '', // Previously YEARLY
     },
   },
 } as const;

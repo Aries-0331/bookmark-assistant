@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
       success: true,
       pricing: {
         monthly: pricing.monthly,
-        yearlyDiscount: pricing.yearlyDiscount,
+        lifetime: pricing.lifetime,
       },
     });
   } catch (error) {
@@ -26,8 +26,8 @@ router.get('/', async (req, res) => {
     res.json({
       success: true,
       pricing: {
-        monthly: 5, // Fallback
-        yearlyDiscount: 0.3, // Fallback
+        monthly: 2.99, // Fallback
+        lifetime: 29.99, // Fallback
       },
     });
   }

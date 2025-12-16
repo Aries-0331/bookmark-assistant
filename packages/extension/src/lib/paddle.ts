@@ -15,7 +15,7 @@
  */
 
 export interface OpenCheckoutOptions {
-  pricing: 'monthly' | 'yearly';
+  pricing: 'monthly' | 'lifetime';
   userEmail?: string;
   userId: string;
   successUrl: string;

@@ -39,7 +39,9 @@ router.post('/checkout-url', async (req: Request, res: Response) => {
     });
 
     const priceId =
-      pricing === 'monthly' ? config.paddle.priceIds.proMonthly : config.paddle.priceIds.proYearly;
+      pricing === 'monthly'
+        ? config.paddle.priceIds.proMonthly
+        : config.paddle.priceIds.proLifetime;
 
     // Create a transaction (checkout session) via Paddle API
     const transaction = await paddle.transactions.create({

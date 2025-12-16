@@ -15,6 +15,9 @@ import {
   FileText,
   MousePointerClick,
   RefreshCw,
+  Infinity as InfiniteIcon,
+  Gift,
+  AlertCircle,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { LucideIcon } from 'lucide-react';
@@ -32,7 +35,7 @@ type FeatureItem = {
   text: string;
 };
 
-const PLAN_FEATURES: Record<'free' | 'pro', FeatureItem[]> = {
+const PLAN_FEATURES: Record<'free' | 'pro' | 'lifetime', FeatureItem[]> = {
   free: [
     { icon: BookmarkIcon, text: '50 bookmarks per sync' },
     { icon: MousePointerClick, text: 'Manual sync only' },
@@ -48,13 +51,25 @@ const PLAN_FEATURES: Record<'free' | 'pro', FeatureItem[]> = {
     { icon: FileText, text: 'AI summaries (coming Q1 2025)' },
     { icon: Crown, text: 'Priority support' },
   ],
+  lifetime: [
+    { icon: InfiniteIcon, text: 'Pay once, keep forever' },
+    { icon: Gift, text: 'Includes all future Pro updates' },
+    { icon: AlertCircle, text: 'Limited to first 500 users' },
+    { icon: Zap, text: 'Unlimited bookmarks per sync' },
+    { icon: RefreshCw, text: 'Set & forget auto-sync' },
+    { icon: Timer, text: '6-hour minimum interval' },
+    { icon: Sparkles, text: 'Smart fingerprint deduplication' },
+    { icon: Tags, text: 'AI tagging (coming Q1 2025)' },
+    { icon: FileText, text: 'AI summaries (coming Q1 2025)' },
+    { icon: Crown, text: 'Priority support' },
+  ],
 };
 
 export function BillingSection() {
-  const [yearly, setYearly] = useState(true);
+  const [isLifetime, setIsLifetime] = useState(false); // false = monthly, true = lifetime
   const [loading, setLoading] = useState(false);
   const { isPro, getPricing, userId, userEmail, refreshEntitlements } = useAppStore();
-  const { monthly: MONTHLY_PRICE, yearlyDiscount: YEARLY_DISCOUNT } = getPricing();
+  const { lifetime: LIFETIME_PRICE } = getPricing();
   const { show: showToast } = useToast();
 
   // Check for upgrade success in URL and refresh entitlements
@@ -104,7 +119,7 @@ export function BillingSection() {
       }
 
       await openPaddleCheckout({
-        pricing: yearly ? 'yearly' : 'monthly',
+        pricing: isLifetime ? 'lifetime' : 'monthly',
         userId,
         userEmail: userEmail || undefined,
         successUrl: `${import.meta.env.VITE_WEBSITE_URL || ''}/success`,
@@ -168,13 +183,8 @@ export function BillingSection() {
     }
   };
 
-  const originalAnnual = MONTHLY_PRICE * 12;
-  const discountedAnnual = Math.round(originalAnnual * (1 - YEARLY_DISCOUNT));
   const formatCurrency = (n: number) =>
-    `$${new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n)}`;
-  const formatCurrencyPerMonth = (n: number) =>
-    `$${new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)}`;
-  const monthlyFromYearly = discountedAnnual / 12;
+    `$${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(n)}`;
 
   if (isPro) {
     return (
@@ -269,27 +279,30 @@ export function BillingSection() {
       description="Unlock the full potential of Bookmark Assistant with Pro"
     >
       <div className="flex items-center justify-center gap-2 mb-4">
-        <span className={classNames(!yearly && 'text-gray-900', 'text-gray-600')}>Monthly</span>
+        <span className={classNames(!isLifetime && 'text-gray-900', 'text-gray-600')}>Monthly</span>
         <button
           type="button"
-          onClick={() => setYearly((v) => !v)}
+          onClick={() => setIsLifetime((v) => !v)}
           className="relative w-14 h-7 flex items-center p-0 bg-gray-200 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
-          style={{ backgroundColor: yearly ? 'rgb(245 158 11)' : 'rgb(229 231 235)' }}
-          aria-pressed={yearly}
-          aria-label="Toggle billing cadence"
+          style={{ backgroundColor: isLifetime ? 'rgb(245 158 11)' : 'rgb(229 231 235)' }}
+          aria-pressed={isLifetime}
+          aria-label="Toggle billing type"
         >
           <span
             className="absolute inline-block w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform duration-200 ease-in-out"
-            style={{ transform: yearly ? 'translateX(30px)' : 'translateX(4px)' }}
+            style={{ transform: isLifetime ? 'translateX(30px)' : 'translateX(4px)' }}
           />
         </button>
         <span
-          className={classNames('text-gray-600 flex items-center gap-1', yearly && 'text-gray-900')}
+          className={classNames(
+            'text-gray-600 flex items-center gap-1',
+            isLifetime && 'text-gray-900'
+          )}
         >
-          Yearly
+          Lifetime
           <span className="flex justify-between items-center w-fit bg-green-100 text-green-700 px-2 py-0.5 rounded-md border border-green-200 text-xs font-semibold">
             <Zap className="w-3 h-3 mr-1" />
-            Save {Math.round(YEARLY_DISCOUNT * 100)}%
+            Best Value
           </span>
         </span>
       </div>
@@ -322,7 +335,7 @@ export function BillingSection() {
 
         {/* Pro card */}
         <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 relative">
-          {yearly && (
+          {isLifetime && (
             <span className="absolute -top-3 right-3 text-xs font-semibold rounded-md bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 border-0 shadow-md px-3 py-1 cursor-default">
               Popular
             </span>
@@ -333,23 +346,29 @@ export function BillingSection() {
               <Crown className="w-3 h-3" />
             </span>
           </div>
-          <div className="h-7 text-center text-sm text-gray-700 mb-1 flex items-center gap-1">
-            {yearly ? (
+          <div className="mb-3 flex items-center gap-2 flex-wrap">
+            {isLifetime ? (
               <>
-                <span className="text-gray-400 line-through">{formatCurrency(MONTHLY_PRICE)}</span>
                 <span className="text-gray-900 text-xl font-semibold">
-                  {formatCurrencyPerMonth(monthlyFromYearly)}
+                  {formatCurrency(LIFETIME_PRICE)}
                 </span>
-                <span className="text-gray-500">/ month</span>
+                <span className="text-gray-500 text-sm">one-time</span>
               </>
             ) : (
               <>
-                <span className="text-gray-900 font-semibold">{formatCurrency(MONTHLY_PRICE)}</span>
-                <span className="text-gray-500">/ month</span>
+                <span className="text-gray-400 line-through text-base">{formatCurrency(5)}</span>
+                <span className="text-gray-900 text-xl font-semibold">{formatCurrency(2.99)}</span>
+                <span className="text-gray-500 text-sm">/ month</span>
               </>
             )}
+            {/* Early Access Badge */}
+            <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-amber-100 border border-amber-200 rounded-md">
+              <Sparkles className="w-3 h-3 text-amber-600" />
+              <span className="text-[11px] font-medium text-amber-900">Early Access</span>
+            </div>
           </div>
           <div className="text-sm text-gray-600 mb-4">Advanced features for power users</div>
+
           <button
             className="w-full text-sm px-4 py-2 mb-4 rounded-lg bg-amber-600 text-white hover:bg-amber-700 shadow inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleUpgrade}
@@ -359,19 +378,8 @@ export function BillingSection() {
             {loading ? 'Loading...' : 'Upgrade to Pro'}
           </button>
 
-          {/* Early Access Badge */}
-          <div className="mb-3 px-3 py-2 bg-amber-100 border border-amber-200 rounded-lg">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-amber-900">
-              <Sparkles className="w-3.5 h-3.5" />
-              Early Access Pricing
-            </div>
-            <p className="text-[11px] text-amber-700 mt-0.5">
-              Lock in this price before AI features launch in Q1 2025
-            </p>
-          </div>
-
           <ul className="space-y-2 text-sm">
-            {PLAN_FEATURES.pro.map((f, i) => (
+            {PLAN_FEATURES[isLifetime ? 'lifetime' : 'pro'].map((f, i) => (
               <li key={i} className="flex items-center gap-2 text-gray-900">
                 <f.icon className="w-4 h-4 text-amber-600" />
                 <span>{f.text}</span>
