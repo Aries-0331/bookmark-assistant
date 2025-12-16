@@ -17,9 +17,11 @@ model User {
   updatedAt     DateTime @updatedAt
 
   // --- 2. Payment Status (Paddle) ---
-  plan             String   @default("free") // "free", "pro"
-  paddleCustomerId String?  @unique
-  licenseKey       String?
+  plan                  String   @default("free") // "free", "pro"
+  paddleCustomerId      String?  @unique
+  paddleSubscriptionId  String?  @unique // For monthly subscriptions only
+  purchaseType          String?  // "monthly" or "lifetime"
+  licenseKey            String?
 
   // --- 3. Notion Identity (Linked via OAuth) ---
   notionUserId      String?  @unique

@@ -29,7 +29,7 @@ export async function openPaddleCheckout(options: OpenCheckoutOptions): Promise<
   try {
     const serverUrl = import.meta.env.VITE_OAUTH_SERVER_URL || 'http://localhost:3000';
 
-    console.log('🚀 Requesting Paddle checkout URL from server...');
+    console.log('🚀 Requesting Paddle checkout URL from server:', serverUrl);
 
     // Request checkout URL from server
     const response = await fetch(`${serverUrl}/api/paddle/checkout-url`, {

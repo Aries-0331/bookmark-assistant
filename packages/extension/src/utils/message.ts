@@ -21,6 +21,11 @@ export type MessageMap = {
     res: { success: boolean; message?: string; error?: string };
   };
   GET_PORTAL_LINK: { req: {}; res: { success: boolean; url?: string; error?: string } };
+  CANCEL_SUBSCRIPTION: { req: {}; res: { success: boolean; error?: string } };
+  GET_SUBSCRIPTION_INFO: {
+    req: {};
+    res: { success: boolean; nextBillingDate?: string; status?: string; error?: string };
+  };
   SCHEDULE_AUTO_SYNC: {
     req: { enabled: boolean; intervalHours: number };
     res: { success: boolean; error?: string };
@@ -41,6 +46,8 @@ export const Messages: { [K in MessageType]: K } = {
   LOGOUT: 'LOGOUT',
   RESTORE_PURCHASE: 'RESTORE_PURCHASE',
   GET_PORTAL_LINK: 'GET_PORTAL_LINK',
+  CANCEL_SUBSCRIPTION: 'CANCEL_SUBSCRIPTION',
+  GET_SUBSCRIPTION_INFO: 'GET_SUBSCRIPTION_INFO',
   SCHEDULE_AUTO_SYNC: 'SCHEDULE_AUTO_SYNC',
 };
 

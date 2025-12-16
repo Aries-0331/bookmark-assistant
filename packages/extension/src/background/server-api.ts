@@ -217,6 +217,25 @@ class ServerAPIClient {
     });
   }
 
+  async cancelSubscription(): Promise<{ success: boolean; error?: string }> {
+    return await this.makeRequest<any>('/api/paddle/cancel-subscription', {
+      method: 'POST',
+      timeoutMs: 10000,
+    });
+  }
+
+  async getSubscriptionInfo(): Promise<{
+    success: boolean;
+    nextBillingDate?: string;
+    status?: string;
+    error?: string;
+  }> {
+    return await this.makeRequest<any>('/api/paddle/subscription-info', {
+      method: 'GET',
+      timeoutMs: 10000,
+    });
+  }
+
   // 🚪 Logout
   async logout(): Promise<void> {
     try {

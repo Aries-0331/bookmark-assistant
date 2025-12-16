@@ -101,7 +101,71 @@ router.post('/webhooks/paddle', async (req: Request, res: Response) => {
 
     console.log(`📥 Webhook: ${event.event_type}`, event.event_id);
 
-    // Only care about subscription changes for now
+    // Handle transaction.completed for lifetime purchases
+    if (event.event_type === 'transaction.completed') {
+      const data = event.data;
+      const customData = data.custom_data as PaddleCustomData | undefined;
+      const internalUserId = customData?.userId;
+      const email = customData?.userEmail;
+
+      console.log('🎉 Transaction completed (likely lifetime purchase):', {
+        transactionId: data.id,
+        customerId: data.customer_id,
+        userId: internalUserId,
+        email,
+      });
+
+      if (internalUserId) {
+        try {
+          const existingWithCustomer = await prisma.user.findFirst({
+            where: {
+              paddleCustomerId: data.customer_id,
+              NOT: { id: internalUserId },
+            },
+            select: { id: true },
+          });
+
+          if (existingWithCustomer) {
+            await prisma.user.update({
+              where: { id: existingWithCustomer.id },
+              data: { paddleCustomerId: null },
+            });
+          }
+
+          await prisma.user.update({
+            where: { id: internalUserId },
+            data: {
+              plan: 'pro',
+              paddleCustomerId: data.customer_id,
+              purchaseType: 'lifetime',
+            },
+          });
+          console.log(`✅ Activated lifetime Pro for user ${internalUserId}`);
+        } catch (e) {
+          console.warn(`⚠️ Failed to update user ${internalUserId} from transaction:`, e);
+        }
+      } else if (email) {
+        const licenseKey = crypto.randomUUID();
+        await prisma.user.upsert({
+          where: { email },
+          create: {
+            email,
+            plan: 'pro',
+            paddleCustomerId: data.customer_id,
+            purchaseType: 'lifetime',
+            licenseKey,
+          },
+          update: {
+            plan: 'pro',
+            paddleCustomerId: data.customer_id,
+            purchaseType: 'lifetime',
+          },
+        });
+        console.log(`✅ Activated lifetime Pro for email ${email}`);
+      }
+    }
+
+    // Handle subscription lifecycle events for monthly subscriptions
     if (
       [
         'subscription.created',
@@ -158,6 +222,8 @@ router.post('/webhooks/paddle', async (req: Request, res: Response) => {
             data: {
               plan: newPlan,
               paddleCustomerId: data.customer_id,
+              paddleSubscriptionId: data.subscription_id || data.id,
+              purchaseType: data.subscription_id ? 'monthly' : undefined,
             },
           });
           console.log(`✅ Updated user ${internalUserId} to ${newPlan} via webhook (by userId)`);
@@ -180,6 +246,8 @@ router.post('/webhooks/paddle', async (req: Request, res: Response) => {
               where: { id: userByPaddleId.id },
               data: {
                 plan: newPlan,
+                paddleSubscriptionId: data.subscription_id || data.id,
+                purchaseType: data.subscription_id ? 'monthly' : undefined,
               },
             });
             console.log(
@@ -199,12 +267,16 @@ router.post('/webhooks/paddle', async (req: Request, res: Response) => {
               email,
               plan: newPlan,
               paddleCustomerId: data.customer_id,
+              paddleSubscriptionId: data.subscription_id || data.id,
+              purchaseType: data.subscription_id ? 'monthly' : undefined,
               licenseKey,
               // notionUserId is NULL initially
             },
             update: {
               plan: newPlan,
               paddleCustomerId: data.customer_id,
+              paddleSubscriptionId: data.subscription_id || data.id,
+              purchaseType: data.subscription_id ? 'monthly' : undefined,
             },
           });
           console.log(`✅ Upserted user ${email} to ${newPlan} via webhook (by email)`);
@@ -238,32 +310,58 @@ router.post(
     try {
       const userId = req.user!.userId;
 
-      // Get user's Paddle Customer ID
+      // Get user's subscription info
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { paddleCustomerId: true, email: true },
+        select: {
+          paddleCustomerId: true,
+          paddleSubscriptionId: true,
+          purchaseType: true,
+          email: true,
+          plan: true,
+        },
       });
 
-      if (!user?.paddleCustomerId) {
+      if (!user || user.plan !== 'pro') {
         return res.status(404).json({
           success: false,
           error: 'No active subscription found',
-          message: 'Could not find a linked Paddle customer ID.',
+          message: 'You need an active Pro subscription to access the management portal.',
         });
       }
 
-      // Create a portal session
-      // Note: Ensure "Customer Portal" is enabled in Paddle Dashboard > Checkout > Customer Portal
+      // Lifetime purchases don't have subscriptions to manage
+      if (user.purchaseType === 'lifetime') {
+        return res.status(400).json({
+          success: false,
+          error: 'Not applicable for lifetime purchases',
+          message: 'Lifetime purchases cannot be managed. Contact support for refund requests.',
+        });
+      }
+
+      // Monthly subscriptions require subscription ID
+      if (!user.paddleSubscriptionId) {
+        return res.status(404).json({
+          success: false,
+          error: 'Subscription ID not found',
+          message: 'Your subscription data is incomplete. Please contact support.',
+        });
+      }
+
+      // Create portal session with correct subscription ID
       try {
-        const portalSession = await paddle.customerPortalSessions.create(user.paddleCustomerId, [
-          user.paddleCustomerId,
+        const portalSession = await paddle.customerPortalSessions.create(user.paddleCustomerId!, [
+          user.paddleSubscriptionId,
         ]);
 
         if (!portalSession?.urls?.general) {
           throw new Error('No portal URL returned from Paddle');
         }
 
-        auditLog('portal_session_created', userId, { customerId: user.paddleCustomerId });
+        auditLog('portal_session_created', userId, {
+          customerId: user.paddleCustomerId,
+          subscriptionId: user.paddleSubscriptionId,
+        });
 
         res.json({
           success: true,
@@ -271,8 +369,6 @@ router.post(
         });
       } catch (paddleError: any) {
         console.error('Paddle Portal Error:', paddleError);
-        // Fallback: If portal creation fails (e.g. not enabled), return a helpful error
-        // or a generic link if available.
         return res.status(500).json({
           success: false,
           error: 'Portal unavailable',
@@ -285,6 +381,155 @@ router.post(
         success: false,
         error: 'Internal Server Error',
         message: 'Failed to generate management link',
+      });
+    }
+  }
+);
+
+/**
+ * Cancel Subscription
+ * Cancel user's monthly subscription (effective at end of billing period)
+ */
+router.post(
+  '/cancel-subscription',
+  validateSession,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+
+      // Get user's subscription info
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          paddleSubscriptionId: true,
+          purchaseType: true,
+          plan: true,
+        },
+      });
+
+      if (!user || user.plan !== 'pro') {
+        return res.status(404).json({
+          success: false,
+          error: 'No active subscription found',
+        });
+      }
+
+      if (user.purchaseType === 'lifetime') {
+        return res.status(400).json({
+          success: false,
+          error: 'Cannot cancel lifetime purchase',
+        });
+      }
+
+      if (!user.paddleSubscriptionId) {
+        return res.status(404).json({
+          success: false,
+          error: 'Subscription ID not found',
+        });
+      }
+
+      try {
+        // Cancel subscription effective at end of billing period
+        await paddle.subscriptions.cancel(user.paddleSubscriptionId, {
+          effectiveFrom: 'next_billing_period',
+        });
+
+        auditLog('subscription_cancelled', userId, {
+          subscriptionId: user.paddleSubscriptionId,
+          effectiveFrom: 'next_billing_period',
+        });
+
+        res.json({
+          success: true,
+          message: 'Subscription will be cancelled at the end of the current billing period',
+        });
+      } catch (paddleError: any) {
+        console.error('Paddle Cancel Error:', paddleError);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to cancel subscription',
+        });
+      }
+    } catch (error) {
+      console.error('Cancel Subscription Error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal Server Error',
+      });
+    }
+  }
+);
+
+/**
+ * Get Subscription Info
+ * Retrieve subscription details including next billing date
+ */
+router.get(
+  '/subscription-info',
+  validateSession,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          paddleSubscriptionId: true,
+          purchaseType: true,
+          plan: true,
+        },
+      });
+
+      if (!user || user.plan !== 'pro') {
+        return res.status(404).json({
+          success: false,
+          error: 'No active subscription found',
+        });
+      }
+
+      if (user.purchaseType === 'lifetime') {
+        return res.json({
+          success: true,
+          status: 'lifetime',
+          nextBillingDate: null,
+        });
+      }
+
+      if (!user.paddleSubscriptionId) {
+        return res.status(404).json({
+          success: false,
+          error: 'Subscription ID not found',
+        });
+      }
+
+      try {
+        const subscription = await paddle.subscriptions.get(user.paddleSubscriptionId);
+
+        const nextBillingDate = subscription.nextBilledAt
+          ? new Date(subscription.nextBilledAt).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })
+          : null;
+
+        res.json({
+          success: true,
+          status: subscription.status,
+          nextBillingDate,
+        });
+      } catch (paddleError: any) {
+        console.error('Paddle Get Subscription Error:', paddleError);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to get subscription info',
+        });
+      }
+    } catch (error) {
+      console.error('Get Subscription Info Error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal Server Error',
       });
     }
   }

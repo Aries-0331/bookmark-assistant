@@ -1,4 +1,4 @@
-import { LayoutGrid, Info, CircleDollarSign, HelpCircle, BookOpen } from 'lucide-react';
+import { LayoutGrid, Info, CircleDollarSign, HelpCircle } from 'lucide-react';
 import { RouteId } from '../router';
 
 type Item = { id: RouteId; label: string; icon: JSX.Element };
@@ -6,7 +6,7 @@ type Item = { id: RouteId; label: string; icon: JSX.Element };
 const items: Item[] = [
   { id: 'general', label: 'General', icon: <LayoutGrid className="w-4 h-4" /> },
   { id: 'billing', label: 'Billing & Plan', icon: <CircleDollarSign className="w-4 h-4" /> },
-  { id: 'tutorials', label: 'Tutorials', icon: <BookOpen className="w-4 h-4" /> },
+  // { id: 'tutorials', label: 'Tutorials', icon: <BookOpen className="w-4 h-4" /> },
   { id: 'faq', label: 'FAQ', icon: <HelpCircle className="w-4 h-4" /> },
   { id: 'about', label: 'About', icon: <Info className="w-4 h-4" /> },
 ];

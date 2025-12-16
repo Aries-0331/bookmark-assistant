@@ -6,7 +6,6 @@ import {
   Bookmark as BookmarkIcon,
   Mail,
   CheckCircle,
-  ExternalLink,
   CreditCard,
   Calendar,
   User,
@@ -68,7 +67,8 @@ const PLAN_FEATURES: Record<'free' | 'pro' | 'lifetime', FeatureItem[]> = {
 export function BillingSection() {
   const [isLifetime, setIsLifetime] = useState(false); // false = monthly, true = lifetime
   const [loading, setLoading] = useState(false);
-  const { isPro, getPricing, userId, userEmail, refreshEntitlements } = useAppStore();
+  const [nextBillingDate, setNextBillingDate] = useState<string | null>(null);
+  const { isPro, getPricing, userId, userEmail, refreshEntitlements, purchaseType } = useAppStore();
   const { lifetime: LIFETIME_PRICE } = getPricing();
   const { show: showToast } = useToast();
 
@@ -109,6 +109,24 @@ export function BillingSection() {
     }
   }, [refreshEntitlements, showToast]);
 
+  // Fetch subscription info for monthly Pro users
+  useEffect(() => {
+    if (isPro && purchaseType === 'monthly') {
+      const fetchSubscriptionInfo = async () => {
+        try {
+          const res = await sendMessage({ type: Messages.GET_SUBSCRIPTION_INFO });
+          if (res.success && res.nextBillingDate) {
+            setNextBillingDate(res.nextBillingDate);
+          }
+        } catch (error) {
+          console.error('❌ Failed to fetch subscription info:', error);
+        }
+      };
+
+      fetchSubscriptionInfo();
+    }
+  }, [isPro, purchaseType]);
+
   const handleUpgrade = async () => {
     try {
       setLoading(true);
@@ -132,29 +150,42 @@ export function BillingSection() {
     }
   };
 
-  const handleManage = async () => {
+  const handleCancelSubscription = async () => {
     try {
-      setLoading(true);
-      const res = await sendMessage({ type: Messages.GET_PORTAL_LINK });
-      if (res.success && res.url) {
-        window.open(res.url, '_blank', 'noopener');
-      } else {
-        // Fallback to generic portal or error
-        const base = (
-          import.meta.env.VITE_BILLING_URL ||
-          import.meta.env.VITE_OAUTH_SERVER_URL ||
-          ''
-        ).replace(/\/$/, '');
-        const manageUrl = base
-          ? `${base}/billing/portal`
-          : 'https://github.com/Aries-0331/bookmarks_to_notion#billing';
+      // Show confirmation dialog
+      const billingDate = nextBillingDate || 'the end of your current billing period';
+      const confirmed = window.confirm(
+        `Are you sure you want to cancel your subscription?\n\n` +
+          `You will retain access until ${billingDate}.\n\n` +
+          `After that, your account will revert to the Free plan.`
+      );
 
-        console.warn('⚠️ Could not get specific portal link, using fallback:', res.error);
-        window.open(manageUrl, '_blank', 'noopener');
+      if (!confirmed) return;
+
+      setLoading(true);
+      const res = await sendMessage({ type: Messages.CANCEL_SUBSCRIPTION });
+
+      if (res.success) {
+        showToast({
+          title: '✓ Subscription Cancelled',
+          description: `You'll have access until ${billingDate}`,
+          variant: 'success',
+          duration: 5000,
+        });
+        // Refresh to update UI
+        await refreshEntitlements();
+      } else {
+        throw new Error(res.error || 'Failed to cancel subscription');
       }
     } catch (error) {
-      console.error('❌ Failed to open portal:', error);
-      alert('Failed to open subscription management. Please try again later.');
+      console.error('❌ Failed to cancel subscription:', error);
+      showToast({
+        title: '✗ Cancellation Failed',
+        description:
+          error instanceof Error ? error.message : 'Please try again or contact support.',
+        variant: 'error',
+        duration: 5000,
+      });
     } finally {
       setLoading(false);
     }
@@ -214,18 +245,19 @@ export function BillingSection() {
               <div className="text-xs text-gray-500 font-medium uppercase tracking-wider flex items-center gap-1">
                 <CreditCard className="w-3 h-3" /> Current Plan
               </div>
-              <div className="text-gray-900 font-medium">Pro (Unlimited)</div>
+              <div className="text-gray-900 font-medium">
+                {purchaseType === 'lifetime' ? 'Pro (Lifetime)' : 'Pro (Monthly)'}
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <div className="text-xs text-gray-500 font-medium uppercase tracking-wider flex items-center gap-1">
-                <Calendar className="w-3 h-3" /> Next Billing Date
+            {purchaseType === 'monthly' && (
+              <div className="space-y-1">
+                <div className="text-xs text-gray-500 font-medium uppercase tracking-wider flex items-center gap-1">
+                  <Calendar className="w-3 h-3" /> Next Billing Date
+                </div>
+                <div className="text-gray-900 font-medium">{nextBillingDate || 'Loading...'}</div>
               </div>
-              <div className="text-gray-900 font-medium">
-                {/* Placeholder as we don't have this data yet */}
-                Managed via Paddle
-              </div>
-            </div>
+            )}
 
             <div className="space-y-1 md:col-span-2">
               <div className="text-xs text-gray-500 font-medium uppercase tracking-wider flex items-center gap-1">
@@ -251,21 +283,42 @@ export function BillingSection() {
           </div>
 
           {/* Actions */}
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <button
-              onClick={handleManage}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm"
-            >
-              <ExternalLink className="w-4 h-4" />
-              Manage Subscription
-            </button>
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+            {purchaseType === 'monthly' ? (
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <button
+                  onClick={handleCancelSubscription}
+                  disabled={loading}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-red-300 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 hover:border-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <AlertCircle className="w-4 h-4" />
+                  {loading ? 'Cancelling...' : 'Cancel Subscription'}
+                </button>
 
-            <button
-              onClick={handleRefund}
-              className="text-[10px] text-gray-400 hover:text-gray-600 underline decoration-dotted"
-            >
-              Refund Policy & Request
-            </button>
+                <button
+                  onClick={handleRefund}
+                  className="text-[10px] text-gray-400 hover:text-gray-600 underline decoration-dotted"
+                >
+                  Refund Policy & Request
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-3 py-2">
+                <div className="flex items-center gap-2 text-base font-medium text-gray-800">
+                  <Crown className="w-5 h-5 text-amber-500" />
+                  <span>You are a Lifetime Pro member</span>
+                </div>
+                <p className="text-sm text-gray-600 text-center">
+                  Thank you for your support! Enjoy unlimited access forever.
+                </p>
+                <button
+                  onClick={handleRefund}
+                  className="mt-2 text-[10px] text-gray-400 hover:text-gray-600 underline decoration-dotted"
+                >
+                  Refund Policy & Request
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </SectionCard>

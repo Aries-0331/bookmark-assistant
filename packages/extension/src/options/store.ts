@@ -23,6 +23,7 @@ export type AppState = {
   bookmarkCount: number;
   lastSync: string;
   isPro: boolean;
+  purchaseType?: 'monthly' | 'lifetime';
   setIsConnecting: (v: boolean) => void;
   setIsSyncing: (v: boolean) => void;
 
@@ -172,10 +173,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       if (response.success && response.profile) {
         const isPro = response.profile.isPro === true;
-        set({ isPro });
+        const purchaseType = response.profile.purchaseType as 'monthly' | 'lifetime' | undefined;
+        set({ isPro, purchaseType });
         // Also persist to storage
-        chrome.storage.local.set({ is_pro: isPro });
-        console.log('✅ User profile refreshed:', { isPro });
+        chrome.storage.local.set({ is_pro: isPro, purchase_type: purchaseType });
+        console.log('✅ User profile refreshed:', { isPro, purchaseType });
       }
     } catch (error) {
       console.error('❌ Failed to refresh user profile:', error);

@@ -206,6 +206,29 @@ addMessageListener({
       return { success: false, error: String(err) } as const;
     }
   },
+  [Messages.CANCEL_SUBSCRIPTION]: async () => {
+    try {
+      const res = await serverAPI.cancelSubscription();
+      return { success: res.success, error: res.error } as const;
+    } catch (err) {
+      console.error('❌ Failed to cancel subscription:', err);
+      return { success: false, error: String(err) } as const;
+    }
+  },
+  [Messages.GET_SUBSCRIPTION_INFO]: async () => {
+    try {
+      const res = await serverAPI.getSubscriptionInfo();
+      return {
+        success: res.success,
+        nextBillingDate: res.nextBillingDate,
+        status: res.status,
+        error: res.error,
+      } as const;
+    } catch (err) {
+      console.error('❌ Failed to get subscription info:', err);
+      return { success: false, error: String(err) } as const;
+    }
+  },
   [Messages.LOGOUT]: async () => {
     try {
       await serverAPI.logout();
