@@ -22,6 +22,11 @@ export default defineConfig({
             if (existsSync(optionsSrc)) {
               copyFileSync(optionsSrc, optionsDst);
             }
+            const popupSrc = resolve(distDir, 'src/popup/popup.html');
+            const popupDst = resolve(distDir, 'popup.html');
+            if (existsSync(popupSrc)) {
+              copyFileSync(popupSrc, popupDst);
+            }
             // Ensure assets are available in dist; copy from src as they are referenced in manifest
             const assetsDir = resolve('src/assets');
             if (existsSync(assetsDir)) {

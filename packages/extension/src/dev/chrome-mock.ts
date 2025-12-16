@@ -2,7 +2,6 @@
 // This file runs in the browser before your popup entry during `vite` dev
 // It provides enough surface for UI to render without real extension APIs.
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const listeners: Array<(changes: any, areaName: string) => void> = [];
 
 function emitStorageChange(changes: Record<string, unknown>, areaName = 'local') {
@@ -17,7 +16,6 @@ const storageData = {
   notion_token: 'dev-notion',
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const chromeMock: any = {
   bookmarks: {
     async getTree() {
@@ -92,7 +90,7 @@ const chromeMock: any = {
 };
 
 // Attach to window
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 (window as any).chrome = chromeMock;
 
 export {};
