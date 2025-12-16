@@ -86,7 +86,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     // Check plan limits
     const isPro = userData.plan === 'pro';
     const syncLimit = isPro ? config.limits.pro.syncBatchLimit : config.limits.free.syncBatchLimit;
-    
+
     if (bookmarks.length > syncLimit) {
       return res.status(403).json({
         error: 'Sync Limit Exceeded',

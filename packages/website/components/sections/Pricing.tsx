@@ -1,10 +1,18 @@
 'use client';
 import * as React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardBody } from '@/components/ui/card';
 import { SectionEyebrow } from '@/components/ui/SectionEyebrow';
-import { Crown, Sparkle, Sparkles, Check } from 'lucide-react';
+import {
+  Crown,
+  Sparkles,
+  Check,
+  Zap,
+  RefreshCw,
+  Timer,
+  Tags,
+  FileText,
+  Gift,
+  AlertCircle,
+} from 'lucide-react';
 import { initializePaddle, Paddle } from '@paddle/paddle-js';
 
 // Singleton Paddle instance
@@ -67,14 +75,13 @@ export function Pricing() {
   const [paddleReady, setPaddleReady] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [pricing, setPricing] = React.useState({
-    monthly: 5,
-    lifetime: 99,
+    monthly: 2.99,
+    lifetime: 29.9,
     currencySymbol: '$',
   });
 
   const displayPrice = billing === 'lifetime' ? pricing.lifetime : pricing.monthly;
   const priceLabel = billing === 'lifetime' ? 'one-time' : '/month';
-  const savingsAmount = pricing.monthly * 12 - pricing.lifetime;
 
   // Initialize Paddle and fetch pricing
   React.useEffect(() => {
@@ -198,129 +205,185 @@ export function Pricing() {
             Start free, upgrade when you need more power.
           </p>
 
-          <div className="inline-flex items-center gap-3 bg-white border border-gray-200 rounded-lg p-1 mb-12">
-            <button
-              className={`px-4 py-2 rounded-md text-base transition ${billing === 'monthly' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900'}`}
-              onClick={() => setBilling('monthly')}
+          <div className="flex items-center justify-center gap-2 mb-4 transform translate-x-12">
+            <span
+              className={`${!billing || billing === 'monthly' ? 'text-gray-900' : 'text-gray-600'}`}
             >
               Monthly
-            </button>
+            </span>
             <button
-              className={`px-4 py-2 rounded-md text-base transition flex items-center gap-2 ${billing === 'lifetime' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}
-              onClick={() => setBilling('lifetime')}
+              type="button"
+              onClick={() => setBilling(billing === 'monthly' ? 'lifetime' : 'monthly')}
+              className="relative w-14 h-7 flex items-center p-0 bg-gray-200 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+              style={{
+                backgroundColor: billing === 'lifetime' ? 'rgb(245 158 11)' : 'rgb(229 231 235)',
+              }}
+              aria-pressed={billing === 'lifetime'}
+              aria-label="Toggle billing type"
             >
-              🔥 Lifetime{' '}
-              {savingsAmount > 0 && (
-                <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                  Save ${savingsAmount.toFixed(0)}
-                </span>
-              )}
+              <span
+                className="absolute inline-block w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform duration-200 ease-in-out"
+                style={{
+                  transform: billing === 'lifetime' ? 'translateX(30px)' : 'translateX(4px)',
+                }}
+              />
             </button>
+            <span
+              className={`flex items-center gap-1 ${billing === 'lifetime' ? 'text-gray-900' : 'text-gray-600'}`}
+            >
+              Lifetime
+              <span className="flex justify-between items-center w-fit bg-green-100 text-green-700 px-2 py-0.5 rounded-md border border-green-200 text-xs font-semibold">
+                <Zap className="w-3 h-3 mr-1" />
+                Best Value
+              </span>
+            </span>
           </div>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 max-w-5xl mx-auto">
+        <div className="grid gap-5 sm:grid-cols-2 max-w-3xl mx-auto">
           {/* Free */}
-          <Card className="border-2">
-            <CardBody className="p-8">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
-                  <Sparkles className="h-5 w-5 text-gray-500" />
-                </div>
-                <div>
-                  <h3 className="text-gray-900 text-xl font-medium">Free</h3>
-                  <p className="text-sm text-gray-600">For individuals</p>
-                </div>
-              </div>
-              <div className="text-4xl text-gray-900 mb-4">
-                {pricing.currencySymbol}0 <span className="text-base text-gray-600">/month</span>
-              </div>
-              <Button className="w-full mb-6" size="lg">
-                Get Started Free
-              </Button>
-              <ul className="space-y-3">
-                {[
-                  '50 bookmarks per sync',
-                  'Manual sync only',
-                  '24-hour sync interval',
-                  'Basic features',
-                  'Community support',
-                ].map((t) => (
-                  <li key={t} className="flex items-center gap-3">
-                    <span className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center">
-                      <Check className="h-3 w-3 text-gray-600" />
-                    </span>
-                    <span className="text-base text-gray-700">{t}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardBody>
-          </Card>
-
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 flex flex-col">
+            <div className="text-lg font-semibold text-gray-900 mb-1">Free</div>
+            <div className="flex items-center text-sm text-gray-500 mb-1">
+              {pricing.currencySymbol}0<span className="text-gray-400 ml-1">/ month</span>
+            </div>
+            <div className="text-sm text-gray-600 mb-4">Basic bookmark syncing</div>
+            <button
+              className="w-full text-sm px-4 py-2 mb-4 rounded-lg border border-gray-200 text-gray-500 cursor-default"
+              disabled
+            >
+              Current Plan
+            </button>
+            <ul className="space-y-2 text-sm flex-grow">
+              <li className="flex items-center gap-2 text-gray-800">
+                <Check className="w-4 h-4 text-gray-600" />
+                <span>50 bookmarks per sync</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-800">
+                <Check className="w-4 h-4 text-gray-600" />
+                <span>Manual sync only</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-800">
+                <Check className="w-4 h-4 text-gray-600" />
+                <span>24-hour interval</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-800">
+                <Check className="w-4 h-4 text-gray-600" />
+                <span>Community support</span>
+              </li>
+            </ul>
+          </div>
           {/* Pro */}
-          <div className="relative">
-            <Card className="border-2">
-              <CardBody className="p-8">
-                {billing === 'lifetime' && (
-                  <div className="absolute top-4 right-4">
-                    <Badge variant="cta" className="px-2 py-1 text-xs">
-                      🔥 Best Value
-                    </Badge>
-                  </div>
-                )}
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 flex items-center justify-center">
-                    <Crown className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-gray-900 text-xl font-medium">Pro</h3>
-                    <p className="text-sm text-gray-600">For power users</p>
-                  </div>
-                </div>
-                <div className="text-4xl text-gray-900 mb-4">
-                  {pricing.currencySymbol}
-                  {displayPrice} <span className="text-base text-gray-600">{priceLabel}</span>
-                </div>
-                {billing === 'lifetime' && savingsAmount > 0 && (
-                  <div className="text-sm text-green-700 mb-3">
-                    💰 Save {pricing.currencySymbol}
-                    {savingsAmount.toFixed(0)} vs. 1 year of monthly
-                  </div>
-                )}
-                <Button
-                  variant="pro"
-                  className="w-full mb-6"
-                  size="lg"
-                  onClick={handleUpgrade}
-                  disabled={loading || !paddleReady}
-                >
-                  <Crown className="h-4 w-4 mr-2" />
-                  {loading ? 'Loading...' : paddleReady ? 'Upgrade to Pro' : 'Loading Payment...'}
-                </Button>
-                <ul className="space-y-3">
-                  {[
-                    '✨ Unlimited bookmarks per sync',
-                    '🤖 Set & forget auto-sync',
-                    '🚀 6-hour minimum interval',
-                    '💎 Smart fingerprint deduplication',
-                    '🏷️ AI tagging (Q1 2025)',
-                    '📝 AI summaries (Q1 2025)',
-                    '👑 Priority support',
-                  ].map((t) => (
-                    <li key={t} className="flex items-center gap-3">
-                      <span className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center">
-                        <Check className="h-3 w-3 text-amber-600" />
-                      </span>
-                      <span className="text-base text-gray-700">{t}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-6 pt-4 border-t border-gray-100 text-sm text-gray-500 flex items-center gap-2">
-                  <Sparkle size={14} />
-                  <span>Payments are securely processed by Paddle</span>
-                </div>
-              </CardBody>
-            </Card>
+          <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 relative flex flex-col">
+            {billing === 'lifetime' && (
+              <span className="absolute -top-3 right-3 text-xs font-semibold rounded-md bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 border-0 shadow-md px-3 py-1 cursor-default">
+                Popular
+              </span>
+            )}
+            <div className="flex items-center gap-2 mb-1">
+              <div className="text-lg font-semibold text-gray-900">Pro</div>
+              <span className="inline-flex items-center gap-1 text-[11px] bg-amber-500/90 text-white px-1.5 py-0.5 rounded">
+                <Crown className="w-3 h-3" />
+              </span>
+            </div>
+            <div className="mb-3 flex items-center gap-2 flex-wrap">
+              {billing === 'monthly' && (
+                <span className="text-gray-400 line-through text-base">
+                  {pricing.currencySymbol}5
+                </span>
+              )}
+              <span className="text-gray-900 text-xl font-semibold">
+                {pricing.currencySymbol}
+                {displayPrice}
+              </span>
+              <span className="text-gray-500 text-sm">{priceLabel}</span>
+              <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-amber-100 border border-amber-200 rounded-md">
+                <Sparkles className="w-3 h-3 text-amber-600" />
+                <span className="text-[11px] font-medium text-amber-900">Early Access</span>
+              </div>
+            </div>
+            <div className="text-sm text-gray-600 mb-4">Advanced features for power users</div>
+            <button
+              className="w-full text-sm px-4 py-2 mb-4 rounded-lg bg-amber-600 text-white hover:bg-amber-700 shadow inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleUpgrade}
+              disabled={loading || !paddleReady}
+            >
+              <Crown className="w-4 h-4" />
+              {loading ? 'Loading...' : paddleReady ? 'Upgrade to Pro' : 'Loading Payment...'}
+            </button>
+            <ul className="space-y-2 text-sm">
+              {billing === 'lifetime' ? (
+                <>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <Gift className="w-4 h-4 text-amber-600" />
+                    <span>Includes all future Pro updates</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <AlertCircle className="w-4 h-4 text-amber-600" />
+                    <span>Limited to first 500 users</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <Zap className="w-4 h-4 text-amber-600" />
+                    <span>Unlimited bookmarks per sync</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <RefreshCw className="w-4 h-4 text-amber-600" />
+                    <span>Set & forget auto-sync</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <Timer className="w-4 h-4 text-amber-600" />
+                    <span>6-hour minimum interval</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <Sparkles className="w-4 h-4 text-amber-600" />
+                    <span>Smart fingerprint deduplication</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <Tags className="w-4 h-4 text-amber-600" />
+                    <span>AI tagging (coming Q1 2025)</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <FileText className="w-4 h-4 text-amber-600" />
+                    <span>AI summaries (coming Q1 2025)</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <Crown className="w-4 h-4 text-amber-600" />
+                    <span>Priority support</span>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <Zap className="w-4 h-4 text-amber-600" />
+                    <span>Unlimited bookmarks per sync</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <RefreshCw className="w-4 h-4 text-amber-600" />
+                    <span>Set & forget auto-sync</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <Timer className="w-4 h-4 text-amber-600" />
+                    <span>6-hour minimum interval</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <Sparkles className="w-4 h-4 text-amber-600" />
+                    <span>Smart fingerprint deduplication</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <Tags className="w-4 h-4 text-amber-600" />
+                    <span>AI tagging (coming Q1 2025)</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <FileText className="w-4 h-4 text-amber-600" />
+                    <span>AI summaries (coming Q1 2025)</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-900">
+                    <Crown className="w-4 h-4 text-amber-600" />
+                    <span>Priority support</span>
+                  </li>
+                </>
+              )}
+            </ul>
           </div>
         </div>
       </div>
