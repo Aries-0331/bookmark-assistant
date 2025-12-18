@@ -42,6 +42,7 @@ export type AppState = {
   initFromStorage: () => Promise<void>;
   saveSyncSettings: (nextIntervalHours?: number) => Promise<void>;
   refreshEntitlements: () => Promise<void>;
+  refreshConnection: () => Promise<void>;
 
   // Config
   pricing: { monthly: number; lifetime: number };
@@ -103,6 +104,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         is_pro,
         session_token,
         auto_sync,
+        sync_in_progress,
+        is_connecting,
       } = await chrome.storage.local.get([
         'last_sync',
         'sync_interval_hours',
@@ -111,11 +114,19 @@ export const useAppStore = create<AppState>((set, get) => ({
         'is_pro',
         'session_token',
         'auto_sync',
+        'sync_in_progress',
+        'is_connecting',
       ]);
 
       // Load connection state
       if (session_token) {
         set({ isConnected: true });
+      }
+      if (is_connecting) {
+        set({ isConnecting: true });
+      }
+      if (sync_in_progress) {
+        set({ isSyncing: true });
       }
 
       // Load user info
@@ -147,11 +158,32 @@ export const useAppStore = create<AppState>((set, get) => ({
             enabled: true,
             intervalHours: coerced,
           });
-        } catch (err) {
-          console.warn('⚠️ Failed to reschedule auto-sync on init:', err);
+        } catch (error) {
+          console.error('❌ Failed to schedule auto-sync on init:', error);
         }
       }
-    } catch {}
+
+      // Setup storage listener for real-time sync across popup and options page
+      chrome.storage.onChanged.addListener((changes) => {
+        if (changes.session_token) {
+          set({ isConnected: !!changes.session_token.newValue });
+        }
+        if (changes.is_connecting) {
+          set({ isConnecting: !!changes.is_connecting.newValue });
+        }
+        if (changes.sync_in_progress) {
+          set({ isSyncing: !!changes.sync_in_progress.newValue });
+        }
+        if (changes.is_pro) {
+          set({ isPro: !!changes.is_pro.newValue });
+        }
+        if (changes.last_sync) {
+          set({ lastSync: changes.last_sync.newValue || '' });
+        }
+      });
+    } catch (error) {
+      console.error('❌ Failed to initialize from storage:', error);
+    }
   },
 
   fetchPricing: async () => {
@@ -181,6 +213,19 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
     } catch (error) {
       console.error('❌ Failed to refresh user profile:', error);
+    }
+  },
+  refreshConnection: async () => {
+    try {
+      const { session_token } = await chrome.storage.local.get(['session_token']);
+      set({ isConnected: !!session_token });
+      
+      if (session_token) {
+        // Also refresh user profile when connected
+        await get().refreshEntitlements();
+      }
+    } catch (error) {
+      console.error('❌ Failed to refresh connection state:', error);
     }
   },
   saveSyncSettings: async (nextIntervalHours?: number) => {

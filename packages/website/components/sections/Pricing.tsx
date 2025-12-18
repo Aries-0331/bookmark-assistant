@@ -1,5 +1,5 @@
 'use client';
-import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { SectionEyebrow } from '@/components/ui/SectionEyebrow';
 import {
   Crown,
@@ -71,10 +71,10 @@ async function getPaddleInstance(): Promise<Paddle | null> {
 }
 
 export function Pricing() {
-  const [billing, setBilling] = React.useState<'monthly' | 'lifetime'>('lifetime');
-  const [paddleReady, setPaddleReady] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
-  const [pricing, setPricing] = React.useState({
+  const [billing, setBilling] = useState<'monthly' | 'lifetime'>('monthly');
+  const [paddleReady, setPaddleReady] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [pricing, setPricing] = useState({
     monthly: 2.99,
     lifetime: 29.9,
     currencySymbol: '$',
@@ -84,7 +84,7 @@ export function Pricing() {
   const priceLabel = billing === 'lifetime' ? 'one-time' : '/month';
 
   // Initialize Paddle and fetch pricing
-  React.useEffect(() => {
+  useEffect(() => {
     const init = async () => {
       const paddle = await getPaddleInstance();
       if (!paddle) return;

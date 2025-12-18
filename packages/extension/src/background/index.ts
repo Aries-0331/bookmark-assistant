@@ -173,8 +173,17 @@ restoreAutoSync(performBookmarkSync);
 
 addMessageListener({
   [Messages.NOTION_OAUTH]: async () => {
-    const code = await launchNotionOAuth();
-    return await exchangeCodeForToken(code);
+    try {
+      const code = await launchNotionOAuth();
+      const result = await exchangeCodeForToken(code);
+      // Clear connecting state after OAuth completes
+      await chrome.storage.local.set({ is_connecting: false });
+      return result;
+    } catch (error) {
+      // Clear connecting state on error
+      await chrome.storage.local.set({ is_connecting: false });
+      throw error;
+    }
   },
   [Messages.SYNC_ALL_BOOKMARKS]: async () => {
     return await performBookmarkSync();
