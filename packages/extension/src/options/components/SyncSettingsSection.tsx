@@ -1,15 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore, FREE_INTERVAL_HOURS, PRO_MIN_INTERVAL_HOURS } from '../store';
 import { SectionCard } from './SectionCard';
 import { useToast } from '../hook/useToast';
 import { RouteId } from '../router';
 
 export function SyncSettingsSection({ onNavigate }: { onNavigate: (to: RouteId) => void }) {
-  const [value, setValue] = useState<number>(0);
-
   const { show } = useToast();
-  const { isPro, autoSync, setAutoSync, saveSyncSettings } = useAppStore();
+  const { isPro, autoSync, intervalHours, setAutoSync, saveSyncSettings } = useAppStore();
+  const [value, setValue] = useState<number>(intervalHours);
   const minIntervalHours = isPro ? PRO_MIN_INTERVAL_HOURS : FREE_INTERVAL_HOURS;
+
+  // Sync local value with store intervalHours
+  useEffect(() => {
+    setValue(intervalHours);
+  }, [intervalHours]);
 
   const onToggleAuto = async () => {
     const next = !autoSync;

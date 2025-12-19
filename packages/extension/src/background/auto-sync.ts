@@ -6,6 +6,13 @@
  * - Creating/clearing sync alarms based on user settings
  * - Triggering automatic bookmark syncs at configured intervals
  * - Respecting plan limits (free: 24h min, pro: 6h min)
+ *
+ * Storage Keys (Single Source of Truth):
+ * - auto_sync_enabled: Whether auto-sync is active (primary state)
+ * - auto_sync_interval_minutes: Alarm interval in minutes (precise)
+ * - sync_interval_hours: User-friendly interval (UI cache, optional)
+ *
+ * Note: Removed redundant 'auto_sync' key to avoid state desync issues.
  */
 
 const ALARM_NAME = 'bookmarks-auto-sync';

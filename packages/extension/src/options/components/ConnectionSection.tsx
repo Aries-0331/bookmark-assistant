@@ -26,7 +26,7 @@ export function ConnectionSection() {
           description: 'Failed to connect to Notion. Please try again.',
         });
       }
-    } catch (error) {
+    } catch {
       show({
         variant: 'error',
         title: 'Connection Failed',
@@ -49,7 +49,10 @@ export function ConnectionSection() {
     if (!isConnected || isSyncing) return;
 
     try {
-      const result = await sendMessage({ type: Messages.SYNC_ALL_BOOKMARKS }, { timeoutMs: 300_000 });
+      const result = await sendMessage(
+        { type: Messages.SYNC_ALL_BOOKMARKS },
+        { timeoutMs: 300_000 }
+      );
 
       if (!result.success) {
         show({
