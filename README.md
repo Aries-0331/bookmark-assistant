@@ -61,6 +61,7 @@ Bookmark Assistant bridges the gap between your Chrome bookmarks and Notion work
 
 ### **Q1 2025 - Launch & Intelligence** 🚀
 
+- [ ] **Internationalization (i18n)**: Multi-language support (English, 简体中文, 日本語)
 - [ ] **Bookmark Favicon Support**: Display site icons in Notion for better visual recognition
 - [ ] **AI-Powered Tagging**: Automatic category and topic detection using OpenAI
 - [ ] **Smart Summaries**: AI-generated content summaries for quick review
@@ -186,6 +187,20 @@ graph TB
 - Content (main > article > body, max 5000 chars)
 ```
 
+#### **6. Internationalization (i18n)**
+
+- **Chrome Extension**: Native `chrome.i18n` API with `_locales/` directory structure
+- **Supported Languages**: English (default), 简体中文, 日本語 (Q1 2025)
+- **Implementation**: Lightweight `useTranslation()` hook wrapping `chrome.i18n.getMessage()`
+- **Website/Server**: `next-i18next` for landing page and backend
+- **Fallback Strategy**: User preference → Browser language → English
+
+```typescript
+// Usage in React components
+const { t } = useTranslation();
+<Button text={t('action_sync_now')} />
+```
+
 ---
 
 ## 🚀 Quick Start
@@ -240,8 +255,9 @@ graph TB
 ### **Developer Guides**
 
 - [Technical Specification](docs/spec/PAYMENT.md) — Payment and user system
-- [Paddle Integration](docs/spec/PADDLE_INTEGRATION.md) — Payment setup and configuration
-- [Auto-Sync Implementation](docs/spec/AUTO_SYNC.md) — Auto-sync feature details
+- [Paddle Integration](docs/PADDLE_INTEGRATION.md) — Payment setup and configuration
+- [Auto-Sync Implementation](docs/AUTO_SYNC.md) — Auto-sync feature details
+- [Internationalization](docs/INTERNATIONALIZATION.md) — Multi-language support strategy
 - [State Management](docs/STATE_MANAGEMENT.md) — Extension state architecture
 - [Testing Guide](tests/README.md) — Testing infrastructure and examples
 - [Paddle Testing Checklist](docs/TESTING_CHECKLIST.md) — Payment integration testing
@@ -294,6 +310,7 @@ This is a commercial project. The source code is not open source and may not be 
 ### **Q1 2025** 🚀
 
 - [ ] **Chrome Web Store listing** (Public launch)
+- [ ] **Internationalization (i18n)** (English, 简体中文, 日本語)
 - [ ] **Bookmark Favicon support** (Visual recognition)
 - [ ] **AI-powered tagging** (OpenAI integration)
 - [ ] **Smart summaries** (AI-generated content summaries)
