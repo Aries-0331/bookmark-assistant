@@ -1,4 +1,5 @@
-import { Shield, RefreshCcw, Unplug } from 'lucide-react';
+import { Shield, RefreshCcw, Unplug, AlertTriangle } from 'lucide-react';
+import { useState } from 'react';
 import Button from './Button';
 import { SectionCard } from './SectionCard';
 import { useAppStore } from '../store';
@@ -8,6 +9,7 @@ import { useToast } from '../hook/useToast';
 export function ConnectionSection() {
   const { show } = useToast();
   const { isConnecting, isConnected, isSyncing, setIsConnecting } = useAppStore();
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
   const onConnect = async () => {
     setIsConnecting(true);
@@ -36,10 +38,15 @@ export function ConnectionSection() {
       setIsConnecting(false);
     }
   };
+  const handleDisconnectClick = () => {
+    setShowDisconnectConfirm(true);
+  };
+
   const onDisconnect = async () => {
     await sendMessage({ type: Messages.LOGOUT });
+    setShowDisconnectConfirm(false);
     show({
-      variant: 'info',
+      variant: 'success',
       title: 'Disconnected',
       description: 'Your Notion connection has been removed.',
     });
@@ -105,10 +112,10 @@ export function ConnectionSection() {
               />
               <Button
                 className="w-12"
-                onClick={onDisconnect}
-                icon={<Unplug size={16} />}
+                onClick={handleDisconnectClick}
+                icon={<Unplug size={18} />}
                 fullWidth={false}
-                title="Disconnect"
+                title=""
               />
             </div>
           ) : (
@@ -121,6 +128,64 @@ export function ConnectionSection() {
             />
           )}
         </div>
+
+        {/* Confirmation Dialog */}
+        {showDisconnectConfirm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-gray-900">Disconnect from Notion?</h3>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-4">
+                This will remove your Notion workspace connection and clear all local settings.
+              </p>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                <div className="flex items-start gap-2 mb-3">
+                  <span className="text-lg">⚠️</span>
+                  <p className="font-semibold text-blue-900">Important:</p>
+                </div>
+                <ul className="space-y-2 text-sm text-blue-800">
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span>
+                      Your synced bookmarks in Notion will <strong>not</strong> be deleted
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span>Reconnecting will require setting up a new database</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span>You'll need to sync bookmarks again after reconnecting</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  className="flex-1"
+                  onClick={() => setShowDisconnectConfirm(false)}
+                  variant="secondary"
+                  text="Cancel"
+                />
+                <Button
+                  className="flex-1"
+                  onClick={onDisconnect}
+                  variant="destructive"
+                  text="Disconnect"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </SectionCard>
   );

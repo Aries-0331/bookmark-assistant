@@ -12,7 +12,7 @@ type ButtonProps = {
   icon?: React.ReactNode;
   fullWidth?: boolean;
   className?: string;
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'destructive';
   ariaLabel?: string;
   title?: string;
 };
@@ -27,12 +27,20 @@ export default function Button({
   loadingText,
   icon,
   className = '',
+  variant = 'primary',
   ariaLabel,
   title,
 }: ButtonProps) {
   const isDisabled = disabled || isSyncing || isConnecting;
+
+  const variantStyles = {
+    primary: 'bg-gray-900 hover:bg-gray-700 focus-visible:ring-gray-900 text-white',
+    secondary: 'bg-gray-100 hover:bg-gray-200 focus-visible:ring-gray-500 text-gray-900',
+    destructive: 'bg-red-600 hover:bg-red-700 focus-visible:ring-red-600 text-white',
+  };
+
   const base =
-    'h-12 rounded-xl transition-colors bg-gray-900 hover:bg-gray-700 font-medium text-base text-white inline-flex items-center justify-center p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-900';
+    'h-12 rounded-xl transition-colors font-medium text-base inline-flex items-center justify-center p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2';
 
   return (
     <button
@@ -41,7 +49,7 @@ export default function Button({
       disabled={isDisabled}
       aria-busy={isSyncing || isConnecting || undefined}
       aria-label={ariaLabel || text}
-      className={`${className} ${base}`}
+      className={`${className} ${base} ${variantStyles[variant]}`}
       title={title}
     >
       {isSyncing || isConnecting ? (
