@@ -59,26 +59,33 @@ Bookmark Assistant bridges the gap between your Chrome bookmarks and Notion work
 
 ## 🚀 Advanced Features (Roadmap)
 
-### **Phase 1: Intelligence Layer** 🔮
+### **Q1 2025 - Launch & Intelligence** 🚀
 
+- [ ] **Bookmark Favicon Support**: Display site icons in Notion for better visual recognition
 - [ ] **AI-Powered Tagging**: Automatic category and topic detection using OpenAI
 - [ ] **Smart Summaries**: AI-generated content summaries for quick review
-- [ ] **Tag Templates**: Custom tagging rules and patterns
-- [ ] **Duplicate Detection**: Identify and merge similar bookmarks
+- [ ] **Chrome Web Store Launch**: Public release and user acquisition
 
-### **Phase 2: Workflow Automation** 🔧
+### **Q2 2025 - Organization & Efficiency** 📁
 
-- [ ] **Folder Mapping**: Sync Chrome folders to Notion databases
+- [ ] **Folder Mapping**: Sync Chrome folders to corresponding Notion databases
+- [ ] **Multi-Database Support**: Route bookmarks to different Notion databases by rules
 - [ ] **Bulk Operations**: Edit, delete, or move multiple bookmarks at once
+- [ ] **Enhanced Search**: Full-text search across bookmark content
+
+### **Q3 2025 - Intelligence & Insights** 🔮
+
+- [ ] **Custom Tag Templates**: User-defined tagging rules and patterns
+- [ ] **Duplicate Detection**: Identify and merge similar bookmarks with AI
 - [ ] **Export/Import**: Backup and restore bookmark collections
-- [ ] **Multi-Database Support**: Route bookmarks to different Notion databases
+- [ ] **Analytics Dashboard**: Track sync frequency, bookmark growth, tag distribution
 
-### **Phase 3: Analytics & Insights** 📊
+### **Q4 2025 - Expansion & Enterprise** 🌍
 
-- [ ] **Usage Statistics**: Track sync frequency, bookmark growth, tag distribution
-- [ ] **Content Analysis**: Identify trending topics and reading patterns
-- [ ] **Search Enhancement**: Full-text search across bookmark content
-- [ ] **Recommendations**: Suggest related bookmarks and tags
+- [ ] **Cross-Browser Support**: Firefox and Safari extension ports
+- [ ] **Team Collaboration**: Shared workspaces and permissions
+- [ ] **Enterprise Tier**: SSO, admin controls, audit logs
+- [ ] **Mobile Companion**: iOS/Android apps for on-the-go access
 
 ---
 
@@ -274,7 +281,7 @@ This is a commercial project. The source code is not open source and may not be 
 
 ## 🗺️ Development Roadmap
 
-### **Q1 2025**
+### **Q4 2024** ✅
 
 - [x] Core sync functionality
 - [x] OAuth integration
@@ -283,29 +290,39 @@ This is a commercial project. The source code is not open source and may not be 
 - [x] Paddle payment integration
 - [x] Auto-sync with catch-up strategy
 - [x] Comprehensive test infrastructure
-- [ ] Chrome Web Store listing
-- [ ] Public beta launch
+
+### **Q1 2025** 🚀
+
+- [ ] **Chrome Web Store listing** (Public launch)
+- [ ] **Bookmark Favicon support** (Visual recognition)
+- [ ] **AI-powered tagging** (OpenAI integration)
+- [ ] **Smart summaries** (AI-generated content summaries)
+- [ ] User onboarding improvements
+- [ ] Performance optimization
 
 ### **Q2 2025**
 
-- [ ] AI-powered tagging (OpenAI integration)
-- [ ] Smart summaries
-- [ ] Folder-to-database mapping
-- [ ] Analytics dashboard
+- [ ] **Folder-to-database mapping** (Chrome folders → Notion DBs)
+- [ ] **Multi-database support** (Route bookmarks by rules)
+- [ ] **Bulk operations UI** (Edit/delete/move multiple bookmarks)
+- [ ] Enhanced error handling
+- [ ] Analytics dashboard (basic)
 
 ### **Q3 2025**
 
-- [ ] Multi-database support
-- [ ] Bulk operations UI
-- [ ] Export/import bookmarks
-- [ ] Mobile companion app (iOS/Android)
+- [ ] **Custom tag templates** (User-defined tagging rules)
+- [ ] **Duplicate detection** (Smart merge suggestions)
+- [ ] **Export/import bookmarks** (Data portability)
+- [ ] Search enhancement (Full-text search)
+- [ ] Mobile companion app (iOS/Android) - Research phase
 
 ### **Q4 2025**
 
 - [ ] Firefox extension port
 - [ ] Safari extension port
-- [ ] Team collaboration features
-- [ ] Enterprise tier
+- [ ] Team collaboration features (Shared workspaces)
+- [ ] Enterprise tier (SSO, admin controls)
+- [ ] Advanced analytics (Content insights)
 
 ---
 
