@@ -1,76 +1,47 @@
 import { AlertCircle, CheckCircle, Crown, Sparkles, RefreshCw, Settings, Link } from 'lucide-react';
+import { useEffect } from 'react';
 import { useAppStore } from '../options/store';
 import { sendMessage, Messages } from '../utils/message';
 import { relativeTime } from '../utils/common';
-import { useState, useEffect } from 'react';
 
 export default function Popup() {
-  const { isConnected, lastSync, bookmarkCount, isPro, isSyncing, setIsSyncing, refreshConnection } =
-    useAppStore();
-  const [syncing, setSyncing] = useState(false);
-  const [connecting, setConnecting] = useState(false);
+  const {
+    isConnected,
+    lastSync,
+    bookmarkCount,
+    isPro,
+    isSyncing,
+    isConnecting,
+    refreshConnection,
+  } = useAppStore();
 
-  // Load connecting state from storage on mount
   useEffect(() => {
     const loadState = async () => {
-      const { is_connecting, sync_in_progress } = await chrome.storage.local.get([
-        'is_connecting',
-        'sync_in_progress',
-      ]);
-      if (is_connecting) {
-        setConnecting(true);
-      }
-      if (sync_in_progress) {
-        setSyncing(true);
-        setIsSyncing(true);
+      if (isConnected) {
+        await refreshConnection();
       }
     };
     loadState();
-
-    // Listen for storage changes (OAuth completion)
-    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
-      if (changes.is_connecting?.newValue === false) {
-        setConnecting(false);
-        // Refresh connection state when OAuth completes
-        refreshConnection();
-      }
-      if (changes.sync_in_progress?.newValue === false) {
-        setSyncing(false);
-        setIsSyncing(false);
-      }
-    };
-
-    chrome.storage.onChanged.addListener(handleStorageChange);
-    return () => chrome.storage.onChanged.removeListener(handleStorageChange);
-  }, [refreshConnection, setIsSyncing]);
+  }, [isConnected, refreshConnection]);
 
   const handleConnect = async () => {
-    if (connecting) return;
-    setConnecting(true);
-    // Persist connecting state so it survives popup close/reopen
-    await chrome.storage.local.set({ is_connecting: true });
-    
+    if (isConnecting) return;
+
     try {
       const result = await sendMessage({ type: Messages.NOTION_OAUTH });
       if (result.success) {
-        // Refresh connection state after successful OAuth
         await refreshConnection();
       } else {
         console.error('Connection failed:', result.error);
       }
     } catch (error) {
       console.error('Connection error:', error);
-    } finally {
-      setConnecting(false);
-      // Clear connecting state
-      await chrome.storage.local.set({ is_connecting: false });
     }
   };
 
   const handleSync = async () => {
-    if (!isConnected || syncing || isSyncing) return;
-    setSyncing(true);
-    
+    if (!isConnected || isSyncing) return;
+
     try {
       const result = await sendMessage({ type: Messages.SYNC_ALL_BOOKMARKS });
       if (!result.success) {
@@ -78,10 +49,6 @@ export default function Popup() {
       }
     } catch (error) {
       console.error('Sync error:', error);
-    } finally {
-      setSyncing(false);
-      // Note: Don't manually clear sync_in_progress or isSyncing here
-      // The background script manages sync_in_progress and storage listener updates isSyncing
     }
   };
 
@@ -152,21 +119,21 @@ export default function Popup() {
         {!isConnected ? (
           <button
             onClick={handleConnect}
-            disabled={connecting}
+            disabled={isConnecting}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
           >
-            <Link className={`w-4 h-4 ${connecting ? 'animate-spin' : ''}`} />
-            {connecting ? 'Connecting...' : 'Connect to Notion'}
+            <Link className={`w-4 h-4 ${isConnecting ? 'animate-spin' : ''}`} />
+            {isConnecting ? 'Connecting...' : 'Connect to Notion'}
           </button>
         ) : (
           <div className={!isPro ? 'space-y-2' : ''}>
             <button
               onClick={handleSync}
-              disabled={syncing || isSyncing}
+              disabled={isSyncing}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
             >
-              <RefreshCw className={`w-4 h-4 ${syncing || isSyncing ? 'animate-spin' : ''}`} />
-              {syncing || isSyncing ? 'Syncing...' : 'Sync Now'}
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Syncing...' : 'Sync Now'}
             </button>
 
             {!isPro && (

@@ -163,24 +163,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         }
       }
 
-      // Setup storage listener for real-time sync across popup and options page
-      chrome.storage.onChanged.addListener((changes) => {
-        if (changes.session_token) {
-          set({ isConnected: !!changes.session_token.newValue });
-        }
-        if (changes.is_connecting) {
-          set({ isConnecting: !!changes.is_connecting.newValue });
-        }
-        if (changes.sync_in_progress) {
-          set({ isSyncing: !!changes.sync_in_progress.newValue });
-        }
-        if (changes.is_pro) {
-          set({ isPro: !!changes.is_pro.newValue });
-        }
-        if (changes.last_sync) {
-          set({ lastSync: changes.last_sync.newValue || '' });
-        }
-      });
     } catch (error) {
       console.error('❌ Failed to initialize from storage:', error);
     }
@@ -219,7 +201,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const { session_token } = await chrome.storage.local.get(['session_token']);
       set({ isConnected: !!session_token });
-      
+
       if (session_token) {
         // Also refresh user profile when connected
         await get().refreshEntitlements();
@@ -267,7 +249,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, []);
 
-  // Reflect connection status from storage token and last sync time
   useEffect(() => {
     const onChanged = (
       changes: { [key: string]: chrome.storage.StorageChange },
@@ -276,6 +257,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (areaName !== 'local') return;
       const shot = WATCHED_CACHE_KEYS.some((key) => key in changes);
       if (!shot) return;
+
       if (changes[CACHE_KEYS.session_token]) {
         const newToken = changes[CACHE_KEYS.session_token].newValue;
         const wasConnected = useAppStore.getState().isConnected;
@@ -286,6 +268,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (!wasConnected && isNowConnected) {
           useAppStore.getState().refreshEntitlements();
         }
+      }
+      if (changes['is_connecting']) {
+        useAppStore.setState({ isConnecting: !!changes['is_connecting'].newValue });
       }
       if (changes['last_sync']) {
         const s = changes['last_sync'].newValue as string | undefined;
@@ -305,6 +290,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (changes['is_pro']) {
         const isPro = !!changes['is_pro'].newValue;
         useAppStore.setState({ isPro });
+      }
+      if (changes['purchase_type']) {
+        const purchaseType = changes['purchase_type'].newValue as 'monthly' | 'lifetime' | undefined;
+        useAppStore.setState({ purchaseType });
       }
       if (changes['cached_pricing']) {
         const pricing = changes['cached_pricing'].newValue;

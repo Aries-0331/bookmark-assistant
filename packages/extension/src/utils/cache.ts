@@ -3,31 +3,72 @@ export interface ChromeLocalCache {
   // Auth/session
   session_token?: string;
   user_id?: string;
+  user_email?: string;
+
+  // Connection state
+  is_connecting?: boolean;
 
   // Sync state
   sync_in_progress?: boolean;
+  last_sync?: string; // ISO timestamp (legacy key name)
   last_sync_at?: string; // ISO timestamp
   last_sync_count?: number;
   last_sync_fingerprint?: string;
+  last_sync_hash?: string;
+
+  // Entitlements
+  is_pro?: boolean;
+  purchase_type?: 'monthly' | 'lifetime';
+
+  // Settings
+  auto_sync?: boolean;
+  sync_interval_hours?: number;
+
+  // Pricing cache
+  cached_pricing?: {
+    monthly: number;
+    lifetime: number;
+  };
 }
 
 // Optional: key literals for safer usage
 export const CACHE_KEYS = {
   session_token: 'session_token',
   user_id: 'user_id',
+  user_email: 'user_email',
+
+  is_connecting: 'is_connecting',
 
   sync_in_progress: 'sync_in_progress',
+  last_sync: 'last_sync',
   last_sync_at: 'last_sync_at',
   last_sync_count: 'last_sync_count',
   last_sync_fingerprint: 'last_sync_fingerprint',
+  last_sync_hash: 'last_sync_hash',
+
+  is_pro: 'is_pro',
+  purchase_type: 'purchase_type',
+
+  auto_sync: 'auto_sync',
+  sync_interval_hours: 'sync_interval_hours',
+
+  cached_pricing: 'cached_pricing',
 } as const;
 
 export const WATCHED_CACHE_KEYS = [
   CACHE_KEYS.session_token,
+  CACHE_KEYS.is_connecting,
   CACHE_KEYS.sync_in_progress,
+  CACHE_KEYS.last_sync,
   CACHE_KEYS.last_sync_at,
   CACHE_KEYS.last_sync_count,
   CACHE_KEYS.last_sync_fingerprint,
+  CACHE_KEYS.last_sync_hash,
+  CACHE_KEYS.is_pro,
+  CACHE_KEYS.purchase_type,
+  CACHE_KEYS.user_id,
+  CACHE_KEYS.user_email,
+  CACHE_KEYS.cached_pricing,
 ] as const;
 
 export type CacheKey = keyof typeof CACHE_KEYS;

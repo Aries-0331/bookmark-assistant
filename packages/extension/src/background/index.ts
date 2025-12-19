@@ -174,6 +174,8 @@ restoreAutoSync(performBookmarkSync);
 addMessageListener({
   [Messages.NOTION_OAUTH]: async () => {
     try {
+      // Set connecting state at the start
+      await chrome.storage.local.set({ is_connecting: true });
       const code = await launchNotionOAuth();
       const result = await exchangeCodeForToken(code);
       // Clear connecting state after OAuth completes

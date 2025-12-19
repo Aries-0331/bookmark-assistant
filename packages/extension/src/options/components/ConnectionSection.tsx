@@ -7,7 +7,7 @@ import { useToast } from '../hook/useToast';
 
 export function ConnectionSection() {
   const { show } = useToast();
-  const { isConnecting, isConnected, isSyncing, setIsConnecting, setIsSyncing } = useAppStore();
+  const { isConnecting, isConnected, isSyncing, setIsConnecting } = useAppStore();
 
   const onConnect = async () => {
     setIsConnecting(true);
@@ -37,7 +37,6 @@ export function ConnectionSection() {
     }
   };
   const onDisconnect = async () => {
-    setIsSyncing(false);
     await sendMessage({ type: Messages.LOGOUT });
     show({
       variant: 'info',
@@ -48,13 +47,19 @@ export function ConnectionSection() {
 
   const onSyncNow = async () => {
     if (!isConnected || isSyncing) return;
-    setIsSyncing(true);
+
     try {
-      // Sync can take a long time, increase timeout to 5 minutes
-      await sendMessage({ type: Messages.SYNC_ALL_BOOKMARKS }, { timeoutMs: 300_000 });
+      const result = await sendMessage({ type: Messages.SYNC_ALL_BOOKMARKS }, { timeoutMs: 300_000 });
+
+      if (!result.success) {
+        show({
+          variant: 'error',
+          title: 'Sync Failed',
+          description: result.error || 'Failed to sync bookmarks',
+        });
+      }
     } catch (error) {
       console.error('Sync failed:', error);
-      // Don't show error toast if it's just a timeout - sync may still complete
       if (error instanceof Error && error.message !== 'REQUEST_TIMEOUT') {
         show({
           variant: 'error',
@@ -62,8 +67,6 @@ export function ConnectionSection() {
           description: error.message || 'Failed to sync bookmarks',
         });
       }
-    } finally {
-      setIsSyncing(false);
     }
   };
 
