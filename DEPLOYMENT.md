@@ -75,7 +75,7 @@ PADDLE_API_KEY=live_xxx
 PADDLE_ENVIRONMENT=production
 PADDLE_WEBHOOK_SECRET=pdl_ntfset_xxx
 PADDLE_PRO_MONTHLY_PRICE_ID=pri_xxx
-PADDLE_PRO_YEARLY_PRICE_ID=pri_xxx
+PADDLE_PRO_LIFETIME_PRICE_ID=pri_xxx
 WEBSITE_URL=<will-update-after-website-deployment>
 ALLOWED_EXTENSION_ID=<will-update-after-chrome-store-publish>
 FREE_DAILY_LIMIT=100
@@ -289,28 +289,28 @@ npx prisma studio
 
 ### Server (Required)
 
-| Variable                      | Example                 | Where to Get                         |
-| ----------------------------- | ----------------------- | ------------------------------------ |
-| `JWT_SECRET`                  | `abc123...`             | Generate: `openssl rand -base64 32`  |
-| `DATABASE_URL`                | `postgresql://...`      | Vercel Postgres or external provider |
-| `NOTION_CLIENT_ID`            | `257d872b-...`          | Notion Developer Portal              |
-| `NOTION_CLIENT_SECRET`        | `secret_abc...`         | Notion Developer Portal              |
-| `PADDLE_API_KEY`              | `live_abc...`           | Paddle Dashboard → Authentication    |
-| `PADDLE_WEBHOOK_SECRET`       | `pdl_ntfset_...`        | Paddle Dashboard → Notifications     |
-| `PADDLE_PRO_MONTHLY_PRICE_ID` | `pri_abc...`            | Paddle Dashboard → Catalog           |
-| `PADDLE_PRO_YEARLY_PRICE_ID`  | `pri_xyz...`            | Paddle Dashboard → Catalog           |
-| `WEBSITE_URL`                 | `https://...vercel.app` | After website deployment             |
-| `ALLOWED_EXTENSION_ID`        | `abcdef...`             | After Chrome Store publish           |
+| Variable                       | Example                 | Where to Get                         |
+| ------------------------------ | ----------------------- | ------------------------------------ |
+| `JWT_SECRET`                   | `abc123...`             | Generate: `openssl rand -base64 32`  |
+| `DATABASE_URL`                 | `postgresql://...`      | Vercel Postgres or external provider |
+| `NOTION_CLIENT_ID`             | `257d872b-...`          | Notion Developer Portal              |
+| `NOTION_CLIENT_SECRET`         | `secret_abc...`         | Notion Developer Portal              |
+| `PADDLE_API_KEY`               | `live_abc...`           | Paddle Dashboard → Authentication    |
+| `PADDLE_WEBHOOK_SECRET`        | `pdl_ntfset_...`        | Paddle Dashboard → Notifications     |
+| `PADDLE_PRO_MONTHLY_PRICE_ID`  | `pri_abc...`            | Paddle Dashboard → Catalog           |
+| `PADDLE_PRO_LIFETIME_PRICE_ID` | `pri_xyz...`            | Paddle Dashboard → Catalog           |
+| `WEBSITE_URL`                  | `https://...vercel.app` | After website deployment             |
+| `ALLOWED_EXTENSION_ID`         | `abcdef...`             | After Chrome Store publish           |
 
 ### Website (Required)
 
-| Variable                                  | Example                 | Where to Get            |
-| ----------------------------------------- | ----------------------- | ----------------------- |
-| `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`         | `live_abc...`           | Paddle Dashboard        |
-| `NEXT_PUBLIC_PADDLE_ENVIRONMENT`          | `production`            | Hardcoded               |
-| `NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID` | `pri_abc...`            | Paddle Dashboard        |
-| `NEXT_PUBLIC_PADDLE_PRO_YEARLY_PRICE_ID`  | `pri_xyz...`            | Paddle Dashboard        |
-| `NEXT_PUBLIC_API_URL`                     | `https://...vercel.app` | After server deployment |
+| Variable                                   | Example                 | Where to Get            |
+| ------------------------------------------ | ----------------------- | ----------------------- |
+| `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`          | `live_abc...`           | Paddle Dashboard        |
+| `NEXT_PUBLIC_PADDLE_ENVIRONMENT`           | `production`            | Hardcoded               |
+| `NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID`  | `pri_abc...`            | Paddle Dashboard        |
+| `NEXT_PUBLIC_PADDLE_PRO_LIFETIME_PRICE_ID` | `pri_xyz...`            | Paddle Dashboard        |
+| `NEXT_PUBLIC_API_URL`                      | `https://...vercel.app` | After server deployment |
 
 ### Extension (Required)
 

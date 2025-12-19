@@ -13,35 +13,7 @@
 
 ## 🔄 状态流转
 
-### ASCII Art 流程图
-
-```
-用户操作 (点击 Sync)
-         ↓
-   UI 发送消息
-         ↓
-  Background Script
-         ↓
-  chrome.storage.set({ sync_in_progress: true })
-         ↓
-    ┌────┴────┐
-    ↓         ↓
-  Popup    Options
-    ↓         ↓
-  更新UI    更新UI
-
-  [执行同步操作]
-
-  chrome.storage.set({ sync_in_progress: false })
-         ↓
-    ┌────┴────┐
-    ↓         ↓
-  Popup    Options
-    ↓         ↓
-  恢复UI    恢复UI
-```
-
-### Mermaid 时序图
+### 状态同步时序图
 
 ```mermaid
 sequenceDiagram
@@ -66,7 +38,7 @@ sequenceDiagram
     UI->>User: 恢复就绪状态
 ```
 
-### Mermaid 架构图
+### 系统架构图
 
 ```mermaid
 graph TB
@@ -89,6 +61,8 @@ graph TB
     style Store fill:#fff9c4
     style BG fill:#c8e6c9
 ```
+
+---
 
 ## 🎯 核心机制
 

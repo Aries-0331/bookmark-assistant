@@ -12,7 +12,7 @@ export const PRO_MIN_INTERVAL_MINUTES = Math.round(PRO_MIN_INTERVAL_HOURS * 60);
 // Pricing constants
 export const PRICE_MONTHLY_REGULAR_USD = 5; // Regular $/month
 export const PRICE_MONTHLY_EARLY_BIRD_USD = 2.99; // Early bird $/month
-export const PRICE_LIFETIME_USD = 99; // $ one-time purchase
+export const PRICE_LIFETIME_USD = 29.99; // $ one-time purchase
 
 export type AppState = {
   // Overview
@@ -217,7 +217,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { minIntervalHours } = get().getEffectiveLimits();
     const rounded = Math.floor(raw * 100) / 100;
     const interval = get().isPro ? Math.max(minIntervalHours, rounded) : minIntervalHours;
-    await chrome.storage.local.set({ 
+    await chrome.storage.local.set({
       sync_interval_hours: interval,
       auto_sync_interval_minutes: Math.round(interval * 60), // Keep in sync
     });

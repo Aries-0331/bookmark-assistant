@@ -50,51 +50,6 @@ graph TB
     style Scheduler fill:#c8e6c9
 ```
 
-### ASCII 架构图
-
-```
-┌──────────────────────────────────────────────┐
-│  UI Layer (Popup + Options)                  │
-│  ┌────────────┐         ┌─────────────┐      │
-│  │  Popup     │         │  Options    │      │
-│  │  (Status)  │         │  (Settings) │      │
-│  └─────┬──────┘         └──────┬──────┘      │
-│        └────────┬───────────────┘             │
-│                 ▼                             │
-│         ┌───────────────┐                     │
-│         │ Zustand Store │                     │
-│         └───────┬───────┘                     │
-└─────────────────┼─────────────────────────────┘
-                  │ sendMessage
-                  ▼
-┌──────────────────────────────────────────────┐
-│  Background Layer                            │
-│  ┌──────────────────┐   ┌────────────────┐   │
-│  │ Background Script│──▶│ Auto-Sync      │   │
-│  │ (Message Handler)│   │ Scheduler      │   │
-│  └──────────────────┘   └────────┬───────┘   │
-│                                  │           │
-│                                  ▼           │
-│                         ┌────────────────┐   │
-│                         │ Chrome Alarms  │   │
-│                         │ API            │   │
-│                         └────────┬───────┘   │
-└──────────────────────────────────┼───────────┘
-                                   │
-                                   ▼
-                      ┌─────────────────────┐
-                      │  Chrome Storage     │
-                      │  (State Persistence)│
-                      └─────────────────────┘
-                                   │
-                                   │ onChanged
-                                   ▼
-                      ┌─────────────────────┐
-                      │  All UI Pages       │
-                      │  (Auto Update)      │
-                      └─────────────────────┘
-```
-
 ---
 
 ## 🔄 核心机制
@@ -115,20 +70,22 @@ graph TB
 
 ### 2. 状态管理
 
-**Storage 键设计**:
+**Storage 键设计** (单一数据源):
 
-| 层级      | 键名                         | 用途       | 单位    |
-| --------- | ---------------------------- | ---------- | ------- |
-| **UI**    | `auto_sync`                  | 开关状态   | boolean |
-| **UI**    | `sync_interval_hours`        | 用户设置   | 小时    |
-| **Alarm** | `auto_sync_enabled`          | Alarm 状态 | boolean |
-| **Alarm** | `auto_sync_interval_minutes` | Alarm 间隔 | 分钟    |
+| 键名                         | 类型       | 用途         | 说明                       |
+| ---------------------------- | ---------- | ------------ | -------------------------- |
+| `auto_sync_enabled`          | boolean    | 自动同步开关 | 主要状态（Alarm 系统使用） |
+| `auto_sync_interval_minutes` | number     | 同步间隔     | 精确的分钟数               |
+| `sync_interval_hours`        | number     | UI 友好间隔  | 可选缓存（小时）           |
+| `last_sync`                  | ISO string | 上次同步时间 | 用于追赶策略               |
 
-**为什么分两层?**
+> **注意**: 之前的 `auto_sync` 键已废弃，统一使用 `auto_sync_enabled` 作为单一数据源，避免状态不一致。
 
-- UI 层：用户友好（小时）
-- Alarm 层：精确控制（分钟）
-- 分离可检测状态不一致
+**为什么保留两个间隔键?**
+
+- `auto_sync_interval_minutes`: Alarm API 需要精确的分钟数
+- `sync_interval_hours`: UI 显示用户友好的小时数
+- 通过 storage listener 自动同步两者
 
 ### 3. 追赶策略
 
@@ -269,23 +226,6 @@ chrome.storage.local.get(null, console.log);
 ```javascript
 chrome.alarms.create('bookmarks-auto-sync', { delayInMinutes: 0.1 });
 ```
-
----
-
-## 📝 最近更新 (2025-12-19)
-
-### ✅ 已修复问题
-
-1. **Storage 键不一致** - `setAutoSync()` 现在同时设置 UI 和 Alarm 键
-2. **UI 初始值错误** - 从 Store 读取 `intervalHours` 而非硬编码 `0`
-3. **文档完善** - 添加架构说明和调试指南
-
-### 相关文件
-
-- `packages/extension/src/background/auto-sync.ts` - Alarm 调度逻辑
-- `packages/extension/src/options/store.ts` - 状态管理
-- `packages/extension/src/options/components/SyncSettingsSection.tsx` - UI 组件
-- `packages/extension/src/utils/cache.ts` - Storage 键定义
 
 ---
 

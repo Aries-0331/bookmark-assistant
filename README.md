@@ -44,7 +44,7 @@ Bookmark Assistant bridges the gap between your Chrome bookmarks and Notion work
 | **Sync Interval**     | Minimum 24 hours (if enabled)         |
 | **Database Mapping**  | Single Notion database per connection |
 
-### **Pro Tier** ($5/month or $42/year)
+### **Pro Tier** ($2.99/month or $29.99 lifetime)
 
 | Feature              | Specification                                    |
 | -------------------- | ------------------------------------------------ |
@@ -53,7 +53,7 @@ Bookmark Assistant bridges the gap between your Chrome bookmarks and Notion work
 | **Priority Support** | Faster response times                            |
 | **Coming Q1 2025**   | AI tagging, summaries, multi-database (included) |
 
-> 🎁 **Early Access Pricing**: Lock in $5/month before AI features launch and price increases
+> 🎁 **Early Bird Pricing**: Lock in $2.99/month or get lifetime access for $29.99 before AI features launch
 
 ---
 
@@ -101,39 +101,40 @@ bookmark-notion-sync/
 
 ## 🛠️ Technical Architecture
 
-### **Frontend (Extension)**
+### **System Architecture**
 
-```
-┌─────────────────────────────────────────────────────┐
-│  Chrome Extension (Manifest V3)                     │
-│  ┌──────────────────┐    ┌─────────────────────┐    │
-│  │  Options Page    │    │  Background Worker  │    │
-│  │  (React UI)      │◄──►│  (Service Worker)   │    │
-│  │  - Settings      │    │  - OAuth            │    │
-│  │  - Sync Status   │    │  - Sync Logic       │    │
-│  │  - Entitlements  │    │  - Content Extract  │    │
-│  └──────────────────┘    └─────────────────────┘    │
-│         │                           │               │
-│         │  chrome.storage.onChanged │               │
-│         └───────────────────────────┘               │
-└─────────────────────────────────────────────────────┘
-              │                     │
-              │ OAuth Flow          │ API Calls
-              ▼                     ▼
-┌─────────────────────────────────────────────────────┐
-│  Backend Server (Express + Prisma)                  │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────┐   │
-│  │ OAuth Proxy  │  │ Entitlements │  │ Bookmarks│   │
-│  │ (Notion)     │  │ (JWT + DB)   │  │ (Notion) │   │
-│  └──────────────┘  └──────────────┘  └──────────┘   │
-└─────────────────────────────────────────────────────┘
-              │                     │
-              │                     │
-              ▼                     ▼
-       ┌─────────────┐      ┌─────────────┐
-       │  Notion API │      │  PostgreSQL │
-       │  (OAuth 2.0)│      │  (Prisma)   │
-       └─────────────┘      └─────────────┘
+```mermaid
+graph TB
+    subgraph "Chrome Extension"
+        Options[Options Page<br/>React UI]
+        BG[Background Worker<br/>Service Worker]
+        Options <-->|chrome.storage| BG
+    end
+
+    subgraph "Backend Server"
+        OAuth[OAuth Proxy]
+        Auth[Entitlements<br/>JWT + DB]
+        API[Bookmark API]
+    end
+
+    subgraph "External Services"
+        Notion[Notion API<br/>OAuth 2.0]
+        DB[(PostgreSQL<br/>Prisma)]
+        Paddle[Paddle Billing]
+    end
+
+    Options -->|OAuth Flow| OAuth
+    BG -->|API Calls| API
+    OAuth <--> Notion
+    Auth <--> DB
+    API <--> Notion
+    Options <-->|Payment| Paddle
+    Paddle -->|Webhooks| Auth
+
+    style Options fill:#e3f2fd
+    style BG fill:#fff9c4
+    style OAuth fill:#c8e6c9
+    style DB fill:#f3e5f5
 ```
 
 ### **Key Technical Decisions**
@@ -231,9 +232,10 @@ bookmark-notion-sync/
 
 ### **Developer Guides**
 
-- [Technical Specification](docs/SPEC.md) — User system and payment reconciliation
-- [Paddle Integration](docs/PADDLE_INTEGRATION.md) — Payment setup and configuration
-- [Auto-Sync Implementation](packages/extension/AUTO_SYNC.md) — Auto-sync feature details
+- [Technical Specification](docs/spec/PAYMENT.md) — Payment and user system
+- [Paddle Integration](docs/spec/PADDLE_INTEGRATION.md) — Payment setup and configuration
+- [Auto-Sync Implementation](docs/spec/AUTO_SYNC.md) — Auto-sync feature details
+- [State Management](docs/STATE_MANAGEMENT.md) — Extension state architecture
 - [Testing Guide](tests/README.md) — Testing infrastructure and examples
 - [Paddle Testing Checklist](docs/TESTING_CHECKLIST.md) — Payment integration testing
 - [Quick Start Auth](QUICK_START_AUTH.md) — OAuth and upgrade flow testing
@@ -264,7 +266,9 @@ bookmark-notion-sync/
 
 ## 📄 License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+**Proprietary Software** — All rights reserved.
+
+This is a commercial project. The source code is not open source and may not be copied, modified, or distributed without explicit permission.
 
 ---
 
@@ -311,20 +315,8 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 | -------------------- | ---------------------- |
 | **Development**      | Active 🟢              |
 | **Version**          | 0.1.0 (Beta)           |
-| **License**          | MIT                    |
+| **License**          | Proprietary            |
 | **Chrome Web Store** | Pending Review         |
 | **Active Users**     | Private Beta           |
 | **Test Coverage**    | 27% (13 passing tests) |
-| **Last Updated**     | 2025-12-05             |
-
----
-
-## 🌟 Star History
-
-If you find this project helpful, please consider giving it a ⭐ on GitHub!
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Aries-0331/bookmarks_to_notion&type=Date)](https://star-history.com/#Aries-0331/bookmarks_to_notion&Date)
-
----
-
-**Built with ❤️ by [Aries](https://github.com/Aries-0331)**
+| **Last Updated**     | 2025-12-19             |
