@@ -147,9 +147,9 @@ export function ConnectionSection() {
               </p>
 
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-                <div className="flex items-start gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-3">
                   <span className="text-lg">⚠️</span>
-                  <p className="font-semibold text-blue-900">Important:</p>
+                  <h4 className="font-semibold text-blue-900">Important:</h4>
                 </div>
                 <ul className="space-y-2 text-sm text-blue-800">
                   <li className="flex items-start gap-2">

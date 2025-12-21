@@ -258,6 +258,7 @@ const { t } = useTranslation();
 - [Paddle Integration](docs/PADDLE_INTEGRATION.md) — Payment setup and configuration
 - [Auto-Sync Implementation](docs/AUTO_SYNC.md) — Auto-sync feature details
 - [Internationalization](docs/INTERNATIONALIZATION.md) — Multi-language support strategy
+- [Notion Template Structures](docs/NOTION_TEMPLATES.md) — Full-page vs inline database handling
 - [State Management](docs/STATE_MANAGEMENT.md) — Extension state architecture
 - [Testing Guide](tests/README.md) — Testing infrastructure and examples
 - [Paddle Testing Checklist](docs/TESTING_CHECKLIST.md) — Payment integration testing

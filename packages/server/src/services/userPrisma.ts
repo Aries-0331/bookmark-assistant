@@ -105,6 +105,32 @@ export class UserPrismaRepo {
       });
     }
   }
+
+  async update(
+    userId: string,
+    updates: Partial<{
+      notionDatabaseId: string;
+      notionDataSourceId: string;
+      templateDatabaseId: string;
+    }>
+  ) {
+    const data = {
+      ...updates,
+      lastActivity: new Date(),
+    };
+
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data,
+      });
+    } catch {
+      await prisma.user.update({
+        where: { notionUserId: userId },
+        data,
+      });
+    }
+  }
 }
 
 export const userPrisma = new UserPrismaRepo();

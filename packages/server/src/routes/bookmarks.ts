@@ -106,13 +106,66 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       });
     }
 
+    // Check if notionDatabaseId exists
+    if (!userData.notionDatabaseId) {
+      console.error('[Bookmark Sync] ❌ No notionDatabaseId found in user data');
+      return res.status(400).json({
+        error: 'Database Not Configured',
+        message: 'No database ID found. Please reconnect your Notion integration.',
+        suggestion: 'Reconnect Notion integration to reconfigure database',
+      });
+    }
+
+    // Verify database access and recover if needed
+    let verifiedDatabaseId = userData.notionDatabaseId;
+    let verifiedDataSourceId = effectiveDataSourceId;
+
+    console.log('[Bookmark Sync] 🔍 Verifying database access...');
+    console.log('[Bookmark Sync]   Database ID:', verifiedDatabaseId);
+    console.log('[Bookmark Sync]   Data Source ID:', verifiedDataSourceId);
+    console.log('[Bookmark Sync]   Duplicated Template ID:', userData.duplicatedTemplateId);
+
+    try {
+      const verification = await notionService.verifyDatabaseAccess(
+        userData.notionDatabaseId,
+        userData.notionAccessToken,
+        userData.duplicatedTemplateId // Use duplicatedTemplateId (page ID) not templateDatabaseId
+      );
+      verifiedDatabaseId = verification.databaseId;
+      verifiedDataSourceId = verification.dataSourceId;
+
+      // Update user record if database changed (recovery successful)
+      if (
+        verifiedDatabaseId !== userData.notionDatabaseId ||
+        verifiedDataSourceId !== userData.notionDataSourceId
+      ) {
+        console.log('[Bookmark Sync] 🔄 Database recovered, updating user record');
+        console.log('[Bookmark Sync]   Old DB:', userData.notionDatabaseId);
+        console.log('[Bookmark Sync]   New DB:', verifiedDatabaseId);
+        await userPrisma.update(userData.id!, {
+          notionDatabaseId: verifiedDatabaseId,
+          notionDataSourceId: verifiedDataSourceId,
+          templateDatabaseId: verifiedDatabaseId, // Update templateDatabaseId to match
+        });
+      }
+    } catch (error) {
+      console.error('[Bookmark Sync] ❌ Database verification failed:', error);
+      return res.status(400).json({
+        error: 'Database Not Accessible',
+        message: error instanceof Error ? error.message : 'Failed to verify database access',
+        suggestion:
+          'Please ensure the database is shared with your Notion integration. Go to your Notion database → ••• menu → Add connections → Select your integration.',
+        databaseId: userData.notionDatabaseId,
+      });
+    }
+
     // Validate and enrich bookmarks
     const enrichedBookmarks = bookmarks.map((bookmark: any, index: number) =>
       validateBookmark(bookmark, index)
     );
     // Query existing bookmarks to build sync map
     const urls = await notionService.existingBookmarkUrls(
-      effectiveDataSourceId,
+      verifiedDataSourceId,
       userData.notionAccessToken
     );
     // Compute diff (by syncId primarily, with URL fallback)
@@ -129,14 +182,15 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       const batchPromises = batch.map(async (bookmark: BookmarkItem) => {
         try {
           const properties = await notionService.buildPropertiesFromDataSource(
-            effectiveDataSourceId!,
+            verifiedDataSourceId,
             userData.notionAccessToken,
             bookmark
           );
 
           // Create new page (incremental create-only)
+          // In API version 2025-09-03, use data_source_id for inline databases
           await notionService.createPage(
-            { type: 'data_source_id', data_source_id: effectiveDataSourceId },
+            { type: 'data_source_id', data_source_id: verifiedDataSourceId },
             properties,
             userData.notionAccessToken
           );

@@ -128,6 +128,7 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
           where: { id: user.id },
           data: {
             templateDatabaseId: dupId,
+            duplicatedTemplateId: dupId, // Sync to both fields for compatibility
             notionDatabaseId: resolved.databaseId,
             notionDataSourceId: resolved.dataSourceId || null,
           },
