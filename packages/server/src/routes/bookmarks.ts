@@ -187,12 +187,19 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
             bookmark
           );
 
+          // Generate favicon URL from bookmark URL
+          const iconUrl = bookmark.url
+            ? `https://www.google.com/s2/favicons?domain=${new URL(bookmark.url).hostname}&sz=64`
+            : undefined;
+
           // Create new page (incremental create-only)
           // In API version 2025-09-03, use data_source_id for inline databases
           await notionService.createPage(
             { type: 'data_source_id', data_source_id: verifiedDataSourceId },
             properties,
-            userData.notionAccessToken
+            userData.notionAccessToken,
+            undefined, // children
+            iconUrl
           );
           return {
             success: true,

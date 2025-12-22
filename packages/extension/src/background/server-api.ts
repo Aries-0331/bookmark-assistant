@@ -85,8 +85,8 @@ class ServerAPIClient {
             `This might be due to slow network or server processing.`
         );
 
-        // Only log non-critical timeouts to backend (don't spam for expected slow operations)
-        if (timeoutMs > 0 && timeoutMs < 30000) {
+        // Log timeouts to backend for monitoring (all timeouts are noteworthy)
+        if (timeoutMs > 0) {
           try {
             globalThis.fetch(`${this.baseUrl}/api/client-log`, {
               method: 'POST',
@@ -103,7 +103,9 @@ class ServerAPIClient {
 
         // Provide helpful error message
         throw new Error(
-          `Request timed out after ${timeoutSeconds}s. Please check your internet connection and try again.`
+          `Sync request timed out after ${timeoutSeconds}s. The server might be busy processing your ${Math.round(
+            timeoutMs / 1000
+          )} bookmarks. Please try again.`
         );
       }
       throw error;
@@ -168,8 +170,9 @@ class ServerAPIClient {
     };
     results: any[];
   }> {
-    // Disable client-side timeout for bulk sync to avoid spurious UI errors
-    const estimatedTimeout = 0;
+    // Set a reasonable timeout (60s) to prevent sync state from getting stuck
+    // If the request takes longer, it will timeout and reset sync_in_progress
+    const estimatedTimeout = 60000;
     return await this.makeRequest<any>('/api/bookmarks/sync', {
       method: 'POST',
       body: JSON.stringify({ bookmarks }),

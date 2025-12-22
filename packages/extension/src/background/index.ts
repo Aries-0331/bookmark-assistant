@@ -7,15 +7,45 @@ import { scheduleAutoSync, setupAutoSyncListener, restoreAutoSync } from './auto
 
 // import './test-oauth-flow'; // Removed in production build
 
+// Reset stale sync state on service worker startup
+// In MV3, service workers can be terminated during long operations
+async function resetStaleSyncState() {
+  try {
+    const { sync_in_progress, last_sync } = await chrome.storage.local.get([
+      'sync_in_progress',
+      'last_sync',
+    ]);
+
+    // If sync is marked as in progress but last_sync is very old (> 10 minutes),
+    // it's likely a stale state from a terminated service worker
+    if (sync_in_progress && last_sync) {
+      const lastSyncTime = new Date(last_sync).getTime();
+      const now = Date.now();
+      const tenMinutesMs = 10 * 60 * 1000;
+
+      if (now - lastSyncTime > tenMinutesMs) {
+        console.warn('[Background] Resetting stale sync_in_progress state');
+        await chrome.storage.local.set({ sync_in_progress: false });
+      }
+    }
+  } catch (error) {
+    console.warn('[Background] Failed to reset stale sync state:', error);
+  }
+}
+
 debugConfig();
 debugOAuthSetup();
-const configValidation = validateConfig();
-if (!configValidation.isValid) {
-  console.error('❌ Configuration errors:', configValidation.errors);
-}
-if (configValidation.warnings.length > 0) {
-  console.warn('⚠️ Configuration warnings:', configValidation.warnings);
-}
+
+// Reset any stale sync state from previous terminated service worker
+resetStaleSyncState().then(() => {
+  const configValidation = validateConfig();
+  if (!configValidation.isValid) {
+    console.error('❌ Configuration errors:', configValidation.errors);
+  }
+  if (configValidation.warnings.length > 0) {
+    console.warn('⚠️ Configuration warnings:', configValidation.warnings);
+  }
+});
 
 // Extract sync logic into a reusable function
 async function performBookmarkSync(): Promise<{ success: boolean; error?: string }> {
