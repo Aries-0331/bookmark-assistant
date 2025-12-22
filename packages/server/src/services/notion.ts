@@ -143,7 +143,10 @@ export class NotionService {
             dataSourceId: resolved.dataSourceId || resolved.databaseId,
           };
         } catch (resolveError) {
-          console.error('[Notion] Database recovery failed:', resolveError instanceof Error ? resolveError.message : resolveError);
+          console.error(
+            '[Notion] Database recovery failed:',
+            resolveError instanceof Error ? resolveError.message : resolveError
+          );
         }
       }
 
@@ -227,13 +230,13 @@ export class NotionService {
     bookmark: BookmarkItem
   ): Promise<Record<string, any>> {
     const notion = this.getClient(accessToken);
-    
+
     // 🚨 CRITICAL: Use dataSources.retrieve, not databases API
     // In API 2025-09-03, properties are in data source, not database
     const dataSource: any = await (notion as any).dataSources.retrieve({
       data_source_id: dataSourceId,
     });
-    
+
     const schema = dataSource?.properties || {};
 
     // Filter out read-only property types using shared configuration
