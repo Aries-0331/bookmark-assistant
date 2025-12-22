@@ -12,6 +12,7 @@ export interface ChromeLocalCache {
   sync_in_progress?: boolean;
   last_sync?: string; // ISO timestamp (legacy key name)
   last_sync_at?: string; // ISO timestamp
+  last_sync_summary?: string; // Summary of last sync (no_changes, error, etc.)
   last_sync_count?: number;
   last_sync_fingerprint?: string;
   last_sync_hash?: string;
@@ -44,6 +45,7 @@ export const CACHE_KEYS = {
   sync_in_progress: 'sync_in_progress',
   last_sync: 'last_sync',
   last_sync_at: 'last_sync_at',
+  last_sync_summary: 'last_sync_summary',
   last_sync_count: 'last_sync_count',
   last_sync_fingerprint: 'last_sync_fingerprint',
   last_sync_hash: 'last_sync_hash',
@@ -65,6 +67,7 @@ export const WATCHED_CACHE_KEYS = [
   CACHE_KEYS.sync_in_progress,
   CACHE_KEYS.last_sync,
   CACHE_KEYS.last_sync_at,
+  CACHE_KEYS.last_sync_summary,
   CACHE_KEYS.last_sync_count,
   CACHE_KEYS.last_sync_fingerprint,
   CACHE_KEYS.last_sync_hash,

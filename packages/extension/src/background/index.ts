@@ -53,7 +53,7 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
     try {
       await chrome.storage.local.set(patch);
     } catch (e) {
-      console.warn('⚠️ Failed to update sync state:', patch, e);
+      console.warn('Failed to update sync state:', patch, e);
     }
   };
   try {

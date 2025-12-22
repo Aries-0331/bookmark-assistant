@@ -21,6 +21,8 @@ export function ConnectionSection() {
         title: 'Everything is up to date',
         description: `All ${count} ${bookmarkText} are already synced to Notion.`,
       });
+      // Clear the summary so it can be shown again on the next sync
+      useAppStore.getState().setLastSyncSummary(undefined);
     }
   }, [lastSyncSummary, show]);
 
@@ -80,9 +82,27 @@ export function ConnectionSection() {
           title: 'Sync Failed',
           description: result.error || 'Failed to sync bookmarks',
         });
+      } else {
+        // Fallback: directly check storage for no_changes status
+        // This handles cases where storage events don't propagate properly
+        setTimeout(async () => {
+          const { last_sync_summary, last_sync_count } = await chrome.storage.local.get([
+            'last_sync_summary',
+            'last_sync_count',
+          ]);
+
+          if (last_sync_summary === 'no_changes') {
+            const count = last_sync_count || 0;
+            const bookmarkText = count === 1 ? 'bookmark' : 'bookmarks';
+            show({
+              variant: 'info',
+              title: 'Everything is up to date',
+              description: `All ${count} ${bookmarkText} are already synced to Notion.`,
+            });
+          }
+        }, 100);
       }
     } catch (error) {
-      console.error('Sync failed:', error);
       if (error instanceof Error && error.message !== 'REQUEST_TIMEOUT') {
         show({
           variant: 'error',

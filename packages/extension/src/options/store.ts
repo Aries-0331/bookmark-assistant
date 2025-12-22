@@ -291,8 +291,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const s = changes['last_sync'].newValue as string | undefined;
         useAppStore.setState({ lastSync: s || '' });
       }
-      if (changes['last_sync_summary']) {
-        const summary = changes['last_sync_summary'].newValue as string | undefined;
+      if (changes[CACHE_KEYS.last_sync_summary]) {
+        const summary = changes[CACHE_KEYS.last_sync_summary].newValue as string | undefined;
         // Parse and set sync summary for UI feedback
         if (summary === 'no_changes') {
           // Get count from storage
@@ -306,8 +306,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
               },
             });
           });
-        } else if (summary === null) {
+        } else if (!summary) {
           // Clear summary after successful sync
+          // Note: summary is undefined when the key is deleted (set to null)
           useAppStore.setState({ lastSyncSummary: undefined });
         }
       }
