@@ -1,5 +1,5 @@
 import { Shield, RefreshCcw, Unplug, AlertTriangle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Button from './Button';
 import { SectionCard } from './SectionCard';
 import { useAppStore } from '../store';
@@ -8,8 +8,21 @@ import { useToast } from '../hook/useToast';
 
 export function ConnectionSection() {
   const { show } = useToast();
-  const { isConnecting, isConnected, isSyncing, setIsConnecting } = useAppStore();
+  const { isConnecting, isConnected, isSyncing, setIsConnecting, lastSyncSummary } = useAppStore();
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+
+  // Show toast when sync summary changes
+  useEffect(() => {
+    if (lastSyncSummary?.type === 'no_changes') {
+      const count = lastSyncSummary.count || 0;
+      const bookmarkText = count === 1 ? 'bookmark' : 'bookmarks';
+      show({
+        variant: 'info',
+        title: 'Everything is up to date',
+        description: `All ${count} ${bookmarkText} are already synced to Notion.`,
+      });
+    }
+  }, [lastSyncSummary, show]);
 
   const onConnect = async () => {
     setIsConnecting(true);

@@ -137,7 +137,10 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
       previousHash === currentHash
     ) {
       // No changes — keep last successful sync timestamp; just notify summary
-      await setState({ last_sync_summary: 'no_changes' });
+      await setState({
+        last_sync_summary: 'no_changes',
+        last_sync_count: currentCount,
+      });
       // Ensure minimal progress duration
       const elapsed = Date.now() - startedAt;
       if (elapsed < MIN_PROGRESS_MS) {

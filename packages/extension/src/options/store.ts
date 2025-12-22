@@ -27,6 +27,14 @@ export type AppState = {
   setIsConnecting: (v: boolean) => void;
   setIsSyncing: (v: boolean) => void;
 
+  // Sync feedback
+  lastSyncSummary?: {
+    type: 'success' | 'no_changes' | 'error';
+    message?: string;
+    count?: number;
+  };
+  setLastSyncSummary: (summary?: AppState['lastSyncSummary']) => void;
+
   // User info
   userId: string;
   userEmail: string;
@@ -62,8 +70,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   isPro: false,
   userId: '',
   userEmail: '',
+  lastSyncSummary: undefined,
   setIsConnecting: (v: boolean) => set({ isConnecting: v }),
   setIsSyncing: (v: boolean) => set({ isSyncing: v }),
+  setLastSyncSummary: (summary) => set({ lastSyncSummary: summary }),
   setUserInfo: (userId: string, userEmail?: string) => {
     set({ userId, userEmail: userEmail || '' });
     // Also persist to storage for Paddle checkout
@@ -280,6 +290,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (changes['last_sync']) {
         const s = changes['last_sync'].newValue as string | undefined;
         useAppStore.setState({ lastSync: s || '' });
+      }
+      if (changes['last_sync_summary']) {
+        const summary = changes['last_sync_summary'].newValue as string | undefined;
+        // Parse and set sync summary for UI feedback
+        if (summary === 'no_changes') {
+          // Get count from storage
+          chrome.storage.local.get(['last_sync_count'], (result) => {
+            const count = result.last_sync_count as number | undefined;
+            useAppStore.setState({
+              lastSyncSummary: {
+                type: 'no_changes',
+                message: 'Everything is up to date',
+                count: count || 0,
+              },
+            });
+          });
+        } else if (summary === null) {
+          // Clear summary after successful sync
+          useAppStore.setState({ lastSyncSummary: undefined });
+        }
+      }
+      if (changes['last_sync_count']) {
+        const count = changes['last_sync_count'].newValue as number | undefined;
+        const currentSummary = useAppStore.getState().lastSyncSummary;
+        if (currentSummary?.type === 'no_changes' && count) {
+          useAppStore.setState({
+            lastSyncSummary: {
+              ...currentSummary,
+              count,
+            },
+          });
+        }
       }
       if (changes['sync_in_progress']) {
         useAppStore.setState({ isSyncing: !!changes['sync_in_progress'].newValue });
