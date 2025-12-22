@@ -16,15 +16,32 @@ type DiffOutcome = {
   stats: {
     requestTotal: number;
     existingIndexSize: number;
+    matchedBySyncId: number;
+    matchedByUrl: number;
   };
 };
 
-function diffBookmarks(accepted: BookmarkItem[], urls: string[]): DiffOutcome {
+function diffBookmarks(accepted: BookmarkItem[], urls: string[], syncIds: string[]): DiffOutcome {
   let count = 0;
+  let matchedBySyncId = 0;
+  let matchedByUrl = 0;
 
   const toCreate: BookmarkItem[] = [];
   for (const b of accepted) {
-    if (urls.includes(b.url)) {
+    let isDuplicate = false;
+
+    // Prefer syncId matching (most reliable)
+    if (b.syncId && syncIds.includes(b.syncId)) {
+      isDuplicate = true;
+      matchedBySyncId++;
+    }
+    // Fallback to URL matching
+    else if (b.url && urls.includes(b.url)) {
+      isDuplicate = true;
+      matchedByUrl++;
+    }
+
+    if (isDuplicate) {
       count++;
     } else {
       toCreate.push(b);
@@ -38,6 +55,8 @@ function diffBookmarks(accepted: BookmarkItem[], urls: string[]): DiffOutcome {
     stats: {
       requestTotal: accepted.length,
       existingIndexSize: count,
+      matchedBySyncId,
+      matchedByUrl,
     },
   };
 }
@@ -164,12 +183,12 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       validateBookmark(bookmark, index)
     );
     // Query existing bookmarks to build sync map
-    const urls = await notionService.existingBookmarkUrls(
+    const { urls, syncIds } = await notionService.existingBookmarkUrls(
       verifiedDataSourceId,
       userData.notionAccessToken
     );
     // Compute diff (by syncId primarily, with URL fallback)
-    const diff = diffBookmarks(enrichedBookmarks as BookmarkItem[], urls);
+    const diff = diffBookmarks(enrichedBookmarks as BookmarkItem[], urls, syncIds);
     console.log('[Bookmark Sync] Diff result:', diff.stats);
 
     const results: SyncResult[] = [];

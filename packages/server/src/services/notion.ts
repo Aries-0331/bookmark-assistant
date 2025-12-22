@@ -476,11 +476,91 @@ export class NotionService {
 
   /**
    * Get existing bookmarks from database to check for duplicates
+   * Returns both URLs and syncIds for comparison
    */
-  async existingBookmarkUrls(dataSourceId: string, accessToken: string): Promise<string[]> {
-    // TODO: Implement duplicate checking using dataSources.query
-    // Currently skipped to avoid API errors with inline databases
-    return [];
+  async existingBookmarkUrls(
+    dataSourceId: string,
+    accessToken: string
+  ): Promise<{
+    urls: string[];
+    syncIds: string[];
+  }> {
+    const notion = this.getClient(accessToken);
+    const urls: string[] = [];
+    const syncIds: string[] = [];
+    let cursor: string | undefined = undefined;
+    let pageCount = 0;
+    const maxPages = 100; // Safety limit to prevent infinite loops
+
+    try {
+      do {
+        pageCount++;
+        if (pageCount > maxPages) {
+          console.warn('[Notion] Reached max pages limit while fetching existing bookmarks');
+          break;
+        }
+
+        const response: any = await (notion as any).dataSources.query({
+          data_source_id: dataSourceId,
+          page_size: 100,
+          start_cursor: cursor,
+        });
+
+        const results = response?.results || [];
+        console.log(`[Notion] Fetched page ${pageCount} with ${results.length} bookmarks`);
+
+        // Extract URL and syncId from each page
+        for (const page of results) {
+          const properties = page.properties || {};
+
+          // Extract URL
+          let urlValue: string | null = null;
+          for (const [propName, propDef] of Object.entries(properties)) {
+            const def = propDef as any;
+            if (def?.type === 'url' && def?.url) {
+              urlValue = def.url;
+              break;
+            }
+          }
+          if (urlValue) {
+            urls.push(urlValue);
+          }
+
+          // Extract syncId (rich_text property matching patterns)
+          let syncIdValue: string | null = null;
+          for (const [propName, propDef] of Object.entries(properties)) {
+            const def = propDef as any;
+            if (def?.type === 'rich_text' && Array.isArray(def?.rich_text)) {
+              // Check if property name matches syncId patterns
+              if (/sync.*id/i.test(propName) || /identifier/i.test(propName) || propName === 'id') {
+                const text = def.rich_text
+                  .map((t: any) => t?.plain_text || '')
+                  .join('')
+                  .trim();
+                if (text) {
+                  syncIdValue = text;
+                  break;
+                }
+              }
+            }
+          }
+          if (syncIdValue) {
+            syncIds.push(syncIdValue);
+          }
+        }
+
+        cursor = response?.next_cursor || undefined;
+      } while (cursor);
+
+      console.log(
+        `[Notion] Found ${urls.length} URLs and ${syncIds.length} syncIds (${pageCount} pages)`
+      );
+      return { urls, syncIds };
+    } catch (error) {
+      console.error('[Notion] Failed to fetch existing bookmarks for duplicate check:', error);
+      // Return empty arrays on error - safer to create duplicates than fail the entire sync
+      return { urls: [], syncIds: [] };
+    }
   }
 
   /**
