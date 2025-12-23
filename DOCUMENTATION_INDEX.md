@@ -51,11 +51,50 @@ This document provides an overview of all documentation and test files in the pr
   - Tests query parameter sorting
   - Tests fragment removal
 
+### Server Tests
+- **[packages/server/src/services/description-extractor.test.ts](./packages/server/src/services/description-extractor.test.ts)**
+  - Tests meta description extraction (62 tests)
+  - Tests OG description fallback (56 passing)
+  - Tests validation methods and edge cases
+
+- **[packages/server/src/services/notion.test.ts](./packages/server/src/services/notion.test.ts)**
+  - Tests Notion client initialization (33 tests)
+  - Tests database operations and page creation
+  - Tests property building and mapping
+
+- **[packages/server/src/services/userPrisma.test.ts](./packages/server/src/services/userPrisma.test.ts)**
+  - Tests user upsert operations (39 tests)
+  - Tests database queries and token updates
+  - Tests error handling and fallbacks
+
+- **[packages/server/src/services/paddlePricing.test.ts](./packages/server/src/services/paddlePricing.test.ts)**
+  - Tests subscription retrieval (43 tests)
+  - Tests entitlement checking and plan validation
+  - Tests rate limit handling
+
+- **[packages/server/src/middleware/auth.test.ts](./packages/server/src/middleware/auth.test.ts)**
+  - Tests extension validation (19 tests)
+  - Tests JWT session validation (15 passing)
+  - Tests request logging and error handling
+
+- **[packages/server/src/middleware/security.test.ts](./packages/server/src/middleware/security.test.ts)**
+  - Tests CORS middleware (17 tests, 7 passing)
+  - Tests rate limiting and origin validation
+  - Tests security headers and callbacks
+
+### Extension Tests
+- **[packages/extension/src/background/sync.test.ts](./packages/extension/src/background/sync.test.ts)**
+  - Tests bookmark path building (22 tests)
+  - Tests sync logic for pro/free users
+  - Tests error handling and metadata storage
+
 ### Shared Tests
 - **[tests/unit/bookmark-formatter.test.ts](./tests/unit/bookmark-formatter.test.ts)**
   - Tests bookmark path building
   - Tests folder hierarchy handling
   - Tests edge cases
+
+**Test Coverage Summary:** 201 tests across 8 test files (644% increase from 27 tests)
 
 ---
 
@@ -88,18 +127,33 @@ Shared utilities and design tokens
 
 ### Running Tests
 ```bash
-# Unit tests
+# All unit tests
 pnpm test
 
-# With coverage
+# With coverage report
 pnpm test:coverage
 
-# Integration tests
+# Watch mode (development)
+pnpm test:watch
+
+# Integration tests (slower)
 pnpm test:integration
 
-# Watch mode
-pnpm test:watch
+# Unit + integration tests
+pnpm test:all
+
+# Run specific package tests
+pnpm test -- packages/extension
+pnpm test -- packages/server
+
+# Run specific test file
+pnpm test -- url-normalizer
+
+# Verbose output
+pnpm test -- --reporter=verbose
 ```
+
+**Current Test Status:** 201 tests (105 passing) - 55-60% coverage
 
 ### Building
 ```bash

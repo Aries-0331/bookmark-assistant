@@ -353,5 +353,5 @@ This is a commercial project. The source code is not open source and may not be 
 | **License**          | Proprietary            |
 | **Chrome Web Store** | Pending Review         |
 | **Active Users**     | Private Beta           |
-| **Test Coverage**    | 27% (13 passing tests) |
-| **Last Updated**     | 2025-12-19             |
+| **Test Coverage**    | 55-60% (201 tests, 105 passing) |
+| **Last Updated**     | 2025-12-23             |

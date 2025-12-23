@@ -86,10 +86,14 @@ export class DescriptionExtractor {
       /<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i
     );
     if (metaDescriptionMatch && metaDescriptionMatch[1]?.trim()) {
-      return {
-        text: this.sanitizeDescription(metaDescriptionMatch[1]),
-        source: 'meta_description',
-      };
+      const metaDesc = this.sanitizeDescription(metaDescriptionMatch[1]);
+      // Validate that meta description is reasonable (not a title)
+      if (this.isValidDescription(metaDesc)) {
+        return {
+          text: metaDesc,
+          source: 'meta_description',
+        };
+      }
     }
 
     // Priority 2: <meta property="og:description">
@@ -97,18 +101,28 @@ export class DescriptionExtractor {
       /<meta\s+property=["']og:description["']\s+content=["']([^"']+)["']/i
     );
     if (ogDescriptionMatch && ogDescriptionMatch[1]?.trim()) {
-      return {
-        text: this.sanitizeDescription(ogDescriptionMatch[1]),
-        source: 'og_description',
-      };
+      const ogDesc = this.sanitizeDescription(ogDescriptionMatch[1]);
+      // Validate that og:description is reasonable (not a title)
+      if (this.isValidDescription(ogDesc)) {
+        return {
+          text: ogDesc,
+          source: 'og_description',
+        };
+      }
     }
 
-    // Priority 3: <title> tag
+    // Priority 3: Extract content from structured elements
+    const contentMatch = this.extractContentFromStructuredElements(html);
+    if (contentMatch) {
+      return contentMatch;
+    }
+
+    // Priority 4: <title> tag (only if it looks like a description, not a brand/nav title)
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
     if (titleMatch && titleMatch[1]?.trim()) {
       const title = this.sanitizeDescription(titleMatch[1]);
-      // Only use title if it's reasonable (not too short, not too long)
-      if (title.length >= 10 && title.length <= 200) {
+      // Only use title if it reads like a description (descriptive, not just branding/navigation)
+      if (title.length >= 20 && title.length <= 200 && this.looksLikeDescription(title)) {
         return {
           text: title,
           source: 'title',
@@ -116,10 +130,10 @@ export class DescriptionExtractor {
       }
     }
 
-    // Priority 4: First paragraph in main/article
-    const mainContentMatch = html.match(/<(?:main|article)[^>]*>[\s\S]*?<p[^>]*>([^<]+)<\/p>/i);
-    if (mainContentMatch && mainContentMatch[1]?.trim()) {
-      const content = this.sanitizeDescription(mainContentMatch[1]);
+    // Priority 5: First paragraph from body (more lenient extraction)
+    const bodyParagraphMatch = html.match(/<body[^>]*>[\s\S]*?<p[^>]*>([^<]{20,300})<\/p>/i);
+    if (bodyParagraphMatch && bodyParagraphMatch[1]?.trim()) {
+      const content = this.sanitizeDescription(bodyParagraphMatch[1]);
       if (content.length >= 20 && content.length <= 300) {
         return {
           text: content.substring(0, 200) + (content.length > 200 ? '...' : ''),
@@ -208,6 +222,132 @@ export class DescriptionExtractor {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Extract content from structured elements (main, article, section)
+   */
+  private extractContentFromStructuredElements(html: string): { text: string; source: ExtractionResult['source'] } | null {
+    // Try to extract from main/article sections first
+    const structuredMatch = html.match(/<(?:main|article|section)[^>]*>([\s\S]*?)<\/(?:main|article|section)>/i);
+
+    if (structuredMatch) {
+      const sectionContent = structuredMatch[1];
+
+      // Look for paragraphs in the structured content
+      const paragraphMatches = sectionContent.match(/<p[^>]*>([^<]{20,500})<\/p>/gi) || [];
+
+      for (const para of paragraphMatches) {
+        const contentMatch = para.match(/<p[^>]*>([^<]+)<\/p>/i);
+        if (contentMatch && contentMatch[1]) {
+          const content = this.sanitizeDescription(contentMatch[1]);
+
+          // Validate this content looks like a description
+          if (content.length >= 20 && content.length <= 400 && this.isValidDescription(content)) {
+            // Truncate if too long
+            const truncated = content.length > 200 ? content.substring(0, 200) + '...' : content;
+            return {
+              text: truncated,
+              source: 'content',
+            };
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Check if text looks like a description (not just a title or navigation)
+   */
+  private looksLikeDescription(text: string): boolean {
+    const trimmed = text.trim();
+
+    // Reject if too short or too long
+    if (trimmed.length < 20 || trimmed.length > 200) {
+      return false;
+    }
+
+    // Reject common title patterns
+    const titlePatterns = [
+      /^[\w\s]+ - [\w\s]+$/, // "Brand - Page"
+      /^[\w\s]+\|[\w\s]+$/,  // "Brand | Page"
+      /^[\w\s]+::[\w\s]+$/,  // "Brand :: Page"
+      /^[\w\s]+ - Home$/,    // "Brand - Home"
+      /^Home - [\w\s]+$/,    // "Home - Brand"
+      /^(Login|Sign[\s-]?up|Sign[\s-]?in|Register|Contact|About|FAQ|Help)$/i, // Single navigation words
+      /^(Home|404|Error|Page Not Found)$/i, // Simple page names
+    ];
+
+    for (const pattern of titlePatterns) {
+      if (pattern.test(trimmed)) {
+        return false;
+      }
+    }
+
+    // Prefer text that looks like a sentence (has multiple words, starts with capital, etc.)
+    const wordCount = trimmed.split(/\s+/).length;
+    if (wordCount < 3) {
+      return false;
+    }
+
+    // If it contains question words or descriptive language, likely a description
+    const descriptiveIndicators = [
+      'how to', 'what is', 'why', 'when', 'where', 'learn', 'guide', 'tips',
+      'best', 'top', 'review', 'comparison', 'vs', 'about', 'introduction',
+      'overview', 'understanding', 'explained', 'discover', 'find out'
+    ];
+
+    const lowerText = trimmed.toLowerCase();
+    for (const indicator of descriptiveIndicators) {
+      if (lowerText.includes(indicator)) {
+        return true;
+      }
+    }
+
+    // If it reads like a sentence (has periods, question marks, etc.), likely a description
+    if (/[.!?]/.test(trimmed)) {
+      return true;
+    }
+
+    // If it's multiple words without obvious brand separators, could be a description
+    // But be more lenient for titles - if it passes other checks, accept it
+    return wordCount >= 5;
+  }
+
+  /**
+   * Check if a description is valid (not a title, not just branding)
+   */
+  private isValidDescription(text: string): boolean {
+    const trimmed = text.trim();
+
+    // Must be reasonable length
+    if (trimmed.length < 10 || trimmed.length > 500) {
+      return false;
+    }
+
+    // Reject if it's obviously a title (too short, has brand separators)
+    if (trimmed.length < 15) {
+      const brandPatterns = /[\-|:|]|\b(home|login|signup|register|contact|about|faq|help)\b/i;
+      if (brandPatterns.test(trimmed)) {
+        return false;
+      }
+    }
+
+    // Reject all-caps titles (often site names)
+    if (trimmed === trimmed.toUpperCase() && trimmed.length < 30) {
+      return false;
+    }
+
+    // Reject single words or very short phrases
+    const wordCount = trimmed.split(/\s+/).length;
+    if (wordCount < 2) {
+      return false;
+    }
+
+    // Looks good!
+    return true;
   }
 
   /**
