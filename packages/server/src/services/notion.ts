@@ -84,6 +84,57 @@ const READ_ONLY_PROPERTY_TYPES = new Set([
 ]);
 
 export class NotionService {
+  /**
+   * Helper method to wrap Notion API calls with retry logic
+   */
+  private async withRetry<T>(
+    operation: () => Promise<T>,
+    operationName: string,
+    maxRetries = 3
+  ): Promise<T> {
+    let lastError: any;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Request timeout after 30s')), 30000);
+        });
+
+        const result = await Promise.race([operation(), timeoutPromise]);
+        return result as T;
+      } catch (error: any) {
+        lastError = error;
+        const isNetworkError =
+          error.message?.includes('ECONNRESET') ||
+          error.message?.includes('fetch failed') ||
+          error.message?.includes('timeout') ||
+          error.code === 'ECONNRESET' ||
+          error.cause?.errno === -54;
+
+        if (isNetworkError && attempt < maxRetries) {
+          const delay = 1000 * Math.pow(2, attempt); // 1s, 2s, 4s
+          console.log(
+            `[Notion] ${operationName} attempt ${attempt + 1} failed (${error.message || error.code || error}), retrying in ${delay}ms...`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+
+        if (error.status === 429 && attempt < maxRetries) {
+          const delay = 5000; // 5s for rate limits
+          console.log(
+            `[Notion] ${operationName} rate limited (attempt ${attempt + 1}), waiting ${delay}ms...`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+
+        throw error;
+      }
+    }
+
+    throw lastError;
+  }
   private getClient(accessToken: string) {
     return new Client({ auth: accessToken, notionVersion: config.notionApiVersion });
   }
@@ -135,14 +186,21 @@ export class NotionService {
   ): Promise<{ databaseId: string; dataSourceId: string }> {
     const notion = this.getClient(accessToken);
 
-    // Step 1: Try accessing the stored database
+    // Step 1: Try accessing the stored database with retry
     try {
-      const db: any = await notion.request({ method: 'get', path: `databases/${databaseId}` });
+      console.log(`[Notion] Verifying database access for ${databaseId}...`);
+      const db: any = await this.withRetry(
+        () => notion.request({ method: 'get', path: `databases/${databaseId}` }),
+        `Verify database ${databaseId}`,
+        3
+      );
       if (db && db.object === 'database') {
+        console.log(`[Notion] ✓ Database ${databaseId} is accessible`);
         const dataSourceId = await this.getPrimaryDataSourceId(databaseId, accessToken);
         return { databaseId, dataSourceId };
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error(`[Notion] ✗ Failed to access database ${databaseId}:`, error.message || error);
       // Step 2: Attempt recovery by re-parsing the duplicated template page
       if (duplicatedTemplateId) {
         console.log('[Notion] Attempting database recovery from template');
@@ -151,6 +209,7 @@ export class NotionService {
             duplicatedTemplateId,
             accessToken
           );
+          console.log(`[Notion] ✓ Database recovered from template: ${resolved.databaseId}`);
           return {
             databaseId: resolved.databaseId,
             dataSourceId: resolved.dataSourceId || resolved.databaseId,
@@ -180,17 +239,22 @@ export class NotionService {
     const notion = this.getClient(accessToken);
 
     try {
-      const db = (await notion.request({
-        method: 'get',
-        path: `databases/${databaseId}`,
-      })) as any;
+      const db: any = await this.withRetry(
+        () =>
+          notion.request({
+            method: 'get',
+            path: `databases/${databaseId}`,
+          }),
+        `Get data source for ${databaseId}`,
+        3
+      );
 
       if (db.data_sources && db.data_sources.length > 0) {
         return db.data_sources[0].id;
       }
 
       throw new Error('No data sources found in database object');
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Notion] ❌ Failed to get data source ID:', error);
       throw error;
     }
@@ -480,7 +544,8 @@ export class NotionService {
    */
   async existingBookmarkUrls(
     dataSourceId: string,
-    accessToken: string
+    accessToken: string,
+    options: { maxPages?: number; timeoutMs?: number } = {}
   ): Promise<{
     urls: string[];
     syncIds: string[];
@@ -490,24 +555,87 @@ export class NotionService {
     const syncIds: string[] = [];
     let cursor: string | undefined = undefined;
     let pageCount = 0;
-    const maxPages = 100; // Safety limit to prevent infinite loops
+    const maxPages = options.maxPages || 50; // Reduced from 100 to avoid rate limits
+    const timeoutMs = options.timeoutMs || 30000; // 30 second timeout
 
-    try {
-      do {
-        pageCount++;
-        if (pageCount > maxPages) {
-          console.warn('[Notion] Reached max pages limit while fetching existing bookmarks');
-          break;
-        }
+    const attemptFetch = async (retryCount = 0): Promise<any> => {
+      const maxRetries = 3;
+      const baseDelay = 1000; // 1 second
 
-        const response: any = await (notion as any).dataSources.query({
+      try {
+        // Add timeout to the API call
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Request timeout')), timeoutMs);
+        });
+
+        const fetchPromise = (notion as any).dataSources.query({
           data_source_id: dataSourceId,
           page_size: 100,
           start_cursor: cursor,
         });
 
+        const response = await Promise.race([fetchPromise, timeoutPromise]);
+        return response;
+      } catch (error: any) {
+        console.warn(
+          `[Notion] Fetch attempt ${retryCount + 1} failed:`,
+          error.message || error
+        );
+
+        // Check if it's a network/connection error
+        const isNetworkError =
+          error.message?.includes('ECONNRESET') ||
+          error.message?.includes('fetch failed') ||
+          error.message?.includes('timeout') ||
+          error.code === 'ECONNRESET' ||
+          error.cause?.errno === -54;
+
+        if (retryCount < maxRetries && isNetworkError) {
+          const delay = baseDelay * Math.pow(2, retryCount); // Exponential backoff
+          console.log(
+            `[Notion] Retrying in ${delay}ms (attempt ${retryCount + 1}/${maxRetries})...`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          return attemptFetch(retryCount + 1);
+        }
+
+        // If it's a rate limit error, wait longer
+        if (error.status === 429 || error.message?.includes('rate limit')) {
+          const delay = baseDelay * 5; // 5 second delay for rate limits
+          console.log(
+            `[Notion] Rate limited, waiting ${delay}ms before retry...`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          if (retryCount < maxRetries) {
+            return attemptFetch(retryCount + 1);
+          }
+        }
+
+        throw error;
+      }
+    };
+
+    try {
+      do {
+        pageCount++;
+        if (pageCount > maxPages) {
+          console.warn(
+            `[Notion] Reached max pages limit (${maxPages}) while fetching existing bookmarks. ` +
+            `Found ${urls.length} URLs so far.`
+          );
+          break;
+        }
+
+        console.log(
+          `[Notion] Fetching existing bookmarks page ${pageCount}/${maxPages}...`
+        );
+
+        const response = await attemptFetch();
         const results = response?.results || [];
-        console.log(`[Notion] Fetched page ${pageCount} with ${results.length} bookmarks`);
+
+        console.log(
+          `[Notion] Fetched page ${pageCount} with ${results.length} bookmarks (total: ${urls.length})`
+        );
 
         // Extract URL and syncId from each page
         for (const page of results) {
@@ -550,16 +678,29 @@ export class NotionService {
         }
 
         cursor = response?.next_cursor || undefined;
+
+        // Small delay between pages to respect rate limits
+        if (cursor && pageCount < maxPages) {
+          await new Promise((resolve) => setTimeout(resolve, 350)); // ~3 requests per second
+        }
       } while (cursor);
 
       console.log(
-        `[Notion] Found ${urls.length} URLs and ${syncIds.length} syncIds (${pageCount} pages)`
+        `[Notion] ✓ Successfully fetched ${urls.length} URLs and ${syncIds.length} syncIds from ${pageCount} pages`
       );
       return { urls, syncIds };
-    } catch (error) {
-      console.error('[Notion] Failed to fetch existing bookmarks for duplicate check:', error);
-      // Return empty arrays on error - safer to create duplicates than fail the entire sync
-      return { urls: [], syncIds: [] };
+    } catch (error: any) {
+      console.error(
+        `[Notion] ✗ Failed to fetch existing bookmarks after ${pageCount} pages:`,
+        error.message || error
+      );
+      console.error(
+        `[Notion] Partial data collected: ${urls.length} URLs, ${syncIds.length} syncIds`
+      );
+
+      // Return what we have so far instead of empty arrays
+      // This allows the sync to continue with partial duplicate checking
+      return { urls, syncIds };
     }
   }
 
@@ -587,7 +728,13 @@ export class NotionService {
       visited.add(id);
 
       try {
-        const children = await notion.blocks.children.list({ block_id: id, page_size: 100 });
+        console.log(`[Notion] Reading children for block ${id} (depth ${depth})...`);
+
+        const children = await this.withRetry(
+          () => notion.blocks.children.list({ block_id: id, page_size: 100 }),
+          `Read children for ${id}`,
+          3
+        );
 
         for (const block of (children as any).results || []) {
           const type = block?.type;
@@ -597,10 +744,15 @@ export class NotionService {
             console.log('[Notion] Found child_database:', candidateId);
 
             try {
-              const db = (await notion.request({
-                method: 'get',
-                path: `databases/${candidateId}`,
-              })) as any;
+              const db: any = await this.withRetry(
+                () =>
+                  notion.request({
+                    method: 'get',
+                    path: `databases/${candidateId}`,
+                  }),
+                `Get database ${candidateId}`,
+                3
+              );
 
               if (db && db.object === 'database') {
                 // Skip linked database views, only use inline databases
@@ -628,10 +780,14 @@ export class NotionService {
           if (block?.has_children) {
             queue.push(block.id);
             meta.set(block.id, depth + 1);
+
+            // Rate limiting: wait before adding more to queue
+            await new Promise((resolve) => setTimeout(resolve, 350));
           }
         }
-      } catch (e) {
-        console.warn('[Notion] Error reading children for block', id, e);
+      } catch (e: any) {
+        console.error(`[Notion] ✗ Error reading children for block ${id}:`, e.message || e);
+        // Continue processing other blocks instead of failing completely
       }
     }
 

@@ -4,6 +4,171 @@ import { validateConfig, debugConfig } from './config';
 import { serverAPI, APIError } from './server-api';
 import { addMessageListener, Messages } from '../utils/message';
 import { scheduleAutoSync, setupAutoSyncListener, restoreAutoSync } from './auto-sync';
+import { normalizeUrl } from '../utils/url-normalizer';
+
+// Cache for page descriptions (url -> { description: string, timestamp: number })
+const pageDescriptionCache = new Map<string, { description: string; timestamp: number }>();
+const DESCRIPTION_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const DESCRIPTION_CACHE_STORAGE_KEY = 'page_description_cache';
+const MAX_CACHE_SIZE = 1000; // Maximum number of cache entries before LRU eviction
+
+// Evict least recently used entries when cache exceeds max size
+function evictLRUEntries() {
+  if (pageDescriptionCache.size <= MAX_CACHE_SIZE) {
+    return;
+  }
+
+  // Convert to array and sort by timestamp (oldest first)
+  const entries = Array.from(pageDescriptionCache.entries())
+    .map(([url, data]) => ({ url, ...data }))
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  // Remove oldest entries until we're under the limit
+  const toRemove = entries.slice(0, entries.length - MAX_CACHE_SIZE);
+  let removedCount = 0;
+  for (const entry of toRemove) {
+    pageDescriptionCache.delete(entry.url);
+    removedCount++;
+  }
+
+  if (removedCount > 0) {
+    console.log(
+      `[DescriptionExtractor] Evicted ${removedCount} LRU entries (cache size: ${pageDescriptionCache.size}/${MAX_CACHE_SIZE})`
+    );
+  }
+}
+
+// Listen for page descriptions from content scripts
+chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
+  if (message.type === 'PAGE_DESCRIPTION') {
+    const { url, description } = message.payload;
+    const normalizedUrl = normalizeUrl(url);
+    console.log(`[DescriptionExtractor] Received description for ${url} (normalized: ${normalizedUrl}): "${description}"`);
+    
+    // Update timestamp for LRU tracking
+    pageDescriptionCache.set(normalizedUrl, {
+      description,
+      timestamp: Date.now(),
+    });
+
+    // Evict LRU entries if cache is too large
+    evictLRUEntries();
+
+    // Persist to storage
+    persistDescriptionCache().catch((error) => {
+      console.warn('[DescriptionExtractor] Failed to persist cache:', error);
+    });
+  }
+});
+
+// Persist cache to chrome.storage.local for persistence across service worker restarts
+async function persistDescriptionCache() {
+  try {
+    const cacheObject: Record<string, { description: string; timestamp: number }> = {};
+    pageDescriptionCache.forEach((value, key) => {
+      cacheObject[key] = value;
+    });
+    await chrome.storage.local.set({ [DESCRIPTION_CACHE_STORAGE_KEY]: cacheObject });
+    console.log(`[DescriptionExtractor] Persisted ${Object.keys(cacheObject).length} descriptions to storage`);
+  } catch (error) {
+    console.error('[DescriptionExtractor] Failed to persist cache to storage:', error);
+  }
+}
+
+// Load cache from chrome.storage.local
+async function loadDescriptionCacheFromStorage() {
+  try {
+    const result = await chrome.storage.local.get([DESCRIPTION_CACHE_STORAGE_KEY]);
+    const cacheData = result[DESCRIPTION_CACHE_STORAGE_KEY];
+    if (cacheData && typeof cacheData === 'object') {
+      const now = Date.now();
+      let loadedCount = 0;
+      let expiredCount = 0;
+      let normalizedCount = 0;
+
+      for (const [url, data] of Object.entries(cacheData)) {
+        if (
+          data &&
+          typeof data === 'object' &&
+          'description' in data &&
+          'timestamp' in data &&
+          typeof (data as any).description === 'string' &&
+          typeof (data as any).timestamp === 'number'
+        ) {
+          // Normalize URL when loading (handles migration of old cache entries)
+          const normalizedUrl = normalizeUrl(url);
+          const wasNormalized = normalizedUrl !== url;
+
+          if (now - (data as any).timestamp <= DESCRIPTION_CACHE_TTL_MS) {
+            // Use normalized URL as key
+            pageDescriptionCache.set(normalizedUrl, {
+              description: (data as any).description,
+              timestamp: (data as any).timestamp,
+            });
+            loadedCount++;
+            if (wasNormalized) {
+              normalizedCount++;
+            }
+          } else {
+            expiredCount++;
+          }
+        }
+      }
+
+      // Evict LRU entries if we loaded too many
+      evictLRUEntries();
+
+      console.log(
+        `[DescriptionExtractor] Loaded ${loadedCount} descriptions from storage (${expiredCount} expired, ${normalizedCount} normalized)`
+      );
+    }
+  } catch (error) {
+    console.error('[DescriptionExtractor] Failed to load cache from storage:', error);
+  }
+}
+
+// Clean up expired cache entries periodically
+setInterval(async () => {
+  const now = Date.now();
+  let deletedCount = 0;
+  for (const [url, data] of pageDescriptionCache.entries()) {
+    if (now - data.timestamp > DESCRIPTION_CACHE_TTL_MS) {
+      pageDescriptionCache.delete(url);
+      deletedCount++;
+    }
+  }
+  if (deletedCount > 0) {
+    console.log(`[DescriptionExtractor] Cleaned up ${deletedCount} expired descriptions`);
+    await persistDescriptionCache();
+  }
+}, 60 * 60 * 1000); // Check every hour
+
+function getCachedDescription(url: string): string {
+  // Normalize URL before lookup to ensure cache hits
+  const normalizedUrl = normalizeUrl(url);
+  const cached = pageDescriptionCache.get(normalizedUrl);
+  
+  if (!cached) {
+    console.debug(`[DescriptionExtractor] No cache entry for: ${url} (normalized: ${normalizedUrl})`);
+    return '';
+  }
+
+  // Check if expired
+  if (Date.now() - cached.timestamp > DESCRIPTION_CACHE_TTL_MS) {
+    console.debug(`[DescriptionExtractor] Cache expired for: ${url} (normalized: ${normalizedUrl})`);
+    pageDescriptionCache.delete(normalizedUrl);
+    return '';
+  }
+
+  // Update timestamp for LRU tracking (mark as recently used)
+  cached.timestamp = Date.now();
+
+  console.debug(`[DescriptionExtractor] Cache hit for ${url} (normalized: ${normalizedUrl}): "${cached.description}"`);
+  return cached.description;
+}
+
+// Load cache on service worker startup
+loadDescriptionCacheFromStorage();
 
 // import './test-oauth-flow'; // Removed in production build
 
@@ -71,10 +236,14 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
         if (node.url) {
           const title = node.title || 'Untitled';
           const url = node.url || '';
+          const normalizedUrl = normalizeUrl(url);
+          const description = getCachedDescription(url);
+          console.log(`[Sync] Processing bookmark: "${title}" -> ${url} (normalized: ${normalizedUrl})`);
+          console.log(`[Sync] Description for ${url}: "${description}" (${description ? 'found' : 'not found'})`);
           formatted.push({
             title,
             url,
-            description: 'Imported from Chrome bookmarks',
+            description,
             path: currentPath,
             dateAdded: node.dateAdded
               ? new Date(node.dateAdded).toISOString()
@@ -91,7 +260,10 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
         }
       }
     };
+    console.log('[Sync] Starting to flatten bookmarks...');
     flatten(flat as any);
+    console.log(`[Sync] Flattened ${formatted.length} bookmarks`);
+    console.log(`[Sync] Cache size: ${pageDescriptionCache.size} URLs with descriptions`);
 
     // Compute a stable fingerprint of current bookmarks to avoid redundant syncs
     const computeFingerprint = async () => {
@@ -150,7 +322,20 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
       return { success: true } as const;
     }
 
+    // Log sample of bookmarks to be synced (first 5)
+    console.log(`[Sync] Preparing to sync ${formatted.length} bookmarks to server`);
+    console.log(`[Sync] Sample bookmarks:`);
+    formatted.slice(0, 5).forEach((bm, i) => {
+      console.log(`[Sync]   ${i + 1}. ${bm.title} -> ${bm.url}`);
+      console.log(`[Sync]      Description: "${bm.description}" (${bm.description ? 'has text' : 'empty'})`);
+    });
+    if (formatted.length > 5) {
+      console.log(`[Sync]   ... and ${formatted.length - 5} more`);
+    }
+
+    console.log('[Sync] Sending bookmarks to server...');
     await serverAPI.syncBookmarks(formatted);
+    console.log('[Sync] Server sync completed successfully');
 
     await setState({
       last_sync: new Date().toISOString(),

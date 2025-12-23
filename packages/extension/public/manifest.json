@@ -34,5 +34,11 @@
     "128": "assets/favicon/android-chrome-512x512.png"
   },
   "options_page": "options.html",
-  "content_scripts": []
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/description-extractor.ts"],
+      "run_at": "document_end"
+    }
+  ]
 }

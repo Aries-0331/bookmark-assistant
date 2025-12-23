@@ -7,6 +7,7 @@ import { notionService } from '../services/notion';
 import { userPrisma } from '../services/userPrisma';
 import { config } from '../config';
 import { auditLog, sanitizeError, validateBookmark, createBatches, sleep } from '../utils';
+import { descriptionExtractor } from '../services/description-extractor';
 
 const router: import('express').Router = Router();
 
@@ -179,13 +180,62 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     }
 
     // Validate and enrich bookmarks
-    const enrichedBookmarks = bookmarks.map((bookmark: any, index: number) =>
+    let enrichedBookmarks = bookmarks.map((bookmark: any, index: number) =>
       validateBookmark(bookmark, index)
     );
+
+    // Generate descriptions for bookmarks without them (if enabled)
+    const generateDescriptions = options.generateDescriptions !== false; // Default: true
+    if (generateDescriptions) {
+      console.log('[Bookmark Sync] Generating descriptions for bookmarks without them...');
+      const descriptionPromises = enrichedBookmarks.map(async (bookmark: BookmarkItem) => {
+        // Skip if description already exists
+        if (bookmark.description && bookmark.description.trim()) {
+          return bookmark;
+        }
+
+        // Skip if no URL
+        if (!bookmark.url) {
+          return bookmark;
+        }
+
+        try {
+          // Extract description from URL
+          const result = await descriptionExtractor.extractFromUrl(bookmark.url);
+          if (result.success && result.description) {
+            console.log(
+              `[Bookmark Sync] Generated description for ${bookmark.title}: "${result.description.substring(0, 50)}..."`
+            );
+            return {
+              ...bookmark,
+              description: result.description,
+            };
+          } else {
+            console.debug(
+              `[Bookmark Sync] Failed to generate description for ${bookmark.url}: ${result.error || 'No description found'}`
+            );
+          }
+        } catch (error) {
+          console.warn(`[Bookmark Sync] Error generating description for ${bookmark.url}:`, error);
+        }
+
+        return bookmark;
+      });
+
+      // Wait for all descriptions to be generated (with timeout)
+      enrichedBookmarks = (await Promise.all(descriptionPromises)) as typeof enrichedBookmarks;
+      console.log('[Bookmark Sync] Description generation completed');
+    }
     // Query existing bookmarks to build sync map
+    // Limit to 50 pages (5000 bookmarks) to avoid rate limits
+    // For larger databases, we'll sync what we can and accept some duplicates
     const { urls, syncIds } = await notionService.existingBookmarkUrls(
       verifiedDataSourceId,
-      userData.notionAccessToken
+      userData.notionAccessToken,
+      {
+        maxPages: 50, // Reduced from 100 to avoid rate limits
+        timeoutMs: 45000, // 45 second timeout
+      }
     );
     // Compute diff (by syncId primarily, with URL fallback)
     const diff = diffBookmarks(enrichedBookmarks as BookmarkItem[], urls, syncIds);

@@ -47,6 +47,7 @@ export interface OAuthExchangeRequest {
 export interface BookmarkSyncOptions {
   batchSize?: number;
   duplicateHandling?: 'update' | 'skip' | 'create_new';
+  generateDescriptions?: boolean; // Default: true - Generate descriptions for bookmarks without them
 }
 
 export interface BookmarkSyncRequest {
