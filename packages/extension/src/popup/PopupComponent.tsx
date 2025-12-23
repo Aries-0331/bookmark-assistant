@@ -67,14 +67,14 @@ export default function Popup() {
   return (
     <div className="w-[380px] bg-white">
       {/* Header */}
-      <div className="bg-white text-gray-800 p-4">
+      <div className="bg-white text-gray-800 px-4 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <img src="/assets/logo.png" alt="Logo" className="w-6 h-6" />
+          <img src="/assets/logo.png" alt="Logo" className="w-8 h-8" />
           <h1 className="text-base font-semibold">Bookmark Assistant</h1>
         </div>
       </div>
 
-      <div className="p-4 space-y-4">
+      <div className="px-4 pt-2 pb-4 space-y-4">
         {/* Status Card */}
         <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 space-y-3">
           <div className="flex items-center justify-between">
