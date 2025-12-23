@@ -1,5 +1,5 @@
 import { AlertCircle, CheckCircle, Crown, Sparkles, RefreshCw, Settings, Link } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAppStore } from '../options/store';
 import { sendMessage, Messages } from '../utils/message';
 import { relativeTime } from '../utils/common';
@@ -15,14 +15,17 @@ export default function Popup() {
     refreshConnection,
   } = useAppStore();
 
+  const hasInitialized = useRef(false);
+
   useEffect(() => {
     const loadState = async () => {
-      if (isConnected) {
-        await refreshConnection();
-      }
+      if (hasInitialized.current) return;
+      hasInitialized.current = true;
+
+      await refreshConnection();
     };
     loadState();
-  }, [isConnected, refreshConnection]);
+  }, []);
 
   const handleConnect = async () => {
     if (isConnecting) return;

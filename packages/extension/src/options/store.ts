@@ -20,6 +20,8 @@ export type AppState = {
   isConnecting: boolean;
   isConnected: boolean;
   isSyncing: boolean;
+  isRefreshingProfile: boolean;
+  hasTriedInitialLoad: boolean;
   bookmarkCount: number;
   lastSync: string;
   isPro: boolean;
@@ -65,6 +67,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   isConnecting: false,
   isConnected: false,
   isSyncing: false,
+  isRefreshingProfile: false,
+  hasTriedInitialLoad: false,
   bookmarkCount: 0,
   lastSync: '',
   isPro: false,
@@ -194,6 +198,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   refreshEntitlements: async () => {
+    if (get().isRefreshingProfile) return;
+    set({ isRefreshingProfile: true });
+
     try {
       const response = await sendMessage({ type: Messages.GET_USER_PROFILE });
 
@@ -201,25 +208,40 @@ export const useAppStore = create<AppState>((set, get) => ({
         const isPro = response.profile.isPro === true;
         const purchaseType = response.profile.purchaseType as 'monthly' | 'lifetime' | undefined;
         set({ isPro, purchaseType });
-        // Also persist to storage
         chrome.storage.local.set({ is_pro: isPro, purchase_type: purchaseType });
-        console.log('✅ User profile refreshed:', { isPro, purchaseType });
       }
-    } catch (error) {
-      console.error('❌ Failed to refresh user profile:', error);
+    } catch (error: any) {
+      console.error('Failed to refresh user profile:', error);
+
+      const is401 = error?.status === 401 || error?.message?.includes('401') || error?.code === 'UNAUTHORIZED';
+      if (is401) {
+        set({ isConnected: false, isPro: false, purchaseType: undefined });
+        chrome.storage.local.remove(['session_token', 'user_id', 'user_email']);
+      }
+    } finally {
+      set({ isRefreshingProfile: false });
     }
   },
   refreshConnection: async () => {
     try {
       const { session_token } = await chrome.storage.local.get(['session_token']);
-      set({ isConnected: !!session_token });
 
-      if (session_token) {
-        // Also refresh user profile when connected
-        await get().refreshEntitlements();
+      if (!session_token) {
+        set({ isConnected: false, isPro: false, purchaseType: undefined });
+        return;
       }
+
+      const { hasTriedInitialLoad } = await chrome.storage.local.get(['hasTriedInitialLoad']);
+      if (hasTriedInitialLoad) {
+        return;
+      }
+
+      await chrome.storage.local.set({ hasTriedInitialLoad: true });
+      set({ hasTriedInitialLoad: true });
+
+      await get().refreshEntitlements();
     } catch (error) {
-      console.error('❌ Failed to refresh connection state:', error);
+      console.error('Failed to refresh connection state:', error);
     }
   },
   saveSyncSettings: async (nextIntervalHours?: number) => {
@@ -274,12 +296,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!shot) return;
 
       if (changes[CACHE_KEYS.session_token]) {
+        const oldToken = changes[CACHE_KEYS.session_token].oldValue;
         const newToken = changes[CACHE_KEYS.session_token].newValue;
         const wasConnected = useAppStore.getState().isConnected;
         const isNowConnected = !!newToken;
+
         useAppStore.setState({ isConnected: isNowConnected });
 
-        // Refresh entitlements when connection state changes to connected
+        if (newToken && (!oldToken || oldToken !== newToken)) {
+          chrome.storage.local.remove(['hasTriedInitialLoad']);
+          useAppStore.setState({ hasTriedInitialLoad: false });
+        }
+
         if (!wasConnected && isNowConnected) {
           useAppStore.getState().refreshEntitlements();
         }
@@ -293,9 +321,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       if (changes[CACHE_KEYS.last_sync_summary]) {
         const summary = changes[CACHE_KEYS.last_sync_summary].newValue as string | undefined;
-        // Parse and set sync summary for UI feedback
         if (summary === 'no_changes') {
-          // Get count from storage
           chrome.storage.local.get(['last_sync_count'], (result) => {
             const count = result.last_sync_count as number | undefined;
             useAppStore.setState({
@@ -307,8 +333,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
             });
           });
         } else if (!summary) {
-          // Clear summary after successful sync
-          // Note: summary is undefined when the key is deleted (set to null)
           useAppStore.setState({ lastSyncSummary: undefined });
         }
       }
@@ -384,29 +408,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
-  // Refresh entitlements on visibility change (e.g. returning from payment tab)
+  // Visibility change handler (disabled to prevent unnecessary API calls)
   useEffect(() => {
-    const onVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && useAppStore.getState().isConnected) {
-        useAppStore.getState().refreshEntitlements();
-      }
-    };
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+    // Currently disabled
   }, []);
 
   // Kick off config + settings load
   useEffect(() => {
     (async () => {
       await useAppStore.getState().initFromStorage();
-      // Fetch latest pricing
       await useAppStore.getState().fetchPricing();
-
-      // If user is connected, refresh entitlements
-      const { isConnected } = useAppStore.getState();
-      if (isConnected) {
-        await useAppStore.getState().refreshEntitlements();
-      }
     })();
   }, []);
 

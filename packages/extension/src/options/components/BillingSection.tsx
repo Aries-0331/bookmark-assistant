@@ -107,7 +107,7 @@ export function BillingSection() {
 
       checkEntitlements();
     }
-  }, [refreshEntitlements, showToast]);
+  }, [showToast]);
 
   // Fetch subscription info for monthly Pro users
   useEffect(() => {
