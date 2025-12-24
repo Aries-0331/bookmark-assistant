@@ -5,6 +5,7 @@ import { serverAPI, APIError } from './server-api';
 import { addMessageListener, Messages } from '../utils/message';
 import { scheduleAutoSync, setupAutoSyncListener, restoreAutoSync } from './auto-sync';
 import { normalizeUrl } from '../utils/url-normalizer';
+import { reportError } from '../utils/error-reporter';
 
 // Cache for page descriptions (url -> { description: string, timestamp: number })
 const pageDescriptionCache = new Map<string, { description: string; timestamp: number }>();
@@ -221,6 +222,11 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
       console.warn('Failed to update sync state:', patch, e);
     }
   };
+  
+  // Declare variables outside try block so they're accessible in catch
+  let formatted: any[] = [];
+  let currentHash: string | undefined;
+  
   try {
     const startedAt = Date.now();
     const MIN_PROGRESS_MS = 1200; // keep UI spinner visible to avoid flicker / rapid re-clicks
@@ -229,7 +235,7 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
 
     await setState({ sync_in_progress: true, last_sync_error: null });
 
-    const formatted: any[] = [];
+    formatted = []; // Use existing declaration
     const minimalForHash: Array<{ url: string; title: string; path: string }> = [];
     const flatten = (nodes: any[], currentPath = 'Bookmarks') => {
       for (const node of nodes) {
@@ -300,7 +306,7 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
       'last_sync_hash',
     ]);
     const currentCount = formatted.length;
-    const currentHash = fp;
+    currentHash = fp; // Use existing declaration
     const previousHash = typeof prevHash === 'string' ? prevHash : prevFp;
     if (
       typeof prevCount === 'number' &&
@@ -354,6 +360,15 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
     return { success: true } as const;
   } catch (err) {
     console.error('❌ Server-side bookmark sync failed:', err);
+    
+    // Report error to server for monitoring
+    const error = err instanceof Error ? err : new Error(String(err));
+    await reportError(error, {
+      operation: 'sync',
+      bookmarkCount: formatted?.length || 0,
+      syncHash: currentHash,
+    });
+    
     const summary: Record<string, any> = {};
     if (err instanceof APIError) {
       if (err.status === 429) {
@@ -402,6 +417,14 @@ addMessageListener({
     } catch (error) {
       // Clear connecting state on error
       await chrome.storage.local.set({ is_connecting: false });
+      
+      // Report OAuth errors to server
+      const err = error instanceof Error ? error : new Error(String(error));
+      await reportError(err, {
+        operation: 'oauth',
+        stage: 'exchange_token',
+      });
+      
       throw error;
     }
   },
@@ -494,4 +517,30 @@ try {
   });
 } catch (e) {
   // Some environments may not support action.onClicked in mocks; ignore
+}
+
+// Global error handlers to catch unhandled errors
+if (typeof self !== 'undefined') {
+  self.addEventListener('error', (event) => {
+    console.error('[Global Error]', event.error);
+    reportError(event.error || new Error(event.message), {
+      type: 'unhandled',
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    }).catch(() => {
+      // Fail silently if error reporting fails
+    });
+  });
+
+  self.addEventListener('unhandledrejection', (event) => {
+    console.error('[Unhandled Rejection]', event.reason);
+    const error =
+      event.reason instanceof Error ? event.reason : new Error(String(event.reason));
+    reportError(error, {
+      type: 'unhandled_promise',
+    }).catch(() => {
+      // Fail silently if error reporting fails
+    });
+  });
 }

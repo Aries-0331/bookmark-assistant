@@ -8,6 +8,7 @@ import userRoutes from './user';
 import paddleRoutes from './paddle';
 import pricingRoutes from './pricing';
 import adminRoutes from './admin';
+import errorRoutes from './errors';
 
 const router: import('express').Router = Router();
 
@@ -19,6 +20,7 @@ router.use('/user', userRoutes);
 router.use('/paddle', paddleRoutes); // Paddle routes: /api/paddle/checkout-url and /api/paddle/webhooks/paddle
 router.use('/pricing', pricingRoutes);
 router.use('/admin', adminRoutes); // Admin routes: cache management
+router.use('/errors', errorRoutes); // Error reporting from extension
 
 // Health check endpoint (kept at root level)
 router.get('/health', (req, res) => {
