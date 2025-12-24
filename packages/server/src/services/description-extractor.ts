@@ -4,6 +4,7 @@
  */
 
 import { URL } from 'url';
+import { descriptionCache } from './description-cache';
 
 export interface ExtractionResult {
   description: string;
@@ -11,6 +12,7 @@ export interface ExtractionResult {
   success: boolean;
   error?: string;
   url: string;
+  fromCache?: boolean;
 }
 
 export class DescriptionExtractor {
@@ -23,48 +25,77 @@ export class DescriptionExtractor {
    */
   async extractFromUrl(url: string): Promise<ExtractionResult> {
     try {
+      // Normalize URL for consistent caching
+      const normalizedUrl = this.normalizeUrl(url);
+
+      // Check cache first
+      const cached = await descriptionCache.get(normalizedUrl);
+      if (cached) {
+        console.log(`[DescriptionExtractor] Cache hit for ${normalizedUrl} (hits: ${cached.hits})`);
+        return {
+          description: cached.description,
+          source: cached.source,
+          success: true,
+          url: normalizedUrl,
+          fromCache: true,
+        };
+      }
+
+      console.log(`[DescriptionExtractor] Cache miss for ${normalizedUrl}, fetching...`);
+
       // Validate URL
-      if (!this.isValidUrl(url)) {
+      if (!this.isValidUrl(normalizedUrl)) {
         return {
           description: '',
           source: 'empty',
           success: false,
           error: 'Invalid URL',
-          url,
+          url: normalizedUrl,
+          fromCache: false,
         };
       }
 
       // Skip non-HTTP URLs
-      if (!this.isFetchableUrl(url)) {
+      if (!this.isFetchableUrl(normalizedUrl)) {
         return {
           description: '',
           source: 'empty',
           success: false,
           error: 'URL is not fetchable',
-          url,
+          url: normalizedUrl,
+          fromCache: false,
         };
       }
 
       // Fetch HTML
-      const html = await this.fetchHtml(url);
+      const html = await this.fetchHtml(normalizedUrl);
       if (!html) {
         return {
           description: '',
           source: 'empty',
           success: false,
           error: 'Failed to fetch HTML',
-          url,
+          url: normalizedUrl,
+          fromCache: false,
         };
       }
 
       // Extract description
       const description = this.extractDescription(html);
 
+      // Cache the result (async, don't wait)
+      if (description.text) {
+        descriptionCache
+          .set(normalizedUrl, description.text, description.source)
+          .catch((err) => console.warn('[DescriptionExtractor] Failed to cache:', err));
+      }
+
       return {
         description: description.text,
         source: description.source,
         success: true,
-        url,
+        url: normalizedUrl,
+        fromCache: false,
       };
     } catch (error) {
       return {
@@ -73,6 +104,7 @@ export class DescriptionExtractor {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
         url,
+        fromCache: false,
       };
     }
   }
@@ -227,9 +259,13 @@ export class DescriptionExtractor {
   /**
    * Extract content from structured elements (main, article, section)
    */
-  private extractContentFromStructuredElements(html: string): { text: string; source: ExtractionResult['source'] } | null {
+  private extractContentFromStructuredElements(
+    html: string
+  ): { text: string; source: ExtractionResult['source'] } | null {
     // Try to extract from main/article sections first
-    const structuredMatch = html.match(/<(?:main|article|section)[^>]*>([\s\S]*?)<\/(?:main|article|section)>/i);
+    const structuredMatch = html.match(
+      /<(?:main|article|section)[^>]*>([\s\S]*?)<\/(?:main|article|section)>/i
+    );
 
     if (structuredMatch) {
       const sectionContent = structuredMatch[1];
@@ -272,10 +308,10 @@ export class DescriptionExtractor {
     // Reject common title patterns
     const titlePatterns = [
       /^[\w\s]+ - [\w\s]+$/, // "Brand - Page"
-      /^[\w\s]+\|[\w\s]+$/,  // "Brand | Page"
-      /^[\w\s]+::[\w\s]+$/,  // "Brand :: Page"
-      /^[\w\s]+ - Home$/,    // "Brand - Home"
-      /^Home - [\w\s]+$/,    // "Home - Brand"
+      /^[\w\s]+\|[\w\s]+$/, // "Brand | Page"
+      /^[\w\s]+::[\w\s]+$/, // "Brand :: Page"
+      /^[\w\s]+ - Home$/, // "Brand - Home"
+      /^Home - [\w\s]+$/, // "Home - Brand"
       /^(Login|Sign[\s-]?up|Sign[\s-]?in|Register|Contact|About|FAQ|Help)$/i, // Single navigation words
       /^(Home|404|Error|Page Not Found)$/i, // Simple page names
     ];
@@ -294,9 +330,26 @@ export class DescriptionExtractor {
 
     // If it contains question words or descriptive language, likely a description
     const descriptiveIndicators = [
-      'how to', 'what is', 'why', 'when', 'where', 'learn', 'guide', 'tips',
-      'best', 'top', 'review', 'comparison', 'vs', 'about', 'introduction',
-      'overview', 'understanding', 'explained', 'discover', 'find out'
+      'how to',
+      'what is',
+      'why',
+      'when',
+      'where',
+      'learn',
+      'guide',
+      'tips',
+      'best',
+      'top',
+      'review',
+      'comparison',
+      'vs',
+      'about',
+      'introduction',
+      'overview',
+      'understanding',
+      'explained',
+      'discover',
+      'find out',
     ];
 
     const lowerText = trimmed.toLowerCase();
@@ -329,7 +382,7 @@ export class DescriptionExtractor {
 
     // Reject if it's obviously a title (too short, has brand separators)
     if (trimmed.length < 15) {
-      const brandPatterns = /[\-|:|]|\b(home|login|signup|register|contact|about|faq|help)\b/i;
+      const brandPatterns = /[-|:|]|\b(home|login|signup|register|contact|about|faq|help)\b/i;
       if (brandPatterns.test(trimmed)) {
         return false;
       }

@@ -11,23 +11,23 @@ datasource db {
 
 model User {
   // --- 1. Identity (Internal System) ---
-  id            String   @id @default(cuid())
-  email         String   @unique
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // --- 2. Payment Status (Paddle) ---
-  plan                  String   @default("free") // "free", "pro"
-  paddleCustomerId      String?  @unique
-  paddleSubscriptionId  String?  @unique // For monthly subscriptions only
-  purchaseType          String?  // "monthly" or "lifetime"
-  licenseKey            String?
+  plan                 String  @default("free") // "free", "pro"
+  paddleCustomerId     String? @unique
+  paddleSubscriptionId String? @unique // For monthly subscriptions only
+  purchaseType         String? // "monthly" or "lifetime"
+  licenseKey           String?
 
   // --- 3. Notion Identity (Linked via OAuth) ---
-  notionUserId      String?  @unique
-  notionAccessToken String?
+  notionUserId       String? @unique
+  notionAccessToken  String?
   notionRefreshToken String?
-  notionWorkspaceId String?
+  notionWorkspaceId  String?
 
   // --- 4. App Configuration ---
   databases            Json?
@@ -40,4 +40,19 @@ model User {
 
   @@index([email])
   @@index([notionUserId])
+}
+
+model DescriptionCache {
+  id          String    @id @default(cuid())
+  url         String    @unique
+  description String    @db.Text
+  source      String // 'meta_description' | 'og_description' | 'title' | 'content' | 'empty'
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+  hits        Int       @default(0)
+  lastHitAt   DateTime?
+
+  @@index([url])
+  @@index([expiresAt])
+  @@map("description_cache")
 }

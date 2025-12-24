@@ -15,6 +15,7 @@ import {
   securityHeaders,
 } from './middleware';
 import { auditLog } from './utils';
+import { scheduleCleanupJob } from './jobs/cache-cleanup';
 
 // Validate configuration before starting
 try {
@@ -68,6 +69,9 @@ if (!process.env.VERCEL) {
     console.log(`🚀 Bookmark Notion Sync Server running on port ${PORT}`);
     console.log(`🔐 Environment: ${config.nodeEnv}`);
     console.log(`🎯 Health check: http://localhost:${PORT}/health`);
+
+    // Schedule cache cleanup job
+    scheduleCleanupJob();
 
     auditLog('server_start', 'system', {
       port: PORT,
