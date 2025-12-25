@@ -677,3 +677,4 @@ A: Yes for indie launch! Big companies need Sentry, but you can start simple.
 **Alternative:** See [ERROR_MONITORING_DESIGN.md](./ERROR_MONITORING_DESIGN.md) for full Sentry implementation  
 **Upgrade Path:** Switch to Sentry when you have revenue + high error volume
 
+

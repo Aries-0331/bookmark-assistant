@@ -1312,3 +1312,4 @@ sentry-cli info
 ---
 
 _This design document is part of the Production Readiness initiative. See [PRODUCTION_READINESS_ANALYSIS.md](../PRODUCTION_READINESS_ANALYSIS.md) for full context._
+
