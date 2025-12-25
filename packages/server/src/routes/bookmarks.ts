@@ -206,6 +206,24 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
         
         // Create a map to track updated bookmarks by their identifier
         const updatedBookmarksMap = new Map<string, BookmarkItem>();
+
+        // Helper function to get a unique key for a bookmark
+        const getBookmarkKey = (bookmark: BookmarkItem): string => {
+          return bookmark.url || bookmark.syncId || `bookmark-${Math.random().toString(36).substr(2, 9)}`;
+        };
+
+        // Helper function to normalize bookmark to ensure all properties are present
+        const normalizeBookmark = (bookmark: BookmarkItem): BookmarkItem => {
+          return {
+            title: bookmark.title,
+            url: bookmark.url,
+            path: bookmark.path,
+            description: bookmark.description,
+            tags: bookmark.tags,
+            dateAdded: bookmark.dateAdded,
+            syncId: bookmark.syncId,
+          };
+        };
         
         // Process each batch sequentially
         for (let i = 0; i < descriptionBatches.length; i++) {
@@ -224,11 +242,11 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
                   `[Bookmark Sync] Generated description for ${bookmark.title}: "${result.description.substring(0, 50)}..."`
                 );
                 // Store updated bookmark in map
-                const updated = {
+                const updated = normalizeBookmark({
                   ...bookmark,
                   description: result.description,
-                };
-                updatedBookmarksMap.set(bookmark.url || bookmark.syncId, updated);
+                });
+                updatedBookmarksMap.set(getBookmarkKey(bookmark), updated);
                 return updated;
               } else {
                 console.debug(
@@ -238,7 +256,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
             } catch (error) {
               console.warn(`[Bookmark Sync] Error generating description for ${bookmark.url}:`, error);
             }
-            return bookmark;
+            return normalizeBookmark(bookmark);
           });
           
           await Promise.all(batchPromises);
@@ -251,8 +269,8 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
         
         // Update enrichedBookmarks with extracted descriptions
         enrichedBookmarks = enrichedBookmarks.map((bm) => {
-          const updated = updatedBookmarksMap.get(bm.url || bm.syncId);
-          return updated || bm;
+          const updated = updatedBookmarksMap.get(getBookmarkKey(bm));
+          return updated ? normalizeBookmark(updated) : normalizeBookmark(bm);
         });
         
         console.log('[Bookmark Sync] Description generation completed');

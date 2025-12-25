@@ -1,6 +1,6 @@
 // 🛠️ Utility Functions for Server Operations
 
-import { AuditLogEntry } from '../types';
+import { AuditLogEntry, BookmarkItem } from '../types';
 import { randomUUID } from 'crypto';
 
 /**
@@ -54,10 +54,10 @@ export const sleep = (ms: number): Promise<void> => {
 /**
  * Validate and sanitize bookmark data
  */
-export const validateBookmark = (bookmark: any, _index: number) => {
+export const validateBookmark = (bookmark: any, _index: number): BookmarkItem => {
   return {
     title: bookmark.title || bookmark.name || 'Untitled Bookmark',
-    url: bookmark.url,
+    url: bookmark.url || '',
     path: bookmark.path,
     description: bookmark.description || '',
     tags: Array.isArray(bookmark.tags) ? bookmark.tags : [],
