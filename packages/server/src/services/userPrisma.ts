@@ -1,7 +1,39 @@
 import { PrismaClient } from '@prisma/client';
 import { UserData } from '../types';
 
-export const prisma = new PrismaClient();
+// Configure Prisma with connection pool settings
+// These settings help prevent "MaxClientsInSessionMode" errors
+const prismaClientOptions = {
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+  // Connection pool configuration via DATABASE_URL parameters
+  // If not in URL, Prisma defaults are used (connection_limit: number of CPUs * 2 + 1)
+  // For production, ensure DATABASE_URL includes: ?connection_limit=20&pool_timeout=10
+};
+
+// Create singleton PrismaClient instance
+// This prevents multiple instances from creating separate connection pools
+let prismaInstance: PrismaClient | null = null;
+
+export const prisma = ((): PrismaClient => {
+  if (!prismaInstance) {
+    prismaInstance = new PrismaClient(prismaClientOptions);
+    
+    // Log connection pool info on startup
+    const dbUrl = process.env.DATABASE_URL || '';
+    const connectionLimit = dbUrl.match(/connection_limit=(\d+)/)?.[1] || 'default';
+    console.log(`[Prisma] Connection pool initialized (limit: ${connectionLimit})`);
+    
+    // Handle graceful shutdown
+    process.on('beforeExit', async () => {
+      await prismaInstance?.$disconnect();
+    });
+  }
+  return prismaInstance;
+})();
 
 export class UserPrismaRepo {
   async upsert(user: UserData): Promise<void> {

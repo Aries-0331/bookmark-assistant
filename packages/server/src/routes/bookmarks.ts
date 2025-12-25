@@ -188,43 +188,77 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     const generateDescriptions = options.generateDescriptions !== false; // Default: true
     if (generateDescriptions) {
       console.log('[Bookmark Sync] Generating descriptions for bookmarks without them...');
-      const descriptionPromises = enrichedBookmarks.map(async (bookmark: BookmarkItem) => {
-        // Skip if description already exists
-        if (bookmark.description && bookmark.description.trim()) {
-          return bookmark;
-        }
-
-        // Skip if no URL
-        if (!bookmark.url) {
-          return bookmark;
-        }
-
-        try {
-          // Extract description from URL
-          const result = await descriptionExtractor.extractFromUrl(bookmark.url);
-          if (result.success && result.description) {
-            console.log(
-              `[Bookmark Sync] Generated description for ${bookmark.title}: "${result.description.substring(0, 50)}..."`
-            );
-            return {
-              ...bookmark,
-              description: result.description,
-            };
-          } else {
-            console.debug(
-              `[Bookmark Sync] Failed to generate description for ${bookmark.url}: ${result.error || 'No description found'}`
-            );
+      
+      // Filter bookmarks that need description extraction
+      const bookmarksNeedingDescriptions = enrichedBookmarks.filter(
+        (bookmark) => !bookmark.description?.trim() && bookmark.url
+      );
+      
+      if (bookmarksNeedingDescriptions.length > 0) {
+        console.log(
+          `[Bookmark Sync] Extracting descriptions for ${bookmarksNeedingDescriptions.length} bookmarks in batches...`
+        );
+        
+        // Process descriptions in batches to prevent connection pool exhaustion
+        const batchSize = config.descriptionExtraction.batchSize;
+        const batchDelay = config.descriptionExtraction.batchDelayMs;
+        const descriptionBatches = createBatches(bookmarksNeedingDescriptions, batchSize);
+        
+        // Create a map to track updated bookmarks by their identifier
+        const updatedBookmarksMap = new Map<string, BookmarkItem>();
+        
+        // Process each batch sequentially
+        for (let i = 0; i < descriptionBatches.length; i++) {
+          const batch = descriptionBatches[i];
+          console.log(
+            `[Bookmark Sync] Processing description batch ${i + 1}/${descriptionBatches.length} (${batch.length} bookmarks)...`
+          );
+          
+          // Process batch items concurrently (but limit batch size)
+          const batchPromises = batch.map(async (bookmark: BookmarkItem) => {
+            try {
+              // Extract description from URL
+              const result = await descriptionExtractor.extractFromUrl(bookmark.url!);
+              if (result.success && result.description) {
+                console.log(
+                  `[Bookmark Sync] Generated description for ${bookmark.title}: "${result.description.substring(0, 50)}..."`
+                );
+                // Store updated bookmark in map
+                const updated = {
+                  ...bookmark,
+                  description: result.description,
+                };
+                updatedBookmarksMap.set(bookmark.url || bookmark.syncId, updated);
+                return updated;
+              } else {
+                console.debug(
+                  `[Bookmark Sync] Failed to generate description for ${bookmark.url}: ${result.error || 'No description found'}`
+                );
+              }
+            } catch (error) {
+              console.warn(`[Bookmark Sync] Error generating description for ${bookmark.url}:`, error);
+            }
+            return bookmark;
+          });
+          
+          await Promise.all(batchPromises);
+          
+          // Add delay between batches to prevent overwhelming the connection pool
+          if (i < descriptionBatches.length - 1) {
+            await sleep(batchDelay);
           }
-        } catch (error) {
-          console.warn(`[Bookmark Sync] Error generating description for ${bookmark.url}:`, error);
         }
-
-        return bookmark;
-      });
-
-      // Wait for all descriptions to be generated (with timeout)
-      enrichedBookmarks = (await Promise.all(descriptionPromises)) as typeof enrichedBookmarks;
-      console.log('[Bookmark Sync] Description generation completed');
+        
+        // Update enrichedBookmarks with extracted descriptions
+        enrichedBookmarks = enrichedBookmarks.map((bm) => {
+          const updated = updatedBookmarksMap.get(bm.url || bm.syncId);
+          return updated || bm;
+        });
+        
+        console.log('[Bookmark Sync] Description generation completed');
+      } else {
+        console.log('[Bookmark Sync] All bookmarks already have descriptions, skipping extraction');
+      }
     }
     // Query existing bookmarks to build sync map
     // Limit to 50 pages (5000 bookmarks) to avoid rate limits

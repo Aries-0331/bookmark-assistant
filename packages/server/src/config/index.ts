@@ -58,6 +58,17 @@ export const config = {
     delayMs: 334, // ~3 requests per second
   },
 
+  // Description Extraction Configuration
+  descriptionExtraction: {
+    // Batch size for concurrent description extractions
+    // Smaller batches prevent connection pool exhaustion
+    batchSize: Number(process.env.DESCRIPTION_EXTRACTION_BATCH_SIZE) || 5,
+    // Delay between batches (ms)
+    batchDelayMs: Number(process.env.DESCRIPTION_EXTRACTION_BATCH_DELAY) || 100,
+    // Timeout for individual extraction (ms)
+    timeoutMs: Number(process.env.DESCRIPTION_EXTRACTION_TIMEOUT) || 5000,
+  },
+
   pricing: {
     monthlyFallback: 2.99, // USD per month - fallback only
     lifetimeFallback: 29.99, // USD one-time - fallback only

@@ -55,10 +55,35 @@ describe('Security Middleware', () => {
     mockRequest = {
       headers: {},
     };
+    // Track calls to vary
+    const varyCalls: string[] = [];
     mockResponse = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
-      setHeader: vi.fn(),
+      setHeader: vi.fn((header, value) => {
+        if (!mockResponse.headers) mockResponse.headers = {};
+        mockResponse.headers[header] = value;
+      }),
+      getHeader: vi.fn((header) => {
+        return mockResponse.headers?.[header];
+      }),
+      vary: vi.fn((header: string) => {
+        varyCalls.push(header);
+        // Implement the actual vary behavior - append to existing Vary header
+        const currentVary = mockResponse.getHeader?.('vary');
+        if (currentVary) {
+          if (!currentVary.includes(header)) {
+            mockResponse.setHeader('vary', `${currentVary}, ${header}`);
+          }
+        } else {
+          mockResponse.setHeader('vary', header);
+        }
+      }),
+      set: vi.fn(),
+      get: vi.fn(),
+      end: vi.fn(),
+      send: vi.fn(),
+      headers: {},
     };
     nextFunction = vi.fn();
   });

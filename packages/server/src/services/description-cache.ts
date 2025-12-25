@@ -52,9 +52,15 @@ export class DescriptionCacheService {
       }
 
       // Update hit counter (async, don't wait)
-      this.incrementHit(url).catch((err) =>
-        console.warn('[DescriptionCache] Failed to increment hit:', err)
-      );
+      // Use setTimeout to defer execution and avoid immediate connection usage
+      setTimeout(() => {
+        this.incrementHit(url).catch((err) => {
+          // Only log if it's not a connection pool error (expected under load)
+          if (!err?.message?.includes('MaxClientsInSessionMode')) {
+            console.warn('[DescriptionCache] Failed to increment hit:', err);
+          }
+        });
+      }, 0);
 
       return {
         url: cached.url,
@@ -72,31 +78,58 @@ export class DescriptionCacheService {
 
   /**
    * Store description in cache
+   * Includes retry logic for connection pool exhaustion errors
    */
   async set(url: string, description: string, source: string): Promise<void> {
-    try {
-      const now = new Date();
-      const expiresAt = new Date(now.getTime() + this.ttlDays * 24 * 60 * 60 * 1000);
+    const maxRetries = 3;
+    let attempt = 0;
+    
+    while (attempt < maxRetries) {
+      try {
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + this.ttlDays * 24 * 60 * 60 * 1000);
 
-      await this.prisma.descriptionCache.upsert({
-        where: { url },
-        update: {
-          description,
-          source,
-          expiresAt,
-        },
-        create: {
-          url,
-          description,
-          source,
-          expiresAt,
-        },
-      });
+        await this.prisma.descriptionCache.upsert({
+          where: { url },
+          update: {
+            description,
+            source,
+            expiresAt,
+          },
+          create: {
+            url,
+            description,
+            source,
+            expiresAt,
+          },
+        });
 
-      console.log(`[DescriptionCache] Cached description for ${url}`);
-    } catch (error) {
-      console.error('[DescriptionCache] Error setting cache:', error);
-      throw error;
+        console.log(`[DescriptionCache] Cached description for ${url}`);
+        return; // Success, exit retry loop
+      } catch (error: any) {
+        attempt++;
+        
+        // Check if it's a connection pool exhaustion error
+        const isPoolExhausted =
+          error?.message?.includes('MaxClientsInSessionMode') ||
+          error?.message?.includes('max clients reached') ||
+          error?.message?.includes('connection pool') ||
+          error?.code === 'P1001'; // Prisma connection error code
+        
+        if (isPoolExhausted && attempt < maxRetries) {
+          // Exponential backoff: 100ms, 200ms, 400ms
+          const delayMs = 100 * Math.pow(2, attempt - 1);
+          console.warn(
+            `[DescriptionCache] Connection pool exhausted, retrying in ${delayMs}ms (attempt ${attempt}/${maxRetries})...`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+          continue;
+        }
+        
+        // If not a pool error or max retries reached, throw
+        console.error('[DescriptionCache] Error setting cache:', error);
+        throw error;
+      }
     }
   }
 
