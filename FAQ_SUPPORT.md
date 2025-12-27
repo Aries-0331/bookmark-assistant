@@ -2,7 +2,7 @@
 
 > **Comprehensive FAQ for Bookmark Assistant - Chrome Web Store Launch**
 > **Last Updated:** December 26, 2025
-> **Support Email:** support@bookmark-assistant.com
+> **Support Email:** aries0331.dev@gmail.com
 
 ---
 
@@ -21,73 +21,40 @@
 
 ### What permissions does the extension need?
 
-We request minimal permissions:
+We request **minimal permissions** for security and privacy:
 
-- **Bookmarks** - To read your Chrome bookmarks for syncing
-- **Storage** - To save settings and sync status locally
-- **Identity** - For secure OAuth authentication with Notion
-- **Tabs** (optional) - To extract better descriptions from open pages
+**Required Permissions:**
+
+- ✅ **Bookmarks** - Read your Chrome bookmarks for syncing (read-only)
+- ✅ **Storage** - Save settings and sync status locally
+- ✅ **Identity** - Secure OAuth 2.0 authentication with Notion
+- ✅ **Notifications** - Notify you when sync completes
+- ✅ **Alarms** - Schedule auto-sync (Pro feature only)
+
+**Host Permissions (Specific Sites Only):**
+
+- ✅ `https://api.notion.com/*` - Communicate with Notion API
+- ✅ `https://*.vercel.app/*` - Our backend server for OAuth and description extraction
+
+**We do NOT request:**
+
+- ❌ `<all_urls>` (broad access to all websites)
+- ❌ `activeTab` (access to current tab)
+- ❌ `tabs` (tab information)
+- ❌ `history` (browsing history)
+- ❌ `webNavigation` (navigation tracking)
 
 **We do NOT:**
 
 - ❌ Track your browsing history
 - ❌ Access other extensions' data
+- ❌ Inject scripts into websites
 - ❌ Collect or sell your personal data
 - ❌ Store bookmark content on our servers
-
-### Do I need a Notion account?
-
-Yes, you need a free Notion account to sync bookmarks. If you don't have one:
-
-1. Sign up at https://notion.so (free forever)
-2. Install Bookmark Assistant
-3. Connect via OAuth during setup
 
 ---
 
 ## 🔄 Syncing & Features
-
-### How does syncing work?
-
-**Free Plan:**
-
-- Manual sync only (click "Sync Now" button)
-- Up to 50 bookmarks per sync
-- Minimum 24-hour interval between syncs
-- Smart change detection (only syncs when bookmarks change)
-
-**Pro Plan ($2.99/mo or $29.99 lifetime):**
-
-- Automatic background sync every 6 hours
-- Unlimited bookmarks per sync
-- Smart change detection + description caching
-- Priority processing for faster syncs
-
-### What gets synced to Notion?
-
-For each bookmark, we sync:
-
-- ✅ **Page Title** - Bookmark title from Chrome
-- ✅ **URL** - Full bookmark link
-- ✅ **Description** - Automatically extracted from page (90%+ accuracy)
-- ✅ **Date Added** - When you bookmarked it
-- ✅ **Folder Path** - Chrome folder organization
-- ✅ **Sync ID** - Unique identifier for tracking changes
-
-**Coming Q1 2025:** Favicon support for visual site icons
-
-### How accurate is description extraction?
-
-- **Client-side extraction:** 95% accuracy (when you've visited the page)
-- **Server-side extraction:** 90-92% accuracy (automatic fallback)
-- **Intelligent caching:** 30-day TTL, 80% cost reduction
-
-The extension extracts descriptions from:
-
-1. Meta description tags (priority 1)
-2. Open Graph description (priority 2)
-3. Page title (if descriptive)
-4. Main content paragraphs (fallback)
 
 ### Does it change my Chrome bookmarks?
 
@@ -121,26 +88,6 @@ The extension uses **smart change detection**:
 
 ## 💳 Billing & Plans
 
-### What's the difference between Free and Pro?
-
-| Feature                | Free        | Pro               |
-| ---------------------- | ----------- | ----------------- |
-| Manual Sync            | ✅ Yes      | ✅ Yes            |
-| Auto-Sync              | ❌ No       | ✅ Every 6 hours  |
-| Bookmarks/Sync         | 50          | Unlimited         |
-| Sync Interval          | 24h minimum | 6h minimum        |
-| Description Extraction | ✅ Yes      | ✅ Yes            |
-| Smart Caching          | ✅ Yes      | ✅ Enhanced       |
-| Priority Support       | ❌ No       | ✅ Yes            |
-| Future AI Features     | ❌ No       | ✅ Free (Q3 2025) |
-
-### How much does Pro cost?
-
-- **Monthly:** $2.99/month (cancel anytime)
-- **Lifetime:** $29.99 one-time (pay once, use forever)
-
-💡 **Early Bird Pricing:** Lock in current prices before Q3 2025 when prices increase to $4.99/mo (Pro) and $49.99 (Lifetime)
-
 ### Can I try Pro before purchasing?
 
 Currently, there's no trial period. However:
@@ -148,14 +95,14 @@ Currently, there's no trial period. However:
 - Start with the generous **Free plan** (50 bookmarks/sync)
 - Test all core features (manual sync, description extraction)
 - Upgrade to Pro anytime for auto-sync and unlimited bookmarks
-- 30-day money-back guarantee available
+- 14-day money-back guarantee available
 
 ### Can I cancel Pro anytime?
 
 **Yes!** Cancel anytime from:
 
 1. Extension settings → "Billing & Plan"
-2. Or email support@bookmark-assistant.com
+2. Or email aries0331.dev@gmail.com
 
 **After cancellation:**
 
@@ -230,23 +177,6 @@ All payments are **PCI-DSS compliant** and secure.
 
 **Result:** Extension can no longer access your Notion workspace.
 
-### Where is my data stored?
-
-- **Chrome Bookmarks:** Stored locally by Chrome (we only read)
-- **Extension Settings:** Stored in Chrome's local storage
-- **Notion Data:** Stored in your Notion workspace (you control it)
-- **Our Servers:** Only store:
-  - User authentication tokens (encrypted)
-  - Description cache (30-day TTL, no personal data)
-  - Error logs (anonymized, no bookmark content)
-
-**We do NOT store:**
-
-- ❌ Bookmark content
-- ❌ Personal information
-- ❌ Browsing history
-- ❌ Notion page contents
-
 ---
 
 ## 🛠️ Troubleshooting
@@ -280,18 +210,22 @@ All payments are **PCI-DSS compliant** and secure.
 
 ### Why are descriptions missing?
 
+**Description extraction is done entirely server-side** for better privacy (90-92% accuracy).
+
 **Possible reasons:**
 
-1. **Page Not Visited:** Server-side extraction works, but visiting the page improves accuracy (95% vs 90%)
-2. **Page Has No Meta Tags:** Some pages don't have description metadata
-3. **Dynamic Content:** Some SPAs (single-page apps) load content dynamically
-4. **Connection Issues:** Server couldn't fetch the page (timeout, firewall, etc.)
+1. **Page Has No Meta Tags:** Some pages don't have description metadata
+2. **Dynamic Content:** Some SPAs (single-page apps) load content dynamically (JavaScript-rendered)
+3. **Connection Issues:** Server couldn't fetch the page (timeout, firewall, blocked by robots.txt)
+4. **Private/Protected Pages:** Pages behind login or paywall can't be accessed
+5. **First Sync:** Descriptions are generated on-demand and cached for 30 days
 
 **Solutions:**
 
-- Visit the page in Chrome before syncing (best accuracy)
-- Manual descriptions: Edit in Notion after sync
-- Pro users: Enhanced caching improves subsequent syncs
+- Wait and sync again: Cached descriptions improve over time
+- Manual descriptions: Edit directly in Notion after sync
+- Pro users: Enhanced caching and priority processing
+- Most common sites (Wikipedia, Medium, GitHub, etc.) extract perfectly
 
 ### Why do I get "Rate Limited" errors?
 
@@ -343,12 +277,6 @@ Or manually access via:
 
 **Currently:** Chrome only (Chrome Web Store)
 
-**Planned:**
-
-- Q4 2025: Firefox extension
-- Q4 2025: Safari extension
-- 2026: Mobile apps (iOS/Android)
-
 ### Does it work offline?
 
 **Partial support:**
@@ -380,8 +308,6 @@ Or manually access via:
 
 **Example:** `Bookmarks Bar / Work / Resources`
 
-**Planned (Q2 2025):** Folder mapping (Chrome folders → separate Notion databases)
-
 ### Can I customize the Notion database structure?
 
 **Current version:** Extension creates database with predefined properties:
@@ -393,51 +319,7 @@ Or manually access via:
 - Folder Path (text)
 - Sync ID (text)
 
-**Planned (Q1 2025):** Custom field mapping
-
 **Workaround:** Add custom properties in Notion after sync (won't be overwritten)
-
----
-
-## 🎯 Future Features
-
-### What's coming next?
-
-**Q1 2025 (Next 3 months):**
-
-- Favicon support (visual site icons in Notion)
-- Multi-language support (English, 简体中文, 日本語)
-- Progress indicators for long syncs
-- Enhanced rate limiting
-
-**Q2 2025:**
-
-- Folder mapping (Chrome folders → Notion databases)
-- Multi-database support (route bookmarks by rules)
-- Bulk operations (edit/delete multiple bookmarks)
-- Admin dashboard (cache monitoring)
-
-**Q3 2025:**
-
-- Pro+ tier ($9.99/mo)
-- AI-powered tagging (credits-based)
-- AI content summaries (credits-based)
-- Duplicate detection
-
-### Will Pro users get AI features for free?
-
-**Yes!** Current Pro subscribers ($2.99/mo or $29.99 lifetime) will receive:
-
-- ✅ Free access to AI tagging (Q3 2025)
-- ✅ Free access to AI summaries (Q3 2025)
-- ✅ Grandfathered pricing (lock in $2.99/mo)
-
-**After Q3 2025:**
-
-- New Pro: $4.99/mo (standard features)
-- Pro+: $9.99/mo (includes AI features)
-
-**Early bird advantage:** Subscribe now and get Pro+ features at Pro pricing!
 
 ---
 
@@ -448,7 +330,7 @@ Or manually access via:
 **Support Channels:**
 
 1. **Email Support** (All users)
-   - Email: support@bookmark-assistant.com
+   - Email: aries0331.dev@gmail.com
    - Response time: Within 48 hours (Free), Within 24 hours (Pro)
 
 2. **Documentation** (Self-service)
@@ -457,57 +339,32 @@ Or manually access via:
    - Review extension settings help text
 
 3. **Bug Reports** (Critical issues)
-   - Email: support@bookmark-assistant.com with:
+   - Email: aries0331.dev@gmail.com with:
      - Extension version (see settings)
      - Chrome version (chrome://version)
      - Error message or screenshot
      - Steps to reproduce
 
 4. **Feature Requests**
-   - Email: support@bookmark-assistant.com
+   - Email: aries0331.dev@gmail.com
    - Subject: "Feature Request: [Your Idea]"
-
-### How fast will I get a response?
-
-**Response Times:**
-
-- **Free users:** Within 48 hours (business days)
-- **Pro users:** Within 24 hours (priority support)
-- **Critical bugs:** Within 24 hours (all users)
-
-**Business Hours:** Monday-Friday, 9am-6pm EST
 
 ### Can I request a refund?
 
-**Yes, 30-day money-back guarantee:**
+**Yes, 14-day money-back guarantee:**
 
 **Eligible:**
 
-- Subscriptions within 30 days of purchase
-- Lifetime purchases within 30 days
+- Subscriptions within 14 days of purchase
+- Lifetime purchases within 14 days
 
 **Process:**
 
-1. Email: support@bookmark-assistant.com
+1. Email: aries0331.dev@gmail.com
 2. Subject: "Refund Request"
 3. Include: Order ID (from Paddle receipt)
 
 **Processing:** 5-7 business days after approval
-
-### Is there a community?
-
-**Coming soon!**
-
-**Planned:**
-
-- Discord server (Q1 2025)
-- Reddit community (Q1 2025)
-- Twitter/X updates (@BookmarkAssist)
-
-**Current:**
-
-- Support email: support@bookmark-assistant.com
-- Updates via Chrome Web Store reviews
 
 ---
 
@@ -517,41 +374,11 @@ Or manually access via:
 
 - **Chrome Web Store:** [Coming soon]
 - **Website:** https://bookmark-assistant.com
-- **Support Email:** support@bookmark-assistant.com
+- **Support Email:** aries0331.dev@gmail.com
 - **Privacy Policy:** https://bookmark-assistant.com/privacy
 - **Terms of Service:** https://bookmark-assistant.com/terms
 
-### Documentation
-
-- **User Guide:** [Notion page - coming soon]
-- **Setup Guide:** [Notion page - coming soon]
-- **Video Tutorial:** [YouTube - coming soon]
-
-### Social Media (Planned Q1 2025)
-
-- **Twitter/X:** @BookmarkAssist
-- **Discord:** [Server invite]
-- **Reddit:** r/BookmarkAssistant
-
 ---
-
-## 💡 Tips & Best Practices
-
-### Optimize sync performance
-
-1. **Visit pages before syncing** - Better description accuracy (95% vs 90%)
-2. **Sync during low-usage hours** - Faster processing
-3. **Use Pro auto-sync** - Background processing, no manual work
-4. **Keep Chrome updated** - Latest features and bug fixes
-
-### Organize bookmarks in Notion
-
-After sync, enhance your Notion database:
-
-1. **Add custom properties** - Tags, categories, priorities
-2. **Create database views** - Filter by folder, date, tags
-3. **Use Notion relations** - Link to projects, notes
-4. **Add manual descriptions** - Improve or customize auto-generated ones
 
 ### Backup your data
 
@@ -564,7 +391,7 @@ After sync, enhance your Notion database:
 ---
 
 **Still have questions?**
-📧 Email us at **support@bookmark-assistant.com**
+📧 Email us at **aries0331.dev@gmail.com**
 
 We typically respond within 24-48 hours!
 
@@ -572,4 +399,4 @@ We typically respond within 24-48 hours!
 
 **Last Updated:** December 26, 2025
 **Version:** 1.0.0 (Production Launch)
-**Support Email:** support@bookmark-assistant.com
+**Support Email:** aries0331.dev@gmail.com

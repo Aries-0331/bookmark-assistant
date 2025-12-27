@@ -3,16 +3,8 @@
   "name": "Bookmark Assistant",
   "version": "1.0.0",
   "description": "Transform Chrome bookmarks into organized Notion databases. One-click sync, smart descriptions, auto-sync Pro features.",
-  "permissions": [
-    "bookmarks",
-    "storage",
-    "identity",
-    "activeTab",
-    "scripting",
-    "notifications",
-    "alarms"
-  ],
-  "host_permissions": ["https://api.notion.com/*", "<all_urls>"],
+  "permissions": ["bookmarks", "storage", "identity", "notifications", "alarms"],
+  "host_permissions": ["https://api.notion.com/*", "https://*.vercel.app/*"],
   "background": {
     "service_worker": "src/background/index.ts",
     "type": "module"
@@ -33,12 +25,5 @@
     "48": "assets/favicon/android-chrome-192x192.png",
     "128": "assets/favicon/android-chrome-512x512.png"
   },
-  "options_page": "options.html",
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["src/content/description-extractor.ts"],
-      "run_at": "document_end"
-    }
-  ]
+  "options_page": "options.html"
 }

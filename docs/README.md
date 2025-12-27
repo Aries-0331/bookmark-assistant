@@ -19,6 +19,7 @@
 
 ### Core Features
 
+- [**../FAQ_SUPPORT.md**](../FAQ_SUPPORT.md) - Comprehensive FAQ and support guide
 - [**AUTO_SYNC.md**](AUTO_SYNC.md) - Automatic background synchronization
 - [**NOTION_INTEGRATION.md**](NOTION_INTEGRATION.md) - Notion API integration details
 - [**STATE_MANAGEMENT.md**](STATE_MANAGEMENT.md) - Event-driven state architecture
