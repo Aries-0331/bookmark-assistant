@@ -1,8 +1,8 @@
 # TODO - Bookmark Assistant
 
-> **Last Updated:** December 26, 2025
-> **Status:** ⏳ Chrome Store Review (Submitted)
-> **Grade:** A- (Launch Ready)
+> **Last Updated:** December 29, 2025
+> **Status:** 🔄 Chrome Store Review (Resubmission Required)
+> **Grade:** A- (Launch Ready - Permission Fix Applied)
 
 ---
 
@@ -23,15 +23,24 @@
 
 ## 📋 IMMEDIATE NEXT STEPS
 
-### 1. Chrome Web Store Review Period (Dec 27-30) ⏳ IN PROGRESS
+### 1. Chrome Web Store Review Period (Dec 29-Jan 2) 🔄 RESUBMISSION
 
-**Status:** Submitted Dec 26, 2025 - Awaiting approval
+**Status:** 
+- ❌ Initial submission rejected Dec 29 (Violation: Purple Potassium - unused `notifications` permission)
+- ✅ Fixed and ready for resubmission (v1.0.1)
 
-#### Daily Tasks:
+#### Completed Fixes:
+- [x] Removed unused `notifications` permission from manifest
+- [x] Removed dead code containing `chrome.notifications` API calls
+- [x] Updated version to 1.0.1
+- [x] Built and packaged extension (`bookmark-assistant-v1.0.1.zip`)
+- [x] Created resubmission documentation
 
-- [ ] Check Chrome Web Store developer dashboard for review updates
-- [ ] Monitor support email (aries0331.dev@gmail.com) for questions
-- [ ] Address any review feedback within 24h
+#### Next Steps:
+- [ ] **Upload v1.0.1 to Chrome Web Store** (PRIORITY)
+- [ ] Submit for review with reference to Routing ID: FZSL
+- [ ] Monitor review status daily
+- [ ] Address any additional feedback within 24h
 
 #### Waitlist Management 🆕:
 

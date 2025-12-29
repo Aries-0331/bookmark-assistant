@@ -318,53 +318,6 @@ export function formatBookmarkForServer(
   };
 }
 
-export async function syncAllBookmarksViaServer(
-  bookmarks: chrome.bookmarks.BookmarkTreeNode[]
-): Promise<void> {
-  try {
-    const formattedBookmarks: BookmarkData[] = [];
-
-    function flattenBookmarks(
-      nodes: chrome.bookmarks.BookmarkTreeNode[],
-      currentPath: string = 'Bookmarks'
-    ) {
-      for (const node of nodes) {
-        if (node.url) {
-          // It's a bookmark
-          formattedBookmarks.push(formatBookmarkForServer(node, currentPath));
-        } else if (node.children) {
-          // It's a folder
-          const folderPath = node.title ? `${currentPath} / ${node.title}` : currentPath;
-          flattenBookmarks(node.children, folderPath);
-        }
-      }
-    }
-
-    flattenBookmarks(bookmarks);
-
-    console.log(`📚 Found ${formattedBookmarks.length} bookmarks to sync`);
-
-    // Delegate batching to server; send all bookmarks in one request
-    const result = await serverAPI.syncBookmarks(formattedBookmarks);
-    console.log('✅ Bookmark sync completed:', result.summary);
-
-    // Show success notification with fields server returns
-    chrome.notifications.create({
-      type: 'basic',
-      iconUrl: '/icons/icon48.png',
-      title: 'Bookmark Sync Complete!',
-      message: `✅ ${result.summary.success} succeeded, ${result.summary.failed} failed`,
-    });
-  } catch (error) {
-    console.error('❌ Bookmark sync failed:', error);
-
-    chrome.notifications.create({
-      type: 'basic',
-      iconUrl: '/icons/icon48.png',
-      title: 'Bookmark Sync Failed',
-      message: `❌ ${error instanceof Error ? error.message : 'Unknown error'}`,
-    });
-
-    throw error;
-  }
-}
+// REMOVED: syncAllBookmarksViaServer - this function was unused and contained
+// chrome.notifications API calls that required the 'notifications' permission.
+// Bookmark syncing is now handled by performBookmarkSync in background/index.ts

@@ -5,13 +5,14 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.2-61dafb)](https://reactjs.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
-[![Tests](https://img.shields.io/badge/Tests-185%20(82%25%20passing)-green)](tests/)
+[![Tests](<https://img.shields.io/badge/Tests-185%20(82%25%20passing)-green>)](tests/)
+[![Version](https://img.shields.io/badge/Version-1.0.1-orange)](packages/extension/)
 
 **Transform your Chrome bookmarks into an organized Notion database** with one click. Bookmark Assistant is a production-ready extension that automatically extracts descriptions, syncs changes, and keeps your bookmarks perfectly organized in Notion—no manual copying required.
 
 ---
 
-* [ ] 🎯 What Makes Bookmark Assistant Special
+- [ ] 🎯 What Makes Bookmark Assistant Special
 
 ### **Never Lose Track of Important Links**
 
@@ -43,9 +44,8 @@ Stop manually copying bookmarks into Notion. Bookmark Assistant automatically sy
 
 Perfect for casual users and trying out the extension:
 
-
 | Feature                  | Details                          |
-| -------------------------- | ---------------------------------- |
+| ------------------------ | -------------------------------- |
 | 🔗**Manual Sync**        | One-click export anytime         |
 | 📄**50 Bookmarks/Sync**  | Generous batch limit             |
 | 🎯**Smart Descriptions** | Automatic content extraction     |
@@ -56,14 +56,13 @@ Perfect for casual users and trying out the extension:
 
 For power users who want automation:
 
-
-| Feature                     | Details                                       |
-| ----------------------------- | ----------------------------------------------- |
-| ⚡**Auto-Sync**             | Background sync every 6 hours                 |
+| Feature                   | Details                                       |
+| ------------------------- | --------------------------------------------- |
+| ⚡**Auto-Sync**           | Background sync every 6 hours                 |
 | ♾️**Unlimited Bookmarks** | No batch size limits                          |
-| 🚀**Priority Processing**   | Faster sync speeds                            |
-| 💬**Priority Support**      | Get help when you need it                     |
-| 🎁**Future Features**       | Free access to upcoming AI features (Q3 2025) |
+| 🚀**Priority Processing** | Faster sync speeds                            |
+| 💬**Priority Support**    | Get help when you need it                     |
+| 🎁**Future Features**     | Free access to upcoming AI features (Q3 2025) |
 
 > 💰 **Best Value**: Lifetime access at $29.99 - Pay once, use forever (includes all future updates)
 
@@ -292,10 +291,10 @@ const { t } = useTranslation();
 
 ### Core Features ✅
 
-- [X] Bulk bookmark sync
-- [X] OAuth authentication
-- [X] Content extraction
-- [X] Error handling
+- [x] Bulk bookmark sync
+- [x] OAuth authentication
+- [x] Content extraction
+- [x] Error handling
 
 ### Advanced Features 🔮
 
@@ -322,13 +321,13 @@ This is a commercial project. The source code is not open source and may not be 
 
 ### **Q4 2024** ✅
 
-- [X] Core sync functionality
-- [X] OAuth integration
-- [X] Content extraction
-- [X] Freemium model with Pro tier
-- [X] Paddle payment integration
-- [X] Auto-sync with catch-up strategy
-- [X] Comprehensive test infrastructure
+- [x] Core sync functionality
+- [x] OAuth integration
+- [x] Content extraction
+- [x] Freemium model with Pro tier
+- [x] Paddle payment integration
+- [x] Auto-sync with catch-up strategy
+- [x] Comprehensive test infrastructure
 
 ### **Q1 2025** 🚀
 
@@ -368,9 +367,8 @@ This is a commercial project. The source code is not open source and may not be 
 
 ## 📊 Project Status
 
-
 | Metric               | Status                       |
-| ---------------------- | ------------------------------ |
+| -------------------- | ---------------------------- |
 | **Development**      | 🚀 Production Ready          |
 | **Version**          | 1.0.0 (Launch Ready)         |
 | **Test Coverage**    | 82% (185 tests, 152 passing) |

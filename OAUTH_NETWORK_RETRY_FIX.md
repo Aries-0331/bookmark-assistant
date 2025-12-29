@@ -162,3 +162,4 @@ Users can now connect successfully even with unstable network conditions.
 **Risk:** 🟢 Low (only adds retry wrapper, no business logic changes)  
 **User Impact:** 🟢 Positive (fixes connection failures)
 
+
