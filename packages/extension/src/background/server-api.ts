@@ -246,8 +246,36 @@ class ServerAPIClient {
     } catch {}
     this.sessionToken = null;
 
-    // Clear all local storage to ensure no user data persists
-    await chrome.storage.local.clear();
+    // Selective cleanup: Only remove authentication and session data
+    // Preserve: description cache, pricing cache, oauth_template_database_id (for reconnection)
+    const keysToRemove = [
+      'session_token',
+      'user_id',
+      'user_email',
+      'is_pro',
+      'purchase_type',
+      'last_sync',
+      'last_sync_at',
+      'last_sync_summary',
+      'last_sync_count',
+      'last_sync_fingerprint',
+      'last_sync_hash',
+      'sync_in_progress',
+      'is_connecting',
+      'auto_sync_enabled',
+      'auto_sync_interval_minutes',
+      'sync_interval_hours',
+      'last_bulk_sync',
+      'last_sync_results',
+      'hasTriedInitialLoad',
+    ];
+
+    await chrome.storage.local.remove(keysToRemove);
+
+    // Note: We intentionally preserve:
+    // - oauth_template_database_id (needed for server-side database recovery after reconnection)
+    // - description_cache_* keys (user's cached descriptions - expensive to rebuild)
+    // - cached_pricing (avoids unnecessary refetch)
   }
 }
 

@@ -4,6 +4,7 @@ export interface ChromeLocalCache {
   session_token?: string;
   user_id?: string;
   user_email?: string;
+  oauth_template_database_id?: string; // Template database ID from OAuth (needed for reconnection)
 
   // Connection state
   is_connecting?: boolean;
@@ -39,6 +40,7 @@ export const CACHE_KEYS = {
   session_token: 'session_token',
   user_id: 'user_id',
   user_email: 'user_email',
+  oauth_template_database_id: 'oauth_template_database_id',
 
   is_connecting: 'is_connecting',
 

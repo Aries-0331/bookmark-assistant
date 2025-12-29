@@ -385,91 +385,157 @@ export class NotionService {
 
   /**
    * Exchange OAuth code for access tokens
+   * Includes retry logic for network errors (ECONNRESET, etc.)
    */
   async exchangeOAuthCode(code: string, redirectUri: string): Promise<any> {
     const encoded = Buffer.from(`${config.notionClientId}:${config.notionClientSecret}`).toString(
       'base64'
     );
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    try {
-      const response = await fetch('https://api.notion.com/v1/oauth/token', {
-        method: 'POST',
-        headers: {
-          accept: 'application/json',
-          Authorization: `Basic ${encoded}`,
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          grant_type: 'authorization_code',
-          code,
-          redirect_uri: redirectUri,
-        }),
-        signal: controller.signal,
-      });
+    
+    const maxRetries = 3;
+    let attempt = 0;
+    
+    while (attempt < maxRetries) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      
+      try {
+        const response = await fetch('https://api.notion.com/v1/oauth/token', {
+          method: 'POST',
+          headers: {
+            accept: 'application/json',
+            Authorization: `Basic ${encoded}`,
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            grant_type: 'authorization_code',
+            code,
+            redirect_uri: redirectUri,
+          }),
+          signal: controller.signal,
+        });
 
-      clearTimeout(timeout);
+        clearTimeout(timeout);
 
-      if (!response.ok) {
-        const errorData = await response.text();
+        if (!response.ok) {
+          const errorData = await response.text();
+          throw new Error(
+            `OAuth exchange failed: ${response.status} ${response.statusText} - ${errorData}`
+          );
+        }
+
+        return response.json();
+      } catch (err: any) {
+        clearTimeout(timeout);
+        attempt++;
+        
+        const errorCode = err?.code || err?.cause?.code || 'UNKNOWN';
+        const errorName = err?.name || 'Error';
+        
+        // Check if it's a retryable network error
+        const isNetworkError =
+          errorCode === 'ECONNRESET' ||
+          errorCode === 'ETIMEDOUT' ||
+          errorCode === 'ENOTFOUND' ||
+          errorCode === 'ECONNREFUSED' ||
+          err?.message?.includes('fetch failed') ||
+          err?.message?.includes('network');
+        
+        if (isNetworkError && attempt < maxRetries) {
+          // Exponential backoff: 500ms, 1000ms, 2000ms
+          const delayMs = 500 * Math.pow(2, attempt - 1);
+          console.warn(
+            `[OAuth] Network error (${errorName}:${errorCode}), retrying in ${delayMs}ms (attempt ${attempt}/${maxRetries})...`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+          continue;
+        }
+        
+        // If not a network error or max retries reached, throw
         throw new Error(
-          `OAuth exchange failed: ${response.status} ${response.statusText} - ${errorData}`
+          `OAuth exchange network error (${errorName}:${errorCode}): ${err?.message || String(err)}`
         );
       }
-
-      return response.json();
-    } catch (err: any) {
-      clearTimeout(timeout);
-      const code = err?.code || err?.cause?.code || 'UNKNOWN';
-      const name = err?.name || 'Error';
-      throw new Error(
-        `OAuth exchange network error (${name}:${code}): ${err?.message || String(err)}`
-      );
     }
+    
+    // Should never reach here, but TypeScript needs this
+    throw new Error('OAuth exchange failed after all retries');
   }
 
   /**
    * Refresh access token using refresh token
+   * Includes retry logic for network errors
    */
   async refreshAccessToken(refreshToken: string): Promise<any> {
     const encoded = Buffer.from(`${config.notionClientId}:${config.notionClientSecret}`).toString(
       'base64'
     );
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    try {
-      const response = await fetch('https://api.notion.com/v1/oauth/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: `Basic ${encoded}`,
-        },
-        body: JSON.stringify({
-          grant_type: 'refresh_token',
-          refresh_token: refreshToken,
-        }),
-        signal: controller.signal,
-      });
+    
+    const maxRetries = 3;
+    let attempt = 0;
+    
+    while (attempt < maxRetries) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      
+      try {
+        const response = await fetch('https://api.notion.com/v1/oauth/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Basic ${encoded}`,
+          },
+          body: JSON.stringify({
+            grant_type: 'refresh_token',
+            refresh_token: refreshToken,
+          }),
+          signal: controller.signal,
+        });
 
-      clearTimeout(timeout);
+        clearTimeout(timeout);
 
-      if (!response.ok) {
-        const errorData = await response.text();
+        if (!response.ok) {
+          const errorData = await response.text();
+          throw new Error(
+            `Token refresh failed: ${response.status} ${response.statusText} - ${errorData}`
+          );
+        }
+
+        return response.json();
+      } catch (err: any) {
+        clearTimeout(timeout);
+        attempt++;
+        
+        const errorCode = err?.code || err?.cause?.code || 'UNKNOWN';
+        const errorName = err?.name || 'Error';
+        
+        // Check if it's a retryable network error
+        const isNetworkError =
+          errorCode === 'ECONNRESET' ||
+          errorCode === 'ETIMEDOUT' ||
+          errorCode === 'ENOTFOUND' ||
+          errorCode === 'ECONNREFUSED' ||
+          err?.message?.includes('fetch failed') ||
+          err?.message?.includes('network');
+        
+        if (isNetworkError && attempt < maxRetries) {
+          const delayMs = 500 * Math.pow(2, attempt - 1);
+          console.warn(
+            `[OAuth] Token refresh network error (${errorName}:${errorCode}), retrying in ${delayMs}ms (attempt ${attempt}/${maxRetries})...`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+          continue;
+        }
+        
+        // If not a network error or max retries reached, throw
         throw new Error(
-          `Token refresh failed: ${response.status} ${response.statusText} - ${errorData}`
+          `Token refresh network error (${errorName}:${errorCode}): ${err?.message || String(err)}`
         );
       }
-
-      return response.json();
-    } catch (err: any) {
-      clearTimeout(timeout);
-      const code = err?.code || err?.cause?.code || 'UNKNOWN';
-      const name = err?.name || 'Error';
-      throw new Error(
-        `Token refresh network error (${name}:${code}): ${err?.message || String(err)}`
-      );
     }
+    
+    throw new Error('Token refresh failed after all retries');
   }
 
   /**

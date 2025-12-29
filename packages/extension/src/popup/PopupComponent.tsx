@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle, Crown, Sparkles, RefreshCw, Settings, Link } from 'lucide-react';
+import { AlertCircle, CheckCircle, Crown, RefreshCw, Settings, Link } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useAppStore } from '../options/store';
 import { sendMessage, Messages } from '../utils/message';
@@ -53,13 +53,6 @@ export default function Popup() {
     } catch (error) {
       console.error('Sync error:', error);
     }
-  };
-
-  const handleUpgrade = () => {
-    chrome.runtime.openOptionsPage();
-    setTimeout(() => {
-      window.close();
-    }, 100);
   };
 
   const openSettings = () => {
@@ -125,30 +118,27 @@ export default function Popup() {
             disabled={isConnecting}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
           >
-            <Link className={`w-4 h-4 ${isConnecting ? 'animate-spin' : ''}`} />
-            {isConnecting ? 'Connecting...' : 'Connect to Notion'}
+            {isConnecting ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                Connecting…
+              </>
+            ) : (
+              <>
+                <Link className="w-4 h-4" />
+                Connect to Notion
+              </>
+            )}
           </button>
         ) : (
-          <div className={!isPro ? 'space-y-2' : ''}>
-            <button
-              onClick={handleSync}
-              disabled={isSyncing}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
-            >
-              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? 'Syncing...' : 'Sync Now'}
-            </button>
-
-            {!isPro && (
-              <button
-                onClick={handleUpgrade}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 transition-colors text-sm font-medium shadow-sm"
-              >
-                <Sparkles className="w-4 h-4" />
-                Upgrade to Pro
-              </button>
-            )}
-          </div>
+          <button
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Syncing...' : 'Sync Now'}
+          </button>
         )}
 
         {/* Settings Link */}

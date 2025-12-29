@@ -129,11 +129,48 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     // Check if notionDatabaseId exists
     if (!userData.notionDatabaseId) {
       console.error('[Bookmark Sync] ❌ No notionDatabaseId found in user data');
-      return res.status(400).json({
-        error: 'Database Not Configured',
-        message: 'No database ID found. Please reconnect your Notion integration.',
-        suggestion: 'Reconnect Notion integration to reconfigure database',
-      });
+      
+      // Attempt recovery if we have duplicatedTemplateId
+      if (userData.duplicatedTemplateId) {
+        console.log('[Bookmark Sync] 🔄 Attempting database recovery from duplicatedTemplateId...');
+        try {
+          const resolved = await notionService.resolveDatabaseFromTemplate(
+            userData.duplicatedTemplateId,
+            userData.notionAccessToken
+          );
+          
+          // Update user record with recovered database
+          await userPrisma.update(userData.id!, {
+            notionDatabaseId: resolved.databaseId,
+            notionDataSourceId: resolved.dataSourceId,
+            templateDatabaseId: resolved.databaseId, // Keep in sync
+          });
+          
+          // Update local userData for this request
+          userData.notionDatabaseId = resolved.databaseId;
+          userData.notionDataSourceId = resolved.dataSourceId;
+          
+          console.log('[Bookmark Sync] ✅ Database recovered successfully');
+          console.log('[Bookmark Sync]   Recovered DB:', resolved.databaseId);
+          console.log('[Bookmark Sync]   Data Source:', resolved.dataSourceId);
+        } catch (recoveryError) {
+          console.error('[Bookmark Sync] ❌ Database recovery failed:', recoveryError);
+          return res.status(400).json({
+            error: 'Database Not Configured',
+            message: 'No database ID found and recovery failed. Please reconnect your Notion integration.',
+            suggestion: 'Go to Settings → Disconnect → Reconnect to reconfigure database',
+            recoveryAttempted: true,
+            recoveryError: recoveryError instanceof Error ? recoveryError.message : 'Unknown error',
+          });
+        }
+      } else {
+        // No template ID available for recovery
+        return res.status(400).json({
+          error: 'Database Not Configured',
+          message: 'No database ID found. Please reconnect your Notion integration.',
+          suggestion: 'Go to Settings → Disconnect → Reconnect to reconfigure database',
+        });
+      }
     }
 
     // Verify database access and recover if needed

@@ -60,6 +60,20 @@ export function ConnectionSection() {
   const onDisconnect = async () => {
     await sendMessage({ type: Messages.LOGOUT });
     setShowDisconnectConfirm(false);
+    
+    // Reset Zustand store state to reflect disconnection
+    useAppStore.setState({
+      isConnected: false,
+      isPro: false,
+      purchaseType: undefined,
+      userId: '',
+      userEmail: '',
+      lastSync: '',
+      isSyncing: false,
+      lastSyncSummary: undefined,
+      autoSync: false,
+    });
+    
     show({
       variant: 'success',
       title: 'Disconnected',
