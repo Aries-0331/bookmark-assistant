@@ -19,7 +19,7 @@
 
 ### Core Features
 
-- [**../FAQ_SUPPORT.md**](../FAQ_SUPPORT.md) - Comprehensive FAQ and support guide
+- [**FAQ_SUPPORT.md**](FAQ_SUPPORT.md) - Comprehensive FAQ and support guide
 - [**AUTO_SYNC.md**](AUTO_SYNC.md) - Automatic background synchronization
 - [**NOTION_INTEGRATION.md**](NOTION_INTEGRATION.md) - Notion API integration details
 - [**STATE_MANAGEMENT.md**](STATE_MANAGEMENT.md) - Event-driven state architecture
@@ -46,6 +46,14 @@
 
 - [**DEPLOYMENT.md**](DEPLOYMENT.md) - Deployment guide (Vercel)
 - [**PADDLE_INTEGRATION.md**](PADDLE_INTEGRATION.md) - Payment processing integration
+- [**CHROME_WEB_STORE_SUBMISSION.md**](CHROME_WEB_STORE_SUBMISSION.md) - Chrome Web Store submission & fixes
+- [**PERMISSIONS_JUSTIFICATION.md**](PERMISSIONS_JUSTIFICATION.md) - Extension permissions explanation
+
+### Bug Fixes & Troubleshooting
+
+- [**BUG_FIXES_SUMMARY.md**](BUG_FIXES_SUMMARY.md) - Major bug fixes and resolutions
+- [**WAITLIST_IMPLEMENTATION.md**](WAITLIST_IMPLEMENTATION.md) - Waitlist feature implementation
+- [**LAUNCH_EMAIL_TEMPLATES.md**](LAUNCH_EMAIL_TEMPLATES.md) - Launch email templates
 
 ### Future Features
 

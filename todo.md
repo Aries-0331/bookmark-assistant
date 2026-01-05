@@ -23,24 +23,51 @@
 
 ## 📋 IMMEDIATE NEXT STEPS
 
-### 1. Chrome Web Store Review Period (Dec 29-Jan 2) 🔄 RESUBMISSION
+### 1. Chrome Web Store Review Period (Dec 29-Jan 2) 🔄 RESUBMISSION v2
 
 **Status:** 
-- ❌ Initial submission rejected Dec 29 (Violation: Purple Potassium - unused `notifications` permission)
-- ✅ Fixed and ready for resubmission (v1.0.1)
+- ❌ 1st rejection: Dec 29 (Violation: Purple Potassium - unused `notifications` permission)
+- ✅ Fixed v1.0.1 - removed notifications permission
+- ❌ 2nd rejection: Dec 29 (Violation: Red Potassium - OAuth `Invalid redirect_uri`)
+- ✅ Fixed v1.0.2 - OAuth configuration + removed host_permissions
 
-#### Completed Fixes:
+#### Completed Fixes (v1.0.1):
 - [x] Removed unused `notifications` permission from manifest
 - [x] Removed dead code containing `chrome.notifications` API calls
-- [x] Updated version to 1.0.1
-- [x] Built and packaged extension (`bookmark-assistant-v1.0.1.zip`)
-- [x] Created resubmission documentation
 
-#### Next Steps:
-- [ ] **Upload v1.0.1 to Chrome Web Store** (PRIORITY)
-- [ ] Submit for review with reference to Routing ID: FZSL
-- [ ] Monitor review status daily
-- [ ] Address any additional feedback within 24h
+#### Completed Fixes (v1.0.2):
+- [x] Identified OAuth redirect_uri issue (not registered in Notion)
+- [x] Removed unnecessary `host_permissions` (improves security)
+- [x] Updated version to 1.0.2
+- [x] Created comprehensive documentation:
+  - [x] `OAUTH_REDIRECT_URI_FIX.md`
+  - [x] `CHROME_WEB_STORE_ISSUES_REVIEW.md`
+  - [x] `BUILD_FOR_CHROME_WEB_STORE.md`
+  - [x] `RED_POTASSIUM_FIX_SUMMARY.md`
+
+#### ⚠️ CRITICAL Actions Required (MANUAL - Cannot be automated):
+- [ ] **Update Notion OAuth App** (5 mins)
+  - [ ] Login: https://www.notion.so/my-integrations
+  - [ ] Add redirect URI: `chrome-extension://khffaaemphidjmhokafmiilkcjpgiije/callback`
+  - [ ] Save changes
+- [ ] **Update Vercel Server Environment** (5 mins)
+  - [ ] Go to Vercel Dashboard → Server → Environment Variables
+  - [ ] Set: `ALLOWED_EXTENSION_ID=khffaaemphidjmhokafmiilkcjpgiije`
+  - [ ] Verify: `NOTION_CLIENT_ID` and `NOTION_CLIENT_SECRET`
+  - [ ] Redeploy server: `vercel --prod`
+- [ ] **Build Extension with Production Config** (10 mins)
+  - [ ] Create `packages/extension/.env` (see `ENV_TEMPLATE_PRODUCTION.txt`)
+  - [ ] Set `VITE_OAUTH_SERVER_URL` to production Vercel URL
+  - [ ] Build: `cd packages/extension && pnpm build`
+  - [ ] Verify: `grep -r "localhost" dist/` returns EMPTY
+  - [ ] Package: `cd dist && zip -r ../bookmark-assistant-v1.0.2.zip .`
+- [ ] **Test OAuth Flow** (5 mins)
+  - [ ] Load extension in fresh Chrome profile
+  - [ ] Click "Connect to Notion"
+  - [ ] Verify OAuth completes successfully
+- [ ] **Upload v1.0.2 to Chrome Web Store** (5 mins)
+  - [ ] Submit for review
+  - [ ] Reference: Routing ID FZSL, Violations: Purple Potassium + Red Potassium
 
 #### Waitlist Management 🆕:
 
