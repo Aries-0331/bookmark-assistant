@@ -99,8 +99,23 @@ export function Pricing() {
   // Initialize Paddle and fetch pricing
   useEffect(() => {
     const init = async () => {
+      // Check if Paddle is configured first
+      const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
+      const monthlyId = process.env.NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID;
+      const lifetimeId = process.env.NEXT_PUBLIC_PADDLE_PRO_LIFETIME_PRICE_ID;
+      
+      // If Paddle not configured, use default pricing and skip initialization
+      if (!token || !monthlyId || !lifetimeId) {
+        console.log('💰 Paddle not configured, using default pricing');
+        setPaddleReady(true);
+        return;
+      }
+
       const paddle = await getPaddleInstance();
-      if (!paddle) return;
+      if (!paddle) {
+        setPaddleReady(true); // Still mark as ready to show UI
+        return;
+      }
       setPaddleReady(true);
 
       // 1. Check for transaction (existing logic)
@@ -121,8 +136,7 @@ export function Pricing() {
       }
 
       // 2. Fetch dynamic pricing
-      const monthlyId = process.env.NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID;
-      const lifetimeId = process.env.NEXT_PUBLIC_PADDLE_PRO_LIFETIME_PRICE_ID;
+      // monthlyId and lifetimeId already defined above
 
       if (monthlyId && lifetimeId) {
         try {
