@@ -8,6 +8,7 @@ import { useState } from "react";
 import { WaitlistModal } from "@/components/WaitlistModal";
 
 const HERO_IMG = "https://images.unsplash.com/photo-1549930585-0e530dd1afd4?auto=format&fit=crop&w=1200&q=80";
+const NOTION_TEMPLATE_URL = "https://glow-pheasant-22f.notion.site/Bookmark-Assistant-Dashboard-2ce9466de76d80a49879d40f259ced08?pvs=143";
 
 export function Hero() {
   const [showWaitlist, setShowWaitlist] = useState(false);
@@ -16,8 +17,8 @@ export function Hero() {
     setShowWaitlist(true);
   };
 
-  const handleLearnMore = () => {
-    document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
+  const openTemplate = () => {
+    window.open(NOTION_TEMPLATE_URL, '_blank');
   };
 
   return (
@@ -38,7 +39,9 @@ export function Hero() {
               <Button onClick={handleGetStarted} size="lg">
                 <Bell className="h-5 w-5 mr-2" /> Join Waitlist <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
-              <Button variant="secondary" size="lg" onClick={handleLearnMore}>Learn more</Button>
+              <Button variant="secondary" size="lg" onClick={openTemplate}>
+                <Sparkles className="h-5 w-5 mr-2" /> Get Notion Template
+              </Button>
             </div>
             <div className="mt-8 flex items-center gap-6 text-sm text-gray-600">
               <span className="inline-flex items-center"><CheckCircle2 className="h-4 w-4 text-green-600 mr-2" /> OAuth secure</span>
