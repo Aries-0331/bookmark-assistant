@@ -86,6 +86,7 @@ async function getPaddleInstance(): Promise<Paddle | null> {
 export function Pricing() {
   const [billing, setBilling] = useState<'monthly' | 'lifetime'>('monthly');
   const [paddleReady, setPaddleReady] = useState(false);
+  const [paymentsEnabled, setPaymentsEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [pricing, setPricing] = useState({
     monthly: 2.99,
@@ -103,9 +104,13 @@ export function Pricing() {
       const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
       const monthlyId = process.env.NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID;
       const lifetimeId = process.env.NEXT_PUBLIC_PADDLE_PRO_LIFETIME_PRICE_ID;
-      
+
+      // Mark if payments are enabled
+      const isConfigured = !!(token && monthlyId && lifetimeId);
+      setPaymentsEnabled(isConfigured);
+
       // If Paddle not configured, use default pricing and skip initialization
-      if (!token || !monthlyId || !lifetimeId) {
+      if (!isConfigured) {
         console.log('💰 Paddle not configured, using default pricing');
         setPaddleReady(true);
         return;
@@ -333,10 +338,19 @@ export function Pricing() {
             <button
               className="w-full text-sm px-4 py-2 mb-4 rounded-lg bg-amber-600 text-white hover:bg-amber-700 shadow inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleUpgrade}
-              disabled={loading || !paddleReady}
+              disabled={loading || !paddleReady || !paymentsEnabled}
+              title={!paymentsEnabled ? 'Payment system coming soon!' : undefined}
             >
               <Crown className="w-4 h-4" />
-              {loading ? 'Loading...' : paddleReady ? 'Upgrade to Pro' : 'Loading Payment...'}
+              {!paymentsEnabled ? (
+                <>Coming Soon</>
+              ) : loading ? (
+                'Loading...'
+              ) : paddleReady ? (
+                'Upgrade to Pro'
+              ) : (
+                'Loading Payment...'
+              )}
             </button>
             <ul className="space-y-2 text-sm">
               {billing === 'lifetime' ? (
