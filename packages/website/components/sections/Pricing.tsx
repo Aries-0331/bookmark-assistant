@@ -42,9 +42,17 @@ async function getPaddleInstance(): Promise<Paddle | null> {
 
   const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
   const env = (process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || 'sandbox') as 'sandbox' | 'production';
-  console.log('🔧 Initializing Paddle with token:', token);
+
+  // Only log in development mode
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔧 Initializing Paddle with token:', token ? '***configured***' : 'undefined');
+  }
+
   if (!token) {
-    console.warn('⚠️ NEXT_PUBLIC_PADDLE_CLIENT_TOKEN is not configured');
+    // Only warn in development mode
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ NEXT_PUBLIC_PADDLE_CLIENT_TOKEN is not configured');
+    }
     return null;
   }
 
@@ -53,14 +61,19 @@ async function getPaddleInstance(): Promise<Paddle | null> {
       token,
       environment: env,
       eventCallback: (event) => {
-        console.log('🎫 Paddle event:', event.name, event.data);
+        // Only log events in development mode
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🎫 Paddle event:', event.name, event.data);
+        }
       },
     });
 
     const instance = await paddlePromise;
     if (instance) {
       paddleInstance = instance;
-      console.log('✅ Paddle initialized:', env);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Paddle initialized:', env);
+      }
     }
     return instance || null;
   } catch (error) {
