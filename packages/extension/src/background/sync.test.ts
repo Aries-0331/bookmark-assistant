@@ -448,11 +448,7 @@ describe('Sync Module', () => {
       );
     });
 
-    it('should generate sync IDs using crypto.randomUUID when available', async () => {
-      globalThis.crypto = {
-        randomUUID: vi.fn().mockReturnValue('mock-uuid-123'),
-      } as any;
-
+    it('should generate sync IDs using Chrome bookmark ID (stable identifier)', async () => {
       mockChrome.bookmarks.getTree.mockResolvedValue(mockBookmarkTree);
       mockChrome.storage.local.get.mockResolvedValue({ is_pro: true });
       mockChrome.storage.local.set.mockResolvedValue(undefined);
@@ -466,26 +462,8 @@ describe('Sync Module', () => {
       await syncAllBookmarksToNotion();
 
       const callArgs = vi.mocked(serverAPI.syncBookmarks).mock.calls[0][0];
-      expect(callArgs[0].syncId).toBe('mock-uuid-123');
-
-      delete (globalThis.crypto as any).randomUUID;
-    });
-
-    it('should fallback to manual syncId generation when crypto.randomUUID not available', async () => {
-      mockChrome.bookmarks.getTree.mockResolvedValue(mockBookmarkTree);
-      mockChrome.storage.local.get.mockResolvedValue({ is_pro: true });
-      mockChrome.storage.local.set.mockResolvedValue(undefined);
-
-      const { serverAPI } = await import('./server-api');
-      vi.mocked(serverAPI.syncBookmarks).mockResolvedValue({
-        success: true,
-        summary: { total: 2, created: 2, skipped: 0 },
-      });
-
-      await syncAllBookmarksToNotion();
-
-      const callArgs = vi.mocked(serverAPI.syncBookmarks).mock.calls[0][0];
-      expect(callArgs[0].syncId).toMatch(/^3-\d+$/); // id-timestamp format
+      // syncId should be the stable Chrome bookmark ID
+      expect(callArgs[0].syncId).toBe('3'); // From mockBookmarkTree
     });
   });
 });

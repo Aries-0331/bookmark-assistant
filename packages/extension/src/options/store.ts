@@ -12,7 +12,7 @@ export const PRO_MIN_INTERVAL_MINUTES = Math.round(PRO_MIN_INTERVAL_HOURS * 60);
 // Pricing constants
 export const PRICE_MONTHLY_REGULAR_USD = 5; // Regular $/month
 export const PRICE_MONTHLY_EARLY_BIRD_USD = 2.99; // Early bird $/month
-export const PRICE_LIFETIME_USD = 29.99; // $ one-time purchase
+export const PRICE_LIFETIME_USD = 29.9; // $ one-time purchase
 
 export type AppState = {
   // Overview
@@ -33,7 +33,6 @@ export type AppState = {
   lastSyncSummary?: {
     type: 'success' | 'no_changes' | 'error';
     message?: string;
-    count?: number;
   };
   setLastSyncSummary: (summary?: AppState['lastSyncSummary']) => void;
 
@@ -90,6 +89,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   autoSync: false,
   intervalHours: FREE_INTERVAL_HOURS,
   setAutoSync: async (v: boolean) => {
+    // Security: Validate with server before enabling auto-sync
+    // Users cannot bypass payment by modifying localStorage
+    if (v) {
+      try {
+        const response = await sendMessage({ type: Messages.GET_USER_PROFILE });
+        if (!response.success || !response.profile?.isPro) {
+          console.warn('🚫 Auto-sync blocked: User is not Pro (server-verified)');
+          // Show error notification if possible
+          return; // Don't enable auto-sync
+        }
+      } catch (error) {
+        console.error('❌ Failed to verify Pro status for auto-sync:', error);
+        return; // Don't enable auto-sync on error
+      }
+    }
+
     set({ autoSync: v });
     // Persist using single source of truth
     await chrome.storage.local.set({
@@ -118,9 +133,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         sync_interval_hours,
         user_id,
         user_email,
-        is_pro,
         session_token,
-        auto_sync_enabled,
         sync_in_progress,
         is_connecting,
       } = await chrome.storage.local.get([
@@ -128,9 +141,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         'sync_interval_hours',
         'user_id',
         'user_email',
-        'is_pro',
         'session_token',
-        'auto_sync_enabled',
         'sync_in_progress',
         'is_connecting',
       ]);
@@ -150,35 +161,20 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (user_id) set({ userId: user_id });
       if (user_email) set({ userEmail: user_email });
 
-      // Load entitlements
-      if (typeof is_pro === 'boolean') set({ isPro: is_pro });
+      // NOTE: is_pro is no longer loaded from localStorage as truth
+      // Pro status is determined by server response only
+      // See: refreshEntitlements() which fetches from server
+      // Users CANNOT bypass payment by modifying localStorage
 
       const interval = Number(sync_interval_hours);
-      const { minIntervalHours } = get().getEffectiveLimits();
+      const minIntervalHours = FREE_INTERVAL_HOURS;
       const next = Number.isFinite(interval) ? (interval as number) : minIntervalHours;
       const coerced = Math.max(minIntervalHours, next);
       set({ lastSync: typeof last_sync === 'string' ? last_sync : '' });
 
-      // Load auto-sync state (only enabled for Pro users)
-      const allowedAuto = get().isPro && auto_sync_enabled === true;
-      set({ autoSync: allowedAuto, intervalHours: coerced });
-
-      if (!get().isPro && interval !== minIntervalHours) {
-        await chrome.storage.local.set({ sync_interval_hours: minIntervalHours });
-      }
-
-      // Reschedule auto-sync alarm if enabled
-      if (allowedAuto) {
-        try {
-          await sendMessage({
-            type: Messages.SCHEDULE_AUTO_SYNC,
-            enabled: true,
-            intervalHours: coerced,
-          });
-        } catch (error) {
-          console.error('❌ Failed to schedule auto-sync on init:', error);
-        }
-      }
+      // Load auto-sync state (default to disabled, will be enabled by refreshEntitlements if Pro)
+      // Users cannot bypass payment by modifying localStorage
+      set({ autoSync: false, intervalHours: coerced });
     } catch (error) {
       console.error('❌ Failed to initialize from storage:', error);
     }
@@ -213,7 +209,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch (error: any) {
       console.error('Failed to refresh user profile:', error);
 
-      const is401 = error?.status === 401 || error?.message?.includes('401') || error?.code === 'UNAUTHORIZED';
+      const is401 =
+        error?.status === 401 || error?.message?.includes('401') || error?.code === 'UNAUTHORIZED';
       if (is401) {
         set({ isConnected: false, isPro: false, purchaseType: undefined });
         chrome.storage.local.remove(['session_token', 'user_id', 'user_email']);
@@ -231,13 +228,13 @@ export const useAppStore = create<AppState>((set, get) => ({
         return;
       }
 
+      // hasTriedInitialLoad is obsolete - remove it if present
       const { hasTriedInitialLoad } = await chrome.storage.local.get(['hasTriedInitialLoad']);
       if (hasTriedInitialLoad) {
-        return;
+        await chrome.storage.local.remove(['hasTriedInitialLoad']);
       }
 
-      await chrome.storage.local.set({ hasTriedInitialLoad: true });
-      set({ hasTriedInitialLoad: true });
+      set({ hasTriedInitialLoad: false });
 
       await get().refreshEntitlements();
     } catch (error) {
@@ -246,9 +243,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   saveSyncSettings: async (nextIntervalHours?: number) => {
     const raw = typeof nextIntervalHours === 'number' ? nextIntervalHours : get().intervalHours;
-    const { minIntervalHours } = get().getEffectiveLimits();
+    // Always use free tier limits - Pro status must be server-verified
+    // Users cannot bypass payment by modifying localStorage
+    const minIntervalHours = FREE_INTERVAL_HOURS;
     const rounded = Math.floor(raw * 100) / 100;
-    const interval = get().isPro ? Math.max(minIntervalHours, rounded) : minIntervalHours;
+    const interval = Math.max(minIntervalHours, rounded);
     await chrome.storage.local.set({
       sync_interval_hours: interval,
       auto_sync_interval_minutes: Math.round(interval * 60), // Keep in sync
@@ -266,11 +265,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  getEffectiveLimits: () => {
-    const st = get();
-    const minIntervalHours = st.isPro ? PRO_MIN_INTERVAL_HOURS : FREE_INTERVAL_HOURS;
-    return { minIntervalHours };
-  },
+  getEffectiveLimits: () => ({ minIntervalHours: FREE_INTERVAL_HOURS }),
   getPricing: () => {
     return get().pricing;
   },
@@ -304,7 +299,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         useAppStore.setState({ isConnected: isNowConnected });
 
         if (newToken && (!oldToken || oldToken !== newToken)) {
-          chrome.storage.local.remove(['hasTriedInitialLoad']);
+          // hasTriedInitialLoad is obsolete - no longer needed
           useAppStore.setState({ hasTriedInitialLoad: false });
         }
 
@@ -322,30 +317,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (changes[CACHE_KEYS.last_sync_summary]) {
         const summary = changes[CACHE_KEYS.last_sync_summary].newValue as string | undefined;
         if (summary === 'no_changes') {
-          chrome.storage.local.get(['last_sync_count'], (result) => {
-            const count = result.last_sync_count as number | undefined;
-            useAppStore.setState({
-              lastSyncSummary: {
-                type: 'no_changes',
-                message: 'Everything is up to date',
-                count: count || 0,
-              },
-            });
+          useAppStore.setState({
+            lastSyncSummary: {
+              type: 'no_changes',
+              message: 'Everything is up to date',
+            },
           });
         } else if (!summary) {
           useAppStore.setState({ lastSyncSummary: undefined });
         }
       }
-      if (changes['last_sync_count']) {
-        const count = changes['last_sync_count'].newValue as number | undefined;
-        const currentSummary = useAppStore.getState().lastSyncSummary;
-        if (currentSummary?.type === 'no_changes' && count) {
-          useAppStore.setState({
-            lastSyncSummary: {
-              ...currentSummary,
-              count,
-            },
-          });
+      if (changes['last_sync']) {
+        // Update lastSync when sync completes
+        const lastSync = changes['last_sync'].newValue as string | undefined;
+        if (lastSync) {
+          useAppStore.setState({ lastSync });
         }
       }
       if (changes['sync_in_progress']) {
@@ -376,8 +362,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       if (changes['auto_sync_enabled']) {
         const autoSyncEnabled = !!changes['auto_sync_enabled'].newValue;
-        const isPro = useAppStore.getState().isPro;
-        useAppStore.setState({ autoSync: isPro && autoSyncEnabled });
+        // Note: autoSync is now controlled by setAutoSync which validates with server
+        // We only reflect the storage state here, but actual sync requires server validation
+        useAppStore.setState({ autoSync: autoSyncEnabled });
       }
       if (changes['auto_sync_interval_minutes']) {
         const minutes = changes['auto_sync_interval_minutes'].newValue as number | undefined;

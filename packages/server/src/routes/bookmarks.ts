@@ -106,15 +106,16 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     // Check plan limits
     const isPro = userData.plan === 'pro';
     const syncLimit = isPro ? config.limits.pro.syncBatchLimit : config.limits.free.syncBatchLimit;
+    let bookmarksToSync = bookmarks;
 
-    if (bookmarks.length > syncLimit) {
-      return res.status(403).json({
-        error: 'Sync Limit Exceeded',
-        message: `Free plan is limited to ${config.limits.free.syncBatchLimit} bookmarks per sync. You're trying to sync ${bookmarks.length}. Upgrade to Pro for unlimited syncing.`,
-        limit: syncLimit,
-        attempted: bookmarks.length,
-        isPro,
-      });
+    // For free users, limit to syncLimit and return partial success
+    if (!isPro && bookmarks.length > syncLimit) {
+      console.log(
+        `[Bookmark Sync] ⚠️ Free user attempting to sync ${bookmarks.length} bookmarks, limiting to ${syncLimit}`
+      );
+      bookmarksToSync = bookmarks.slice(0, syncLimit);
+
+      // Continue with limited bookmarks, will report partial sync in response
     }
 
     const effectiveDataSourceId = userData.notionDataSourceId;
@@ -216,8 +217,8 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       });
     }
 
-    // Validate and enrich bookmarks
-    let enrichedBookmarks = bookmarks.map((bookmark: any, index: number) =>
+    // Validate and enrich bookmarks (use limited bookmarks for free users)
+    let enrichedBookmarks = bookmarksToSync.map((bookmark: any, index: number) =>
       validateBookmark(bookmark, index)
     );
 
@@ -329,6 +330,9 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     // Compute diff (by syncId primarily, with URL fallback)
     const diff = diffBookmarks(enrichedBookmarks as BookmarkItem[], urls, syncIds);
     console.log('[Bookmark Sync] Diff result:', diff.stats);
+    console.log(
+      `[Bookmark Sync] Processing: ${diff.toCreate.length} new (out of ${enrichedBookmarks.length} received, ${diff.skippedExisting} duplicates)`
+    );
 
     const results: SyncResult[] = [];
     const batchSize = options.batchSize || config.batchDefaults.size;
@@ -370,12 +374,91 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
             success: false,
             bookmark: bookmark.title,
             error: sanitizeError(error),
+            retryCount: 0, // Track retry attempts
           };
         }
       });
 
-      const batchResults = (await Promise.all(batchPromises)) as SyncResult[];
+      let batchResults = (await Promise.all(batchPromises)) as (SyncResult & { retryCount?: number })[];
+
+      // Single retry pass for failed items (max 1 retry per item)
+      const retryableFailures = batchResults.filter((r) => {
+        if (!r.success && r.retryCount === 0) {
+          const error = (r.error || '').toLowerCase();
+          // Retry if it's a network/fetch error, but not if it's a Notion API error
+          const isRetryable = error.includes('fetch failed') || error.includes('econnreset');
+          return isRetryable;
+        }
+        return false;
+      });
+
+      if (retryableFailures.length > 0) {
+        console.log(`[Bookmark Sync] 🔄 Retrying ${retryableFailures.length} failed bookmarks (1 attempt each)...`);
+        
+        // Retry with delay
+        await sleep(1500);
+        
+        const retryPromises = retryableFailures.map(async (failed) => {
+          // Find the original bookmark
+          const originalBookmark = batch.find((b) => b.title === failed.bookmark);
+          if (!originalBookmark) return { ...failed, retryCount: 1 };
+
+          try {
+            const properties = await notionService.buildPropertiesFromDataSource(
+              verifiedDataSourceId,
+              userData.notionAccessToken,
+              originalBookmark
+            );
+            const iconUrl = originalBookmark.url
+              ? `https://www.google.com/s2/favicons?domain=${new URL(originalBookmark.url).hostname}&sz=64`
+              : undefined;
+
+            await notionService.createPage(
+              { type: 'data_source_id', data_source_id: verifiedDataSourceId },
+              properties,
+              userData.notionAccessToken,
+              undefined,
+              iconUrl
+            );
+            return {
+              success: true as const,
+              bookmark: originalBookmark.title,
+              action: 'created' as const,
+              syncId: originalBookmark.syncId,
+              retryCount: 1,
+            };
+          } catch (retryError) {
+            console.warn(`[Bookmark Sync] ❌ Retry failed for "${failed.bookmark}"`, retryError instanceof Error ? retryError.message : String(retryError));
+            return { ...failed, retryCount: 1 }; // Mark as retried
+          }
+        });
+
+        const retryResults = await Promise.all(retryPromises);
+        
+        // Update results with retry results
+        for (const retryResult of retryResults) {
+          const index = batchResults.findIndex((r) => r.bookmark === retryResult.bookmark);
+          if (index >= 0) {
+            batchResults[index] = retryResult;
+          }
+        }
+        
+        const newSuccesses = retryResults.filter((r) => r.success).length;
+        if (newSuccesses > 0) {
+          console.log(`[Bookmark Sync] ✅ Retry recovered ${newSuccesses} bookmarks`);
+        }
+      }
+
       results.push(...batchResults);
+
+      // Log failures for debugging
+      const batchFailures = batchResults.filter((r) => !r.success);
+      if (batchFailures.length > 0) {
+        console.warn(
+          `[Bookmark Sync] ⚠️ ${batchFailures.length} failed in this batch:`,
+          batchFailures.map((f) => ({ bookmark: f.bookmark, error: f.error }))
+        );
+      }
 
       // Rate limiting between batches
       if (batches.indexOf(batch) < batches.length - 1) {
@@ -390,14 +473,32 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       failed: results.length - successCount,
       batchSize,
       skippedExisting: diff.skippedExisting,
+      duplicatesBySyncId: diff.stats.matchedBySyncId,
+      duplicatesByUrl: diff.stats.matchedByUrl,
     };
 
+    console.log(
+      `[Bookmark Sync] ✅ Sync completed: ${successCount} new, ${diff.skippedExisting} duplicates (${diff.stats.matchedBySyncId} by syncId, ${diff.stats.matchedByUrl} by URL), ${results.length - successCount} failed`
+    );
+
     auditLog('bookmark_sync_success', userId, summary);
+
+    // Check if this was a partial sync due to free tier limits
+    const isPartialSync = !isPro && bookmarks.length > syncLimit;
 
     res.json({
       success: true,
       results,
       summary,
+      ...(isPartialSync && {
+        partialSync: {
+          applied: true,
+          requested: bookmarks.length,
+          processed: syncLimit,
+          skipped: bookmarks.length - syncLimit,
+          message: `Free plan limited to ${syncLimit} bookmarks. ${bookmarks.length - syncLimit} bookmarks were skipped. Upgrade to Pro for unlimited syncing.`,
+        },
+      }),
     });
   } catch (error) {
     const errorMessage = sanitizeError(error);

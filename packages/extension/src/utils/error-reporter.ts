@@ -1,4 +1,5 @@
 import { config } from '../background/config';
+import { cleanErrorReports } from './storage-cleanup';
 
 interface ErrorReport {
   message: string;
@@ -67,10 +68,13 @@ async function storeLocalErrorReport(report: ErrorReport): Promise<void> {
   try {
     const { error_reports = [] } = await chrome.storage.local.get('error_reports');
 
-    // Keep last 50 errors
-    const reports = [...error_reports, report].slice(-50);
+    // Add new error to the list
+    const reports = [...error_reports, report];
 
-    await chrome.storage.local.set({ error_reports: reports });
+    // Clean up old errors using retention policy (48h, max 10 errors)
+    const cleanedReports = cleanErrorReports(reports);
+
+    await chrome.storage.local.set({ error_reports: cleanedReports });
   } catch (err) {
     console.warn('[ErrorReporter] Failed to store error locally:', err);
   }

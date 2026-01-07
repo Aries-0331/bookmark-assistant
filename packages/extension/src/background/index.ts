@@ -6,6 +6,7 @@ import { addMessageListener, Messages } from '../utils/message';
 import { scheduleAutoSync, setupAutoSyncListener, restoreAutoSync } from './auto-sync';
 import { normalizeUrl } from '../utils/url-normalizer';
 import { reportError } from '../utils/error-reporter';
+import { cleanupStorage } from '../utils/storage-cleanup';
 
 // Cache for page descriptions (url -> { description: string, timestamp: number })
 const pageDescriptionCache = new Map<string, { description: string; timestamp: number }>();
@@ -44,8 +45,10 @@ chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
   if (message.type === 'PAGE_DESCRIPTION') {
     const { url, description } = message.payload;
     const normalizedUrl = normalizeUrl(url);
-    console.log(`[DescriptionExtractor] Received description for ${url} (normalized: ${normalizedUrl}): "${description}"`);
-    
+    console.log(
+      `[DescriptionExtractor] Received description for ${url} (normalized: ${normalizedUrl}): "${description}"`
+    );
+
     // Update timestamp for LRU tracking
     pageDescriptionCache.set(normalizedUrl, {
       description,
@@ -70,7 +73,9 @@ async function persistDescriptionCache() {
       cacheObject[key] = value;
     });
     await chrome.storage.local.set({ [DESCRIPTION_CACHE_STORAGE_KEY]: cacheObject });
-    console.log(`[DescriptionExtractor] Persisted ${Object.keys(cacheObject).length} descriptions to storage`);
+    console.log(
+      `[DescriptionExtractor] Persisted ${Object.keys(cacheObject).length} descriptions to storage`
+    );
   } catch (error) {
     console.error('[DescriptionExtractor] Failed to persist cache to storage:', error);
   }
@@ -129,34 +134,41 @@ async function loadDescriptionCacheFromStorage() {
 }
 
 // Clean up expired cache entries periodically
-setInterval(async () => {
-  const now = Date.now();
-  let deletedCount = 0;
-  for (const [url, data] of pageDescriptionCache.entries()) {
-    if (now - data.timestamp > DESCRIPTION_CACHE_TTL_MS) {
-      pageDescriptionCache.delete(url);
-      deletedCount++;
+setInterval(
+  async () => {
+    const now = Date.now();
+    let deletedCount = 0;
+    for (const [url, data] of pageDescriptionCache.entries()) {
+      if (now - data.timestamp > DESCRIPTION_CACHE_TTL_MS) {
+        pageDescriptionCache.delete(url);
+        deletedCount++;
+      }
     }
-  }
-  if (deletedCount > 0) {
-    console.log(`[DescriptionExtractor] Cleaned up ${deletedCount} expired descriptions`);
-    await persistDescriptionCache();
-  }
-}, 60 * 60 * 1000); // Check every hour
+    if (deletedCount > 0) {
+      console.log(`[DescriptionExtractor] Cleaned up ${deletedCount} expired descriptions`);
+      await persistDescriptionCache();
+    }
+  },
+  60 * 60 * 1000
+); // Check every hour
 
 function getCachedDescription(url: string): string {
   // Normalize URL before lookup to ensure cache hits
   const normalizedUrl = normalizeUrl(url);
   const cached = pageDescriptionCache.get(normalizedUrl);
-  
+
   if (!cached) {
-    console.debug(`[DescriptionExtractor] No cache entry for: ${url} (normalized: ${normalizedUrl})`);
+    console.debug(
+      `[DescriptionExtractor] No cache entry for: ${url} (normalized: ${normalizedUrl})`
+    );
     return '';
   }
 
   // Check if expired
   if (Date.now() - cached.timestamp > DESCRIPTION_CACHE_TTL_MS) {
-    console.debug(`[DescriptionExtractor] Cache expired for: ${url} (normalized: ${normalizedUrl})`);
+    console.debug(
+      `[DescriptionExtractor] Cache expired for: ${url} (normalized: ${normalizedUrl})`
+    );
     pageDescriptionCache.delete(normalizedUrl);
     return '';
   }
@@ -164,7 +176,9 @@ function getCachedDescription(url: string): string {
   // Update timestamp for LRU tracking (mark as recently used)
   cached.timestamp = Date.now();
 
-  console.debug(`[DescriptionExtractor] Cache hit for ${url} (normalized: ${normalizedUrl}): "${cached.description}"`);
+  console.debug(
+    `[DescriptionExtractor] Cache hit for ${url} (normalized: ${normalizedUrl}): "${cached.description}"`
+  );
   return cached.description;
 }
 
@@ -203,7 +217,10 @@ debugConfig();
 debugOAuthSetup();
 
 // Reset any stale sync state from previous terminated service worker
-resetStaleSyncState().then(() => {
+resetStaleSyncState().then(async () => {
+  // Clean up storage (remove redundant fields, fix NaN issues, etc.)
+  await cleanupStorage();
+
   const configValidation = validateConfig();
   if (!configValidation.isValid) {
     console.error('❌ Configuration errors:', configValidation.errors);
@@ -214,7 +231,11 @@ resetStaleSyncState().then(() => {
 });
 
 // Extract sync logic into a reusable function
-async function performBookmarkSync(): Promise<{ success: boolean; error?: string }> {
+async function performBookmarkSync(): Promise<{
+  success: boolean;
+  error?: string;
+  noChanges?: boolean;
+}> {
   const setState = async (patch: Record<string, any>) => {
     try {
       await chrome.storage.local.set(patch);
@@ -222,11 +243,11 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
       console.warn('Failed to update sync state:', patch, e);
     }
   };
-  
+
   // Declare variables outside try block so they're accessible in catch
   let formatted: any[] = [];
   let currentHash: string | undefined;
-  
+
   try {
     const startedAt = Date.now();
     const MIN_PROGRESS_MS = 1200; // keep UI spinner visible to avoid flicker / rapid re-clicks
@@ -244,8 +265,12 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
           const url = node.url || '';
           const normalizedUrl = normalizeUrl(url);
           const description = getCachedDescription(url);
-          console.log(`[Sync] Processing bookmark: "${title}" -> ${url} (normalized: ${normalizedUrl})`);
-          console.log(`[Sync] Description for ${url}: "${description}" (${description ? 'found' : 'not found'})`);
+          console.log(
+            `[Sync] Processing bookmark: "${title}" -> ${url} (normalized: ${normalizedUrl})`
+          );
+          console.log(
+            `[Sync] Description for ${url}: "${description}" (${description ? 'found' : 'not found'})`
+          );
           formatted.push({
             title,
             url,
@@ -299,23 +324,26 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
     const {
       last_sync_fingerprint: prevFp,
       last_sync_count: prevCount,
-      last_sync_hash: prevHash,
     } = await chrome.storage.local.get([
       'last_sync_fingerprint',
       'last_sync_count',
-      'last_sync_hash',
     ]);
     const currentCount = formatted.length;
     currentHash = fp; // Use existing declaration
-    const previousHash = typeof prevHash === 'string' ? prevHash : prevFp;
-    if (
+    const previousHash = prevFp;
+
+    // Hash comparison: compare total count and hash
+    // This prevents unnecessary sync when bookmarks haven't changed
+    const hasNoChanges =
       typeof prevCount === 'number' &&
       typeof previousHash === 'string' &&
       prevCount === currentCount &&
-      previousHash === currentHash
-    ) {
+      previousHash === currentHash;
+
+    if (hasNoChanges) {
       // No changes — keep last successful sync timestamp; just notify summary
       await setState({
+        last_sync: new Date().toISOString(), // Update timestamp even for no changes
         last_sync_summary: 'no_changes',
         last_sync_count: currentCount,
       });
@@ -325,7 +353,7 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
         await new Promise((r) => setTimeout(r, MIN_PROGRESS_MS - elapsed));
       }
       await setState({ sync_in_progress: false });
-      return { success: true } as const;
+      return { success: true, noChanges: true } as const;
     }
 
     // Log sample of bookmarks to be synced (first 5)
@@ -333,7 +361,9 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
     console.log(`[Sync] Sample bookmarks:`);
     formatted.slice(0, 5).forEach((bm, i) => {
       console.log(`[Sync]   ${i + 1}. ${bm.title} -> ${bm.url}`);
-      console.log(`[Sync]      Description: "${bm.description}" (${bm.description ? 'has text' : 'empty'})`);
+      console.log(
+        `[Sync]      Description: "${bm.description}" (${bm.description ? 'has text' : 'empty'})`
+      );
     });
     if (formatted.length > 5) {
       console.log(`[Sync]   ... and ${formatted.length - 5} more`);
@@ -347,7 +377,6 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
       last_sync: new Date().toISOString(),
       last_sync_summary: null,
       last_sync_count: currentCount,
-      last_sync_hash: currentHash,
       last_sync_fingerprint: fp,
     });
 
@@ -360,7 +389,7 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
     return { success: true } as const;
   } catch (err) {
     console.error('❌ Server-side bookmark sync failed:', err);
-    
+
     // Report error to server for monitoring
     const error = err instanceof Error ? err : new Error(String(err));
     await reportError(error, {
@@ -368,7 +397,7 @@ async function performBookmarkSync(): Promise<{ success: boolean; error?: string
       bookmarkCount: formatted?.length || 0,
       syncHash: currentHash,
     });
-    
+
     const summary: Record<string, any> = {};
     if (err instanceof APIError) {
       if (err.status === 429) {
@@ -417,14 +446,14 @@ addMessageListener({
     } catch (error) {
       // Clear connecting state on error
       await chrome.storage.local.set({ is_connecting: false });
-      
+
       // Report OAuth errors to server
       const err = error instanceof Error ? error : new Error(String(error));
       await reportError(err, {
         operation: 'oauth',
         stage: 'exchange_token',
       });
-      
+
       throw error;
     }
   },
@@ -535,8 +564,7 @@ if (typeof self !== 'undefined') {
 
   self.addEventListener('unhandledrejection', (event) => {
     console.error('[Unhandled Rejection]', event.reason);
-    const error =
-      event.reason instanceof Error ? event.reason : new Error(String(event.reason));
+    const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
     reportError(error, {
       type: 'unhandled_promise',
     }).catch(() => {

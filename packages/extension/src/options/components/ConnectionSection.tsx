@@ -14,12 +14,10 @@ export function ConnectionSection() {
   // Show toast when sync summary changes
   useEffect(() => {
     if (lastSyncSummary?.type === 'no_changes') {
-      const count = lastSyncSummary.count || 0;
-      const bookmarkText = count === 1 ? 'bookmark' : 'bookmarks';
       show({
         variant: 'info',
         title: 'Everything is up to date',
-        description: `All ${count} ${bookmarkText} are already synced to Notion.`,
+        description: 'All bookmarks are already synced to Notion.',
       });
       // Clear the summary so it can be shown again on the next sync
       useAppStore.getState().setLastSyncSummary(undefined);

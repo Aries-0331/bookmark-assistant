@@ -72,17 +72,9 @@ export async function syncAllBookmarksToNotion() {
       throw new Error('No bookmarks found to sync');
     }
 
-    // Check if user might hit the free tier limit
-    const { is_pro } = await chrome.storage.local.get(['is_pro']);
-    const isPro = !!is_pro;
-    const FREE_LIMIT = 50;
-
-    if (!isPro && bookmarks.length > FREE_LIMIT) {
-      console.warn(
-        `⚠️ Free plan limit: ${bookmarks.length} bookmarks found, only first ${FREE_LIMIT} will be synced`
-      );
-      // Note: Server will enforce the limit, but we can warn here
-    }
+    // NOTE: We no longer check is_pro from local storage
+    // Pro status is now validated securely on the server side using database state
+    // User cannot bypass limits by modifying local storage
 
     // Delegate the bulk sync entirely to the server
     const formatted = bookmarks
@@ -123,7 +115,9 @@ export async function syncAllBookmarksToNotion() {
   }
 }
 
-function flattenBookmarks(bookmarkNodes: chrome.bookmarks.BookmarkTreeNode[]): BookmarkItem[] {
+export function flattenBookmarks(
+  bookmarkNodes: chrome.bookmarks.BookmarkTreeNode[]
+): BookmarkItem[] {
   const flattened: BookmarkItem[] = [];
 
   function traverse(nodes: chrome.bookmarks.BookmarkTreeNode[], parentPath = '') {

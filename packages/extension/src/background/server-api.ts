@@ -103,9 +103,7 @@ class ServerAPIClient {
 
         // Provide helpful error message
         throw new Error(
-          `Sync request timed out after ${timeoutSeconds}s. The server might be busy processing your ${Math.round(
-            timeoutMs / 1000
-          )} bookmarks. Please try again.`
+          `Sync request timed out after ${timeoutSeconds}s. The server might be busy processing your bookmarks. Please try again or reduce the number of bookmarks per sync.`
         );
       }
       throw error;
@@ -169,10 +167,18 @@ class ServerAPIClient {
       failed: number;
     };
     results: any[];
+    partialSync?: {
+      applied: boolean;
+      requested: number;
+      processed: number;
+      skipped: number;
+      message: string;
+    };
   }> {
-    // Set a reasonable timeout (60s) to prevent sync state from getting stuck
+    // Set a longer timeout (180s) for bookmark sync
+    // Processing 50+ bookmarks with description extraction can take time
     // If the request takes longer, it will timeout and reset sync_in_progress
-    const estimatedTimeout = 60000;
+    const estimatedTimeout = 180000;
     return await this.makeRequest<any>('/api/bookmarks/sync', {
       method: 'POST',
       body: JSON.stringify({ bookmarks }),
@@ -259,7 +265,6 @@ class ServerAPIClient {
       'last_sync_summary',
       'last_sync_count',
       'last_sync_fingerprint',
-      'last_sync_hash',
       'sync_in_progress',
       'is_connecting',
       'auto_sync_enabled',
@@ -267,7 +272,6 @@ class ServerAPIClient {
       'sync_interval_hours',
       'last_bulk_sync',
       'last_sync_results',
-      'hasTriedInitialLoad',
     ];
 
     await chrome.storage.local.remove(keysToRemove);
@@ -301,11 +305,11 @@ export function formatBookmarkForServer(
   bookmark: chrome.bookmarks.BookmarkTreeNode,
   path: string
 ): BookmarkData {
-  // Prefer server to assign syncId, but if provided here, use a UUID to ensure uniqueness
-  const syncId =
-    globalThis.crypto && 'randomUUID' in globalThis.crypto
-      ? (globalThis.crypto as any).randomUUID()
-      : `${bookmark.id}-${Date.now()}`;
+  // Use stable syncId based on Chrome bookmark ID
+  // This ensures the same bookmark gets the same syncId across multiple syncs
+  // which is critical for duplicate detection on the server side
+  const syncId = bookmark.id; // Chrome bookmark ID is stable across sessions
+
   return {
     title: bookmark.title || 'Untitled',
     url: bookmark.url || '',

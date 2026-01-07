@@ -48,7 +48,9 @@ export function OverviewSection({ onNavigate }: { onNavigate: (to: RouteId) => v
         </div>
         <div className="flex flex-col items-center gap-2 p-2">
           <span>Bookmarks</span>
-          <span className="text-center text-gray-900">{isConnected ? bookmarkCount : '-'}</span>
+          <span className="text-center text-gray-900 font-medium">
+            {isConnected ? bookmarkCount : '-'}
+          </span>
         </div>
         <div className="flex flex-col items-center gap-2 p-2">
           <span>Last sync</span>

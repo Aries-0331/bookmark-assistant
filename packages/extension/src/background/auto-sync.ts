@@ -15,6 +15,8 @@
  * Note: Removed redundant 'auto_sync' key to avoid state desync issues.
  */
 
+import { serverAPI } from './server-api';
+
 const ALARM_NAME = 'bookmarks-auto-sync';
 
 /**
@@ -101,6 +103,24 @@ export function setupAutoSyncListener(onSync: () => Promise<void>): void {
       return;
     }
 
+    // Security: Verify Pro status with server before syncing
+    // Users cannot bypass payment by modifying localStorage
+    try {
+      const profile = await serverAPI.getUserProfile();
+      if (!profile.isPro) {
+        console.warn('🚫 Auto-sync blocked: User is not Pro (server-verified)');
+        await chrome.alarms.clear(ALARM_NAME);
+        await chrome.storage.local.set({ auto_sync_enabled: false });
+        return;
+      }
+    } catch (error) {
+      console.error('❌ Failed to verify Pro status for auto-sync:', error);
+      // On error, don't sync and disable auto-sync to prevent potential abuse
+      await chrome.alarms.clear(ALARM_NAME);
+      await chrome.storage.local.set({ auto_sync_enabled: false });
+      return;
+    }
+
     // Check if a sync is already in progress
     const { sync_in_progress } = await chrome.storage.local.get('sync_in_progress');
     if (sync_in_progress) {
@@ -134,6 +154,22 @@ export async function restoreAutoSync(onSyncNeeded: () => Promise<any>): Promise
       ]);
 
     if (auto_sync_enabled && auto_sync_interval_minutes) {
+      // Security: Verify Pro status with server before restoring auto-sync
+      // Users cannot bypass payment by modifying localStorage
+      try {
+        const profile = await serverAPI.getUserProfile();
+        if (!profile.isPro) {
+          console.warn('🚫 Auto-sync restore blocked: User is not Pro (server-verified)');
+          await chrome.storage.local.set({ auto_sync_enabled: false });
+          return;
+        }
+      } catch (error) {
+        console.error('❌ Failed to verify Pro status on restore:', error);
+        // On error, disable auto-sync to prevent potential abuse
+        await chrome.storage.local.set({ auto_sync_enabled: false });
+        return;
+      }
+
       const intervalHours = auto_sync_interval_minutes / 60;
       let initialDelay = auto_sync_interval_minutes;
 
