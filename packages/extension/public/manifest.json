@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Bookmark Assistant",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Transform Chrome bookmarks into organized Notion databases. One-click sync, smart descriptions, auto-sync Pro features.",
   "permissions": ["bookmarks", "storage", "identity", "alarms"],
   "host_permissions": [],
