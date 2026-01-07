@@ -1,10 +1,5 @@
 /// <reference types="chrome" />
 
-/**
- * Storage Cleanup Utility
- * Removes redundant and obsolete data from chrome.storage.local
- */
-
 interface PartialSyncInfo {
   new_count?: number;
   failed_count?: number;

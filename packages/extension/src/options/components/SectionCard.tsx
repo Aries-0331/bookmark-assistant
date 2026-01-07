@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import logoUrl from '../../assets/logo.png';
-import { Crown } from 'lucide-react';
+import { Crown, Mail } from 'lucide-react';
 import { RouteId } from '../router';
 
 export function SectionCard({
@@ -41,9 +41,15 @@ export function SectionCard({
 }
 
 export function PageHeader() {
+  const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'aries0331.dev@gmail.com';
+
+  const handleSupportClick = () => {
+    window.open(`mailto:${supportEmail}?subject=Bookmark Assistant Support`, '_blank');
+  };
+
   return (
     <header className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-200">
-      <div className="w-full px-4 md:px-6 h-14 flex items-center justify-start gap-3">
+      <div className="w-full px-4 md:px-6 h-14 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img
             src={logoUrl}
@@ -55,6 +61,15 @@ export function PageHeader() {
             <span className="text-[11px] text-gray-500">Sync Bookmarks to Notion</span>
           </div>
         </div>
+
+        <button
+          onClick={handleSupportClick}
+          className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+          title="Contact Support"
+        >
+          <Mail className="w-4 h-4" />
+          <span className="hidden sm:inline">Support</span>
+        </button>
       </div>
     </header>
   );
