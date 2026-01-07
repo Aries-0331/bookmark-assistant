@@ -692,14 +692,14 @@ export class NotionService {
           break;
         }
 
-        console.log(
+        console.debug(
           `[Notion] Fetching existing bookmarks page ${pageCount}/${maxPages}...`
         );
 
         const response = await attemptFetch();
         const results = response?.results || [];
 
-        console.log(
+        console.debug(
           `[Notion] Fetched page ${pageCount} with ${results.length} bookmarks (total: ${urls.length})`
         );
 

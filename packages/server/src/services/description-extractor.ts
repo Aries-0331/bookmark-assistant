@@ -31,7 +31,7 @@ export class DescriptionExtractor {
       // Check cache first
       const cached = await descriptionCache.get(normalizedUrl);
       if (cached) {
-        console.log(`[DescriptionExtractor] Cache hit for ${normalizedUrl} (hits: ${cached.hits})`);
+        console.debug(`[DescriptionExtractor] Cache hit for ${normalizedUrl} (hits: ${cached.hits})`);
         return {
           description: cached.description,
           source: cached.source,
@@ -41,7 +41,7 @@ export class DescriptionExtractor {
         };
       }
 
-      console.log(`[DescriptionExtractor] Cache miss for ${normalizedUrl}, fetching...`);
+      console.debug(`[DescriptionExtractor] Cache miss for ${normalizedUrl}, fetching...`);
 
       // Validate URL
       if (!this.isValidUrl(normalizedUrl)) {

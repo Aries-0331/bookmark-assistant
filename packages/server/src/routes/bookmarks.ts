@@ -82,9 +82,9 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
   try {
     const userId = req.user!.userId;
     const userData = await userPrisma.find(userId);
-    console.log('[Bookmark Sync] User data fetched:', userData);
+    console.debug('[Bookmark Sync] User data fetched:', userData);
     const { dataSourceId, bookmarks, options = {} }: BookmarkSyncRequest = req.body;
-    console.log('[Bookmark Sync] Sync request received:', {
+    console.debug('[Bookmark Sync] Sync request received:', {
       dataSourceId,
       bookmarkCount: Array.isArray(bookmarks) ? bookmarks.length : 'invalid',
       options,
@@ -266,7 +266,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
         // Process each batch sequentially
         for (let i = 0; i < descriptionBatches.length; i++) {
           const batch = descriptionBatches[i];
-          console.log(
+          console.debug(
             `[Bookmark Sync] Processing description batch ${i + 1}/${descriptionBatches.length} (${batch.length} bookmarks)...`
           );
           
@@ -276,7 +276,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
               // Extract description from URL
               const result = await descriptionExtractor.extractFromUrl(bookmark.url!);
               if (result.success && result.description) {
-                console.log(
+                console.debug(
                   `[Bookmark Sync] Generated description for ${bookmark.title}: "${result.description.substring(0, 50)}..."`
                 );
                 // Store updated bookmark in map
@@ -292,7 +292,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
                 );
               }
             } catch (error) {
-              console.warn(`[Bookmark Sync] Error generating description for ${bookmark.url}:`, error);
+              console.debug(`[Bookmark Sync] Error generating description for ${bookmark.url}:`, error);
             }
             return normalizeBookmark(bookmark);
           });
