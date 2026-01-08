@@ -1,62 +1,39 @@
 # Documentation Index
 
-> **Comprehensive documentation for Bookmark Assistant**
+> **Technical documentation for Bookmark Assistant**
 
 ---
 
-## 📚 Quick Links
+## 📚 Quick Links (Root Level)
 
-### Essential Documents (Root Level)
+### Essential Documents
 
 - [`../README.md`](../README.md) - Project overview and setup
 - [`../CLAUDE.md`](../CLAUDE.md) - Architecture and technical specification
 - [`../todo.md`](../todo.md) - Current tasks and roadmap
 - [`../PRODUCTION_READINESS_ANALYSIS.md`](../PRODUCTION_READINESS_ANALYSIS.md) - Launch readiness assessment
 
+### User & Operations Documentation
+
+- [`../FAQ_SUPPORT.md`](../FAQ_SUPPORT.md) - Comprehensive FAQ and support guide
+- [`../DEPLOYMENT.md`](../DEPLOYMENT.md) - Deployment guide (Vercel)
+- [`../CHROME_WEB_STORE_SUBMISSION.md`](../CHROME_WEB_STORE_SUBMISSION.md) - Chrome Web Store submission guide
+- [`../PERMISSIONS_JUSTIFICATION.md`](../PERMISSIONS_JUSTIFICATION.md) - Extension permissions explanation
+
 ---
 
-## 📖 Feature Documentation
+## 📖 Technical Documentation
 
-### Core Features
+### Core Architecture
 
-- [**FAQ_SUPPORT.md**](FAQ_SUPPORT.md) - Comprehensive FAQ and support guide
-- [**AUTO_SYNC.md**](AUTO_SYNC.md) - Automatic background synchronization
-- [**NOTION_INTEGRATION.md**](NOTION_INTEGRATION.md) - Notion API integration details
 - [**STATE_MANAGEMENT.md**](STATE_MANAGEMENT.md) - Event-driven state architecture
+- [**NOTION_INTEGRATION.md**](NOTION_INTEGRATION.md) - Notion API integration details
+- [**AUTO_SYNC.md**](AUTO_SYNC.md) - Automatic background synchronization
+- [**PADDLE_INTEGRATION.md**](PADDLE_INTEGRATION.md) - Payment processing integration
 
-### Description Extraction
+### Features
 
 - [**DESCRIPTION_CACHE.md**](DESCRIPTION_CACHE.md) - Caching strategy and implementation
-- [**DESCRIPTION_CACHE_IMPLEMENTATION_SUMMARY.md**](DESCRIPTION_CACHE_IMPLEMENTATION_SUMMARY.md) - Implementation details
-- [**DESCRIPTION_OPTIMIZATION_REVIEW.md**](DESCRIPTION_OPTIMIZATION_REVIEW.md) - Performance optimization analysis
-
-### Technical Infrastructure
-
-- [**CONNECTION_POOL_ANALYSIS.md**](CONNECTION_POOL_ANALYSIS.md) - Database connection pool optimization
-- [**TEST_COVERAGE_IMPLEMENTATION_SUMMARY.md**](TEST_COVERAGE_IMPLEMENTATION_SUMMARY.md) - Test coverage improvements
-- [**TEST_FIXING_PROCESS_SUMMARY.md**](TEST_FIXING_PROCESS_SUMMARY.md) - Test fixing methodology
-
-### Error Monitoring
-
-- [**ERROR_MONITORING_DESIGN.md**](ERROR_MONITORING_DESIGN.md) - Comprehensive monitoring design
-- [**ERROR_MONITORING_SIMPLE.md**](ERROR_MONITORING_SIMPLE.md) - Simple $0 implementation
-- [**ERROR_MONITORING_IMPLEMENTATION_SUMMARY.md**](ERROR_MONITORING_IMPLEMENTATION_SUMMARY.md) - Implementation summary
-
-### Operations & Deployment
-
-- [**DEPLOYMENT.md**](DEPLOYMENT.md) - Deployment guide (Vercel)
-- [**PADDLE_INTEGRATION.md**](PADDLE_INTEGRATION.md) - Payment processing integration
-- [**CHROME_WEB_STORE_SUBMISSION.md**](CHROME_WEB_STORE_SUBMISSION.md) - Chrome Web Store submission & fixes
-- [**PERMISSIONS_JUSTIFICATION.md**](PERMISSIONS_JUSTIFICATION.md) - Extension permissions explanation
-
-### Bug Fixes & Troubleshooting
-
-- [**BUG_FIXES_SUMMARY.md**](BUG_FIXES_SUMMARY.md) - Major bug fixes and resolutions
-- [**WAITLIST_IMPLEMENTATION.md**](WAITLIST_IMPLEMENTATION.md) - Waitlist feature implementation
-- [**LAUNCH_EMAIL_TEMPLATES.md**](LAUNCH_EMAIL_TEMPLATES.md) - Launch email templates
-
-### Future Features
-
 - [**INTERNATIONALIZATION.md**](INTERNATIONALIZATION.md) - Multi-language support plan
 
 ---
@@ -69,18 +46,32 @@
 | ---------------- | ------------------------------------------------------- | -------------------------- |
 | **Architecture** | CLAUDE.md, STATE_MANAGEMENT.md                          | System design and patterns |
 | **Features**     | AUTO_SYNC.md, DESCRIPTION_CACHE.md                      | Feature specifications     |
-| **Technical**    | CONNECTION*POOL_ANALYSIS.md, TEST_COVERAGE*\*.md        | Technical deep dives       |
-| **Operations**   | ERROR*MONITORING*\*.md, DEPLOYMENT.md                   | Production operations      |
-| **Business**     | PADDLE_INTEGRATION.md, PRODUCTION_READINESS_ANALYSIS.md | Business and launch        |
+| **Integration**  | NOTION_INTEGRATION.md, PADDLE_INTEGRATION.md           | API integrations          |
+| **Operations**   | DEPLOYMENT.md, CHROME_WEB_STORE_SUBMISSION.md          | Deployment and launch     |
+| **User-Facing**  | FAQ_SUPPORT.md, PERMISSIONS_JUSTIFICATION.md            | User support and policies |
 
 ### By Priority
 
 | Priority            | Documents                                              | When to Read       |
 | ------------------- | ------------------------------------------------------ | ------------------ |
 | **P0 - Essential**  | README.md, CLAUDE.md, PRODUCTION_READINESS_ANALYSIS.md | Start here         |
-| **P1 - Important**  | AUTO_SYNC.md, NOTION_INTEGRATION.md, DEPLOYMENT.md     | Before development |
-| **P2 - Reference**  | DESCRIPTION_CACHE.md, ERROR_MONITORING_DESIGN.md       | As needed          |
-| **P3 - Background** | Test coverage docs, optimization reviews               | Deep dives         |
+| **P1 - Important**  | STATE_MANAGEMENT.md, AUTO_SYNC.md, NOTION_INTEGRATION.md | Before development |
+| **P2 - Reference**  | DESCRIPTION_CACHE.md, PADDLE_INTEGRATION.md            | As needed          |
+| **P3 - Background** | INTERNATIONALIZATION.md                               | Future features    |
+
+---
+
+## 🗂️ Package-Specific Documentation
+
+### Extension Package
+
+- [`../packages/extension/ENV_USAGE.md`](../packages/extension/ENV_USAGE.md) - Environment variable guide
+- [`../packages/extension/DESCRIPTION_GENERATOR_REVIEW.md`](../packages/extension/DESCRIPTION_GENERATOR_REVIEW.md) - Description generation design
+
+### Server Package
+
+- [`../packages/server/DESCRIPTION_GENERATION_DESIGN.md`](../packages/server/DESCRIPTION_GENERATION_DESIGN.md) - Server-side description generation
+- [`../packages/server/DESCRIPTION_GENERATION_IMPLEMENTATION.md`](../packages/server/DESCRIPTION_GENERATION_IMPLEMENTATION.md) - Implementation details
 
 ---
 
@@ -88,11 +79,11 @@
 
 Historical and superseded documentation is stored in [`archive/`](archive/):
 
-- [DESCRIPTION_CACHE_IMPLEMENTATION_PLAN.md](archive/DESCRIPTION_CACHE_IMPLEMENTATION_PLAN.md) - Original cache plan
-- [DESCRIPTION_OPTIMIZATION.md](archive/DESCRIPTION_OPTIMIZATION.md) - Initial optimization analysis
-- [TEST_COVERAGE_IMPROVEMENT_PLAN.md](archive/TEST_COVERAGE_IMPROVEMENT_PLAN.md) - Original test plan
-- [TEST_COVERAGE_PROGRESS_REPORT.md](archive/TEST_COVERAGE_PROGRESS_REPORT.md) - Progress tracking
-- [DOCUMENTATION_REORGANIZATION.md](archive/DOCUMENTATION_REORGANIZATION.md) - Documentation structure changes
+- DESCRIPTION_CACHE_IMPLEMENTATION_PLAN.md - Original cache plan
+- DESCRIPTION_OPTIMIZATION.md - Initial optimization analysis
+- TEST_COVERAGE_IMPLEVEMENT_PLAN.md - Original test plan
+- TEST_COVERAGE_PROGRESS_REPORT.md - Progress tracking
+- DOCUMENTATION_REORGANIZATION.md - Documentation structure changes
 
 ---
 
@@ -103,28 +94,23 @@ Historical and superseded documentation is stored in [`archive/`](archive/):
 1. Read [`../README.md`](../README.md) - Project setup
 2. Read [`../CLAUDE.md`](../CLAUDE.md) - Architecture overview
 3. Review [STATE_MANAGEMENT.md](STATE_MANAGEMENT.md) - State patterns
-4. Check [DEPLOYMENT.md](DEPLOYMENT.md) - Deployment process
+4. Check [NOTION_INTEGRATION.md](NOTION_INTEGRATION.md) - API integration
 
 ### Feature Development
 
 1. Check [`../todo.md`](../todo.md) - Current priorities
-2. Review feature-specific docs (AUTO_SYNC.md, DESCRIPTION_CACHE.md, etc.)
-3. Check [TEST_COVERAGE_IMPLEMENTATION_SUMMARY.md](TEST_COVERAGE_IMPLEMENTATION_SUMMARY.md) - Testing patterns
-4. Reference [NOTION_INTEGRATION.md](NOTION_INTEGRATION.md) - API patterns
+2. Review feature-specific docs (AUTO_SYNC.md, DESCRIPTION_CACHE.md)
+3. Reference [NOTION_INTEGRATION.md](NOTION_INTEGRATION.md) - API patterns
 
 ### Production Operations
 
-1. Review [DEPLOYMENT.md](DEPLOYMENT.md) - Deploy procedures
-2. Check [ERROR_MONITORING_SIMPLE.md](ERROR_MONITORING_SIMPLE.md) - Monitoring setup
-3. Review [CONNECTION_POOL_ANALYSIS.md](CONNECTION_POOL_ANALYSIS.md) - Database optimization
-4. Reference [`../PRODUCTION_READINESS_ANALYSIS.md`](../PRODUCTION_READINESS_ANALYSIS.md) - Launch checklist
+1. Review [`../DEPLOYMENT.md`](../DEPLOYMENT.md) - Deploy procedures
+2. Check [`../CHROME_WEB_STORE_SUBMISSION.md`](../CHROME_WEB_STORE_SUBMISSION.md) - Store submission
+3. Reference [`../PERMISSIONS_JUSTIFICATION.md`](../PERMISSIONS_JUSTIFICATION.md) - Permissions
 
-### Troubleshooting
+### User Support
 
-1. Check [ERROR_MONITORING_DESIGN.md](ERROR_MONITORING_DESIGN.md) - Error patterns
-2. Review [CONNECTION_POOL_ANALYSIS.md](CONNECTION_POOL_ANALYSIS.md) - Database issues
-3. Check [DESCRIPTION_OPTIMIZATION_REVIEW.md](DESCRIPTION_OPTIMIZATION_REVIEW.md) - Performance issues
-4. Reference package-specific docs (extension, server)
+1. Direct users to [`../FAQ_SUPPORT.md`](../FAQ_SUPPORT.md) - Comprehensive FAQ
 
 ---
 
@@ -134,7 +120,6 @@ Historical and superseded documentation is stored in [`archive/`](archive/):
 
 - [`../todo.md`](../todo.md) - Weekly updates
 - [`../PRODUCTION_READINESS_ANALYSIS.md`](../PRODUCTION_READINESS_ANALYSIS.md) - Pre-launch updates
-- [TEST_COVERAGE_IMPLEMENTATION_SUMMARY.md](TEST_COVERAGE_IMPLEMENTATION_SUMMARY.md) - As tests evolve
 
 ### Reference Documents (Stable)
 
@@ -157,8 +142,7 @@ Documents are archived when:
 ### File Naming
 
 - Feature docs: `FEATURE_NAME.md` (e.g., AUTO_SYNC.md)
-- Technical docs: `TOPIC_ANALYSIS.md` (e.g., CONNECTION_POOL_ANALYSIS.md)
-- Summary docs: `FEATURE_IMPLEMENTATION_SUMMARY.md`
+- Technical docs: `TOPIC_INTEGRATION.md` (e.g., NOTION_INTEGRATION.md)
 
 ### Document Structure
 
@@ -170,10 +154,9 @@ Documents are archived when:
 
 ### When to Create New Documentation
 
-- **New Feature:** Create feature spec (FEATURE_NAME.md)
-- **Technical Deep Dive:** Create analysis doc (TOPIC_ANALYSIS.md)
-- **Implementation Complete:** Create summary doc (FEATURE_IMPLEMENTATION_SUMMARY.md)
-- **Process Change:** Update relevant docs + create summary
+- **New Feature:** Create integration guide
+- **API Integration:** Create INTEGRATION.md
+- **Process Change:** Update relevant docs
 
 ---
 
@@ -197,14 +180,13 @@ Documents are archived when:
 
 ```bash
 # 1. Deployment
-DEPLOYMENT.md
+../DEPLOYMENT.md
 
-# 2. Monitoring
-ERROR_MONITORING_SIMPLE.md
+# 2. Chrome Store
+../CHROME_WEB_STORE_SUBMISSION.md
 
-# 3. Troubleshooting
-CONNECTION_POOL_ANALYSIS.md
-ERROR_MONITORING_DESIGN.md
+# 3. User Support
+../FAQ_SUPPORT.md
 ```
 
 ---
@@ -215,7 +197,6 @@ ERROR_MONITORING_DESIGN.md
 
 - Check this index first
 - Review relevant feature doc
-- Check archive for historical context
 - Reference code comments for implementation details
 
 **Documentation improvements?**
@@ -226,6 +207,6 @@ ERROR_MONITORING_DESIGN.md
 
 ---
 
-**Last Updated:** December 25, 2025  
-**Maintainer:** Development Team  
+**Last Updated:** December 26, 2025
+**Maintainer:** Development Team
 **Status:** Current and maintained
