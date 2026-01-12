@@ -57,7 +57,7 @@ function getEnvNumber(key: string, defaultValue = 0) {
 export const config: AppConfig = {
   notion: {
     clientId: getEnvVar('VITE_NOTION_CLIENT_ID', ''),
-    serverUrl: getEnvVar('VITE_OAUTH_SERVER_URL', 'http://bookmark-assistant-server.vercel.app'),
+    serverUrl: getEnvVar('VITE_OAUTH_SERVER_URL', 'https://bookmark-assistant-server.vercel.app'),
   },
   ai: {
     openaiApiKey: getEnvVar('VITE_OPENAI_API_KEY', ''),
@@ -76,7 +76,7 @@ export const config: AppConfig = {
  * NOTE: Moving to direct Notion API calls, this may be deprecated soon
  */
 export const API_CONFIG = {
-  baseUrl: import.meta.env.VITE_OAUTH_SERVER_URL || 'http://bookmark-assistant-server.vercel.app',
+  baseUrl: import.meta.env.VITE_OAUTH_SERVER_URL || 'https://bookmark-assistant-server.vercel.app',
   timeout: 10000,
   retries: 3,
   retryDelay: 1000,

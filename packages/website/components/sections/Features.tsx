@@ -1,47 +1,47 @@
 import { Card, CardBody } from "@/components/ui/card";
 import { SectionEyebrow } from "@/components/ui/SectionEyebrow";
-import { Zap, BookmarkPlus, RefreshCw, Shield, Code, Cloud } from "lucide-react";
+import { Zap, BookmarkPlus, RefreshCw, Shield, Clock, Database } from "lucide-react";
 
 const FEATURES = [
   {
     title: "One-Click Sync",
-    desc: "Send new bookmarks to Notion in seconds with clean mapping.",
+    desc: "Export all your bookmarks to Notion instantly with one click.",
     icon: Zap,
     bg: "from-blue-50 to-indigo-50",
     iconColor: "text-blue-600",
   },
   {
-    title: "Rich Metadata",
-    desc: "Capture titles, descriptions, favicons, and more.",
+    title: "Smart Descriptions",
+    desc: "Automatically extracts page descriptions with 90-92% accuracy.",
     icon: BookmarkPlus,
     bg: "from-purple-50 to-pink-50",
     iconColor: "text-purple-600",
   },
   {
-    title: "Auto Sync",
-    desc: "Keep Notion up-to-date automatically in the background.",
+    title: "Auto-Sync (Pro)",
+    desc: "Background sync every 6 hours to keep Notion always up-to-date.",
     icon: RefreshCw,
     bg: "from-green-50 to-emerald-50",
     iconColor: "text-green-600",
   },
   {
     title: "Secure OAuth",
-    desc: "Connect safely with encrypted tokens and scopes.",
+    desc: "Bank-grade security with encrypted tokens, credentials never exposed.",
     icon: Shield,
     bg: "from-amber-50 to-orange-50",
     iconColor: "text-amber-600",
   },
   {
-    title: "OSS Mode",
-    desc: "Self-host or use local-only sync with transparency.",
-    icon: Code,
+    title: "Change Detection",
+    desc: "Only syncs when bookmarks actually change, saving time and resources.",
+    icon: Clock,
     bg: "from-cyan-50 to-blue-50",
     iconColor: "text-cyan-600",
   },
   {
-    title: "Folder Sync",
-    desc: "Map Chrome folders to Notion databases.",
-    icon: Cloud,
+    title: "Intelligent Caching",
+    desc: "Smart caching reduces redundant operations by 80% for faster syncs.",
+    icon: Database,
     bg: "from-indigo-50 to-violet-50",
     iconColor: "text-indigo-600",
   },

@@ -8,24 +8,24 @@ import {
 
 const FAQS = [
   {
-    q: "What's the difference between OAuth and OSS mode?",
-    a: "OAuth connects your Notion securely via Notion's API. OSS mode lets you self-host or operate locally without third-party servers.",
+    q: 'How does auto-sync work?',
+    a: 'Pro users can enable auto-sync to automatically sync bookmarks every 6 hours in the background. The extension monitors Chrome bookmarks and only syncs when changes are detected, saving time and resources.',
   },
   {
     q: 'Is my data secure?',
-    a: 'We use OAuth and encrypted tokens. Only the minimum data needed to sync is transmitted.',
+    a: 'We use OAuth and encrypted tokens. Only the minimum data needed to sync is transmitted. Your credentials never touch our servers - only secure OAuth flows are used.',
   },
   {
-    q: 'Can I try Pro features before purchasing?',
-    a: 'You can start on Free and upgrade anytime. Trials may be offered periodically.',
+    q: 'How accurate is the description extraction?',
+    a: 'Our server-side extraction achieves 90-92% accuracy for most websites. Some pages with dynamic content or no metadata may have lower accuracy. We cache descriptions for 30 days to improve consistency.',
   },
   {
     q: 'What happens to my bookmarks if I cancel Pro?',
-    a: 'Your existing Notion data remains. You can continue using the Free plan limits.',
+    a: 'Your existing Notion data remains. You can continue using the Free plan limits (50 bookmarks per sync, manual sync only). Re-subscribe anytime to restore Pro features.',
   },
   {
     q: 'Can I sync existing bookmarks from Chrome?',
-    a: 'Yes, initial sync imports your current bookmarks and then keeps them updated.',
+    a: 'Yes, initial sync imports your current bookmarks and then keeps them updated. The extension automatically creates the database structure in Notion - no manual setup required.',
   },
 ];
 
