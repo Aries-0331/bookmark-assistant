@@ -7,7 +7,7 @@
 ## 📋 Current Status
 
 **Extension ID:** `khffaaemphidjmhokafmiilkcjpgiije`  
-**Latest Version:** 1.0.2  
+**Latest Version:** 1.0.6  
 **Status:** Pending Configuration → Ready for Resubmission  
 
 ---
@@ -88,14 +88,14 @@ grep -r "localhost" dist/ | grep -v ".map"
 # ^^^ MUST BE EMPTY
 
 # Package
-cd dist && zip -r ../bookmark-assistant-v1.0.2.zip .
+cd dist && zip -r ../bookmark-assistant-v1.0.6.zip .
 ```
 
 ### Step 4: Upload (5 mins)
 
 ```
 1. Go to: https://chrome.google.com/webstore/devconsole
-2. Upload: packages/extension/bookmark-assistant-v1.0.2.zip
+2. Upload: packages/extension/bookmark-assistant-v1.0.6.zip
 3. Version notes: "Fixed OAuth configuration (Red Potassium)"
 4. Reference: Routing ID FZSL, Violations Purple + Red Potassium
 5. Submit for review
@@ -110,9 +110,9 @@ cd dist && zip -r ../bookmark-assistant-v1.0.2.zip .
 - [ ] Server redeployed
 - [ ] Extension `.env` configured with production URL
 - [ ] Extension built with NO localhost: `grep -r "localhost" dist/`
-- [ ] Version is 1.0.2 in manifest
+- [ ] Version is 1.0.6 in manifest
 - [ ] `host_permissions` is `[]`
-- [ ] Package created: `bookmark-assistant-v1.0.2.zip`
+- [ ] Package created: `bookmark-assistant-v1.0.6.zip`
 
 ---
 

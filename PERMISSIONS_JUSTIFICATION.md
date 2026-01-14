@@ -218,6 +218,6 @@ We follow Chrome's **principle of least privilege**:
 
 ---
 
-**Last Updated:** December 26, 2025
-**Extension Version:** 1.0.0
+**Last Updated:** January 14, 2026
+**Extension Version:** 1.0.6
 **Review Status:** Ready for Chrome Web Store approval

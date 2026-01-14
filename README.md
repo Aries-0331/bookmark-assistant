@@ -6,7 +6,7 @@
 [![React](https://img.shields.io/badge/React-18.2-61dafb)](https://reactjs.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![Tests](<https://img.shields.io/badge/Tests-185%20(82%25%20passing)-green>)](tests/)
-[![Version](https://img.shields.io/badge/Version-1.0.1-orange)](packages/extension/)
+[![Version](https://img.shields.io/badge/Version-1.0.6-orange)](packages/extension/)
 
 **Transform your Chrome bookmarks into an organized Notion database** with one click. Bookmark Assistant is a production-ready extension that automatically extracts descriptions, syncs changes, and keeps your bookmarks perfectly organized in Notion—no manual copying required.
 
@@ -370,7 +370,7 @@ This is a commercial project. The source code is not open source and may not be 
 | Metric               | Status                       |
 | -------------------- | ---------------------------- |
 | **Development**      | 🚀 Production Ready          |
-| **Version**          | 1.0.0 (Launch Ready)         |
+| **Version**          | 1.0.6 (Production)           |
 | **Test Coverage**    | 82% (185 tests, 152 passing) |
 | **Grade**            | A- (Launch Ready)            |
 | **Chrome Web Store** | Submission Ready             |

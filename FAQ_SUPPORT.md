@@ -397,6 +397,6 @@ We typically respond within 24-48 hours!
 
 ---
 
-**Last Updated:** December 26, 2025
-**Version:** 1.0.0 (Production Launch)
+**Last Updated:** January 14, 2026
+**Version:** 1.0.6
 **Support Email:** aries0331.dev@gmail.com
