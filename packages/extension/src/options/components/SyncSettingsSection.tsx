@@ -17,6 +17,18 @@ export function SyncSettingsSection({ onNavigate }: { onNavigate: (to: RouteId) 
 
   const onToggleAuto = async () => {
     const next = !autoSync;
+
+    // Security: Validate with server before enabling
+    // Users cannot bypass payment by modifying localStorage
+    if (next && !isPro) {
+      show({
+        variant: 'error',
+        title: 'Pro Feature',
+        description: 'Auto-sync is a Pro feature. Please upgrade to enable.',
+      });
+      return;
+    }
+
     setAutoSync(next);
   };
 

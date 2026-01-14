@@ -50,7 +50,7 @@ export type AppState = {
   // Lifecycle
   initFromStorage: () => Promise<void>;
   saveSyncSettings: (nextIntervalHours?: number) => Promise<void>;
-  refreshEntitlements: () => Promise<void>;
+  refreshEntitlements: (forceRefresh?: boolean) => Promise<void>;
   refreshConnection: () => Promise<void>;
 
   // Config
@@ -193,18 +193,48 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  refreshEntitlements: async () => {
-    if (get().isRefreshingProfile) return;
+  refreshEntitlements: async (forceRefresh = false) => {
+    if (get().isRefreshingProfile && !forceRefresh) return;
     set({ isRefreshingProfile: true });
 
     try {
+      // Check cache first unless force refresh
+      if (!forceRefresh) {
+        const { is_pro, purchase_type, entitlements_cached_at } = await chrome.storage.local.get([
+          'is_pro',
+          'purchase_type',
+          'entitlements_cached_at',
+        ]);
+
+        // Use cache if less than 5 minutes old
+        const CACHE_TTL_MS = 5 * 60 * 1000;
+        const now = Date.now();
+        const cachedAt = typeof entitlements_cached_at === 'number' ? entitlements_cached_at : 0;
+        const isCacheValid = now - cachedAt < CACHE_TTL_MS;
+
+        if (isCacheValid && typeof is_pro === 'boolean') {
+          console.log('[Entitlements] Using cached Pro status:', is_pro);
+          set({ isPro: is_pro, purchaseType: purchase_type });
+          set({ isRefreshingProfile: false });
+          return;
+        }
+      }
+
+      // Fetch fresh entitlements from server
+      console.log('[Entitlements] Fetching fresh entitlements from server');
       const response = await sendMessage({ type: Messages.GET_USER_PROFILE });
 
       if (response.success && response.profile) {
         const isPro = response.profile.isPro === true;
         const purchaseType = response.profile.purchaseType as 'monthly' | 'lifetime' | undefined;
         set({ isPro, purchaseType });
-        chrome.storage.local.set({ is_pro: isPro, purchase_type: purchaseType });
+
+        // Cache with timestamp for performance
+        await chrome.storage.local.set({
+          is_pro: isPro,
+          purchase_type: purchaseType,
+          entitlements_cached_at: Date.now(),
+        });
       }
     } catch (error: any) {
       console.error('Failed to refresh user profile:', error);
@@ -395,9 +425,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
-  // Visibility change handler (disabled to prevent unnecessary API calls)
+  // Visibility change handler - refresh entitlements when page becomes visible
+  // This handles the case where user upgrades to Pro on the web while options page is open
   useEffect(() => {
-    // Currently disabled
+    const handleVisibilityChange = async () => {
+      if (!document.hidden) {
+        // Page became visible - refresh entitlements if connected
+        const { session_token } = await chrome.storage.local.get(['session_token']);
+        if (session_token) {
+          await useAppStore.getState().refreshEntitlements();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   // Kick off config + settings load
@@ -405,6 +449,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (async () => {
       await useAppStore.getState().initFromStorage();
       await useAppStore.getState().fetchPricing();
+      // Refresh entitlements on mount if connected
+      // This ensures isPro status is up-to-date when options page opens
+      const { session_token } = await chrome.storage.local.get(['session_token']);
+      if (session_token) {
+        await useAppStore.getState().refreshEntitlements();
+      }
     })();
   }, []);
 

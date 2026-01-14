@@ -442,6 +442,20 @@ addMessageListener({
       const result = await exchangeCodeForToken(code);
       // Clear connecting state after OAuth completes
       await chrome.storage.local.set({ is_connecting: false });
+
+      // Refresh entitlements after successful OAuth
+      // This ensures isPro status is updated after authentication
+      try {
+        const { isPro } = await serverAPI.getUserProfile();
+        await chrome.storage.local.set({
+          is_pro: isPro,
+          entitlements_cached_at: Date.now(),
+        });
+      } catch (profileError) {
+        console.warn('⚠️ Failed to refresh entitlements after OAuth:', profileError);
+        // Don't fail the OAuth flow if profile refresh fails
+      }
+
       return result;
     } catch (error) {
       // Clear connecting state on error

@@ -1,10 +1,8 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
-import { ArrowRight, Bell } from 'lucide-react';
+import { ArrowRight, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { WaitlistModal } from '@/components/WaitlistModal';
 
 const HERO_IMG = '/assets/marquee-promo-tile.png';
 const NOTION_TEMPLATE_URL =
@@ -27,10 +25,8 @@ const ProductHuntBadge = () => (
 );
 
 export function Hero() {
-  const [showWaitlist, setShowWaitlist] = useState(false);
-
-  const handleGetStarted = () => {
-    setShowWaitlist(true);
+  const openChromeStore = () => {
+    window.open('https://chromewebstore.google.com/detail/khffaaemphidjmhokafmiilkcjpgiije?utm_source=item-share-cb', '_blank');
   };
 
   const openTemplate = () => {
@@ -66,8 +62,8 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-10"
           >
-            <Button onClick={handleGetStarted} size="lg">
-              <Bell className="h-5 w-5 mr-2" /> Join Waitlist{' '}
+            <Button onClick={openChromeStore} size="lg">
+              <Download className="h-5 w-5 mr-2" /> Add to Chrome{' '}
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
             <div className="flex items-center gap-4">
@@ -101,8 +97,6 @@ export function Hero() {
           </motion.div>
         </div>
       </section>
-
-      <WaitlistModal isOpen={showWaitlist} onClose={() => setShowWaitlist(false)} />
     </>
   );
 }

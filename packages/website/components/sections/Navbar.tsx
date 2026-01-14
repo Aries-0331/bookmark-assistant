@@ -1,12 +1,12 @@
 "use client";
 import { Logo } from "@/components/icons/Logo";
 import { Button } from "@/components/ui/button";
-import { Bell } from "lucide-react";
-import { useState } from "react";
-import { WaitlistModal } from "@/components/WaitlistModal";
+import { Download } from "lucide-react";
 
 export function Navbar() {
-  const [showWaitlist, setShowWaitlist] = useState(false);
+  const openChromeStore = () => {
+    window.open('https://chromewebstore.google.com/detail/khffaaemphidjmhokafmiilkcjpgiije?utm_source=item-share-cb', '_blank');
+  };
 
   return (
     <>
@@ -23,17 +23,15 @@ export function Navbar() {
           <a href="#faq" className="hover:text-gray-900 transition-colors">FAQ</a>
         </div>
         <div>
-            <button onClick={() => setShowWaitlist(true)} className="md:hidden text-sm underline">Join Waitlist</button>
+            <button onClick={openChromeStore} className="md:hidden text-sm underline">Add to Chrome</button>
           <div className="hidden md:block">
-              <Button onClick={() => setShowWaitlist(true)}>
-                <Bell className="h-4 w-4 mr-2" /> Join Waitlist
+              <Button onClick={openChromeStore}>
+                <Download className="h-4 w-4 mr-2" /> Add to Chrome
             </Button>
           </div>
         </div>
       </nav>
     </div>
-
-      <WaitlistModal isOpen={showWaitlist} onClose={() => setShowWaitlist(false)} />
     </>
   );
 }

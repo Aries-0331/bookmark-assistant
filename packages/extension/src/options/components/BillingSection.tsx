@@ -67,6 +67,7 @@ const PLAN_FEATURES: Record<'free' | 'pro' | 'lifetime', FeatureItem[]> = {
 export function BillingSection() {
   const [isLifetime, setIsLifetime] = useState(false); // false = monthly, true = lifetime
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [nextBillingDate, setNextBillingDate] = useState<string | null>(null);
   const { isPro, getPricing, userId, userEmail, refreshEntitlements, purchaseType } = useAppStore();
   const { lifetime: LIFETIME_PRICE } = getPricing();
@@ -191,6 +192,29 @@ export function BillingSection() {
     }
   };
 
+  const handleRefreshStatus = async () => {
+    try {
+      setRefreshing(true);
+      await refreshEntitlements(true); // Force refresh from server
+      showToast({
+        title: '✓ Status Refreshed',
+        description: 'Your subscription status is now up to date',
+        variant: 'success',
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Failed to refresh status:', error);
+      showToast({
+        title: '✗ Refresh Failed',
+        description: 'Could not refresh status. Please try again.',
+        variant: 'error',
+        duration: 3000,
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const handleRefund = () => {
     // Simple "Service Ticket" modal logic using window.confirm/prompt for MVP
     // In a real app, use a proper Modal component
@@ -233,10 +257,21 @@ export function BillingSection() {
               </div>
               <span className="text-amber-900 font-semibold text-lg">Pro Plan Active</span>
             </div>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium border border-green-200">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              Active
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleRefreshStatus}
+                disabled={refreshing}
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-amber-200 text-amber-700 text-xs font-medium hover:bg-amber-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Refresh subscription status"
+              >
+                <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} />
+                {refreshing ? 'Refreshing...' : 'Refresh'}
+              </button>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium border border-green-200">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                Active
+              </span>
+            </div>
           </div>
 
           {/* Info Grid */}

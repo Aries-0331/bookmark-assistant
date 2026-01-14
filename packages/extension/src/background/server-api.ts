@@ -260,6 +260,7 @@ class ServerAPIClient {
       'user_email',
       'is_pro',
       'purchase_type',
+      'entitlements_cached_at', // Clear entitlements cache on logout
       'last_sync',
       'last_sync_at',
       'last_sync_summary',
