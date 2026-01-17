@@ -11,12 +11,21 @@ import { auditLog } from '../utils';
  * Ensures requests come from the authorized Chrome extension
  */
 export const validateExtension = (req: Request, res: Response, next: NextFunction) => {
-  const extensionId = req.headers['x-extension-id'] as string;
+  console.log('\n=== [AUTH] Extension Validation ===');
+  console.log('[AUTH] Received headers:', req.headers);
+  console.log('[AUTH] Request path:', req.path);
+  console.log('[AUTH] Request method:', req.method);
 
-  if (!extensionId || extensionId !== config.allowedExtensionId) {
+  const extensionId = req.headers['x-extension-id'] as string;
+  console.log('[AUTH] Extension ID from header:', extensionId);
+  console.log('[AUTH] Allowed Extension ID (config):', config.allowedExtensionId);
+
+  if (!extensionId) {
+    console.error('[AUTH] ERROR: No extension ID provided in X-Extension-ID header');
     auditLog('extension_validation_failed', 'unknown', {
       providedId: extensionId,
       expectedId: config.allowedExtensionId,
+      error: 'No extension ID in header',
     });
 
     return res.status(403).json({
@@ -25,6 +34,23 @@ export const validateExtension = (req: Request, res: Response, next: NextFunctio
     });
   }
 
+  if (extensionId !== config.allowedExtensionId) {
+    console.error('[AUTH] ERROR: Extension ID mismatch');
+    console.error('[AUTH] Provided:', extensionId);
+    console.error('[AUTH] Expected:', config.allowedExtensionId);
+    auditLog('extension_validation_failed', 'unknown', {
+      providedId: extensionId,
+      expectedId: config.allowedExtensionId,
+      error: 'Extension ID mismatch',
+    });
+
+    return res.status(403).json({
+      error: 'Forbidden',
+      message: 'Invalid extension identity',
+    });
+  }
+
+  console.log('[AUTH] ✅ Extension validation passed');
   next();
 };
 

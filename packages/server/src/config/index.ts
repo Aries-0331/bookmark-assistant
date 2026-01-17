@@ -1,9 +1,13 @@
 // ⚙️ Server Configuration and Environment Setup
 
 import dotenv from 'dotenv';
+import path from 'path';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables in order:
+// 1. .env (base configuration)
+// 2. .env.local (overrides for local development)
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true });
 
 export const config = {
   // Server Configuration
@@ -11,6 +15,9 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   // Edition (controls entitlements). Accepts 'pro' to enable Pro features; defaults to 'open-source'
   isPro: process.env.isPro === 'true',
+
+  // Database Configuration
+  databaseUrl: process.env.DATABASE_URL!,
 
   // Security Configuration
   jwtSecret: process.env.JWT_SECRET!,
@@ -103,6 +110,7 @@ export const config = {
 // Validation function to ensure required environment variables are set
 export function validateConfig(): void {
   const requiredVars = [
+    'DATABASE_URL',
     'JWT_SECRET',
     'ALLOWED_EXTENSION_ID',
     'NOTION_CLIENT_ID',
@@ -136,6 +144,11 @@ export function validateConfig(): void {
   }
 
   console.log('✅ Configuration validated successfully');
+  console.log('\n=== [CONFIG] Server Configuration ===');
+  console.log('[CONFIG] Extension ID:', config.allowedExtensionId);
+  console.log('[CONFIG] JWT Secret:', config.jwtSecret ? '***SET***' : '***NOT SET***');
+  console.log('[CONFIG] Notion Client ID:', config.notionClientId ? '***SET***' : '***NOT SET***');
+  console.log('[CONFIG] Database URL:', config.databaseUrl ? '***SET***' : '***NOT SET***');
 }
 
 export default config;

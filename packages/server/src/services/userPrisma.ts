@@ -1,12 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import { UserData } from '../types';
+import { config } from '../config';
 
 // Configure Prisma with connection pool settings
 // These settings help prevent "MaxClientsInSessionMode" errors
 const prismaClientOptions = {
   datasources: {
     db: {
-      url: process.env.DATABASE_URL,
+      url: config.databaseUrl,
     },
   },
   // Connection pool configuration via DATABASE_URL parameters
