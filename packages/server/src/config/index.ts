@@ -144,11 +144,6 @@ export function validateConfig(): void {
   }
 
   console.log('✅ Configuration validated successfully');
-  console.log('\n=== [CONFIG] Server Configuration ===');
-  console.log('[CONFIG] Extension ID:', config.allowedExtensionId);
-  console.log('[CONFIG] JWT Secret:', config.jwtSecret ? '***SET***' : '***NOT SET***');
-  console.log('[CONFIG] Notion Client ID:', config.notionClientId ? '***SET***' : '***NOT SET***');
-  console.log('[CONFIG] Database URL:', config.databaseUrl ? '***SET***' : '***NOT SET***');
 }
 
 export default config;

@@ -59,23 +59,9 @@ async function retryPrismaOperation<T>(
  */
 router.post('/exchange', validateExtension, async (req, res: Response) => {
   try {
-    console.log('\n=== [OAUTH] Exchange Request Received ===');
-    console.log('[OAUTH] Headers:', {
-      'x-extension-id': req.headers['x-extension-id'],
-      'content-type': req.headers['content-type'],
-      'user-agent': req.headers['user-agent'],
-    });
-    console.log('[OAUTH] Body:', {
-      hasCode: !!req.body.code,
-      codeLength: req.body.code?.length || 0,
-      redirectUri: req.body.redirectUri,
-      extensionUserId: req.body.extensionUserId,
-    });
-
     const { code, redirectUri }: OAuthExchangeRequest & { redirectUri?: string } = req.body;
 
     if (!code) {
-      console.error('[OAUTH] ERROR: Authorization code is missing');
       return res.status(400).json({
         error: 'Bad Request',
         message: 'Authorization code is required',
@@ -83,16 +69,11 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
     }
 
     if (!redirectUri) {
-      console.error('[OAUTH] ERROR: redirectUri is missing');
       return res.status(400).json({
         error: 'Bad Request',
         message: 'redirectUri is required',
       });
     }
-
-    console.log('[OAUTH] Validated - Code and redirectUri present');
-    console.log('[OAUTH] Redirect URI:', redirectUri);
-    console.log('[OAUTH] Code (first 20 chars):', code.substring(0, 20) + '...');
     // Exchange code for tokens with Notion
     const tokenData = await notionService.exchangeOAuthCode(code, redirectUri);
 
@@ -101,24 +82,11 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
     const notionUserId = notionUser?.id;
     const notionEmail = notionUser?.person?.email || notionUser?.email;
 
-    console.log('[OAUTH] Notion Token Exchange Response:');
-    console.log('[OAUTH] - Has token data:', !!tokenData);
-    console.log('[OAUTH] - Has owner:', !!tokenData.owner);
-    console.log('[OAUTH] - Has user:', !!notionUser);
-    console.log('[OAUTH] - User ID:', notionUserId);
-    console.log('[OAUTH] - Email:', notionEmail);
-    console.log('[OAUTH] - Workspace ID:', tokenData.workspace_id);
-    console.log('[OAUTH] - Has access token:', !!tokenData.access_token);
-    console.log('[OAUTH] - Has refresh token:', !!tokenData.refresh_token);
-
     if (!notionUserId) {
-      console.error('[OAUTH] ERROR: Failed to get Notion User ID from token exchange');
-      console.error('[OAUTH] Token data:', JSON.stringify(tokenData, null, 2));
       throw new Error('Failed to get Notion User ID from token exchange');
     }
 
     console.log(`🔐 OAuth Exchange for Notion User: ${notionUserId} (${notionEmail})`);
-    console.log('[OAUTH] Will create/update user in database');
 
     let user: any; // Prisma User model
 
@@ -256,20 +224,13 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
       templateDatabaseId: latest?.templateDatabaseId || null,
       message: 'OAuth exchange successful',
     });
-
-    console.log('[OAUTH] ✅ OAuth exchange completed successfully');
-    console.log('[OAUTH] User created/updated:', user.id);
-    console.log('[OAUTH] Session token created:', sessionToken.substring(0, 20) + '...');
   } catch (error) {
     const errorMessage = sanitizeError(error);
     auditLog('oauth_exchange_error', req.body.extensionUserId || 'unknown', {
       error: errorMessage,
     });
 
-    console.error('[OAUTH] ❌ OAuth exchange failed:');
-    console.error('[OAUTH] Error message:', errorMessage);
-    console.error('[OAUTH] Full error:', error);
-
+    console.error('OAuth exchange error:', error);
     res.status(500).json({
       error: 'Internal Server Error',
       message: 'Failed to process OAuth exchange',

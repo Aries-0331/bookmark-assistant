@@ -388,26 +388,18 @@ export class NotionService {
    * Includes retry logic for network errors (ECONNRESET, etc.)
    */
   async exchangeOAuthCode(code: string, redirectUri: string): Promise<any> {
-    console.log('\n[OAUTH] === Notion Token Exchange Started ===');
-    console.log('[OAUTH] Client ID:', config.notionClientId);
-    console.log('[OAUTH] Redirect URI:', redirectUri);
-    console.log('[OAUTH] Code length:', code.length);
-
     const encoded = Buffer.from(`${config.notionClientId}:${config.notionClientSecret}`).toString(
       'base64'
     );
-    console.log('[OAUTH] Basic auth header created');
     
     const maxRetries = 3;
     let attempt = 0;
     
     while (attempt < maxRetries) {
-      console.log(`[OAUTH] Attempt ${attempt + 1}/${maxRetries}...`);
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000);
 
       try {
-        console.log('[OAUTH] Sending request to Notion OAuth endpoint...');
         const response = await fetch('https://api.notion.com/v1/oauth/token', {
           method: 'POST',
           headers: {
@@ -424,29 +416,15 @@ export class NotionService {
         });
 
         clearTimeout(timeout);
-        console.log('[OAUTH] Response status:', response.status, response.statusText);
 
         if (!response.ok) {
           const errorData = await response.text();
-          console.error('[OAUTH] ERROR - Response not OK:');
-          console.error('[OAUTH] Status:', response.status, response.statusText);
-          console.error('[OAUTH] Error body:', errorData);
           throw new Error(
             `OAuth exchange failed: ${response.status} ${response.statusText} - ${errorData}`
           );
         }
 
-        const jsonData = await response.json();
-        console.log('[OAUTH] ✅ Successfully received tokens from Notion');
-        console.log('[OAUTH] Response data:', {
-          hasAccessToken: !!jsonData.access_token,
-          hasRefreshToken: !!jsonData.refresh_token,
-          tokenType: jsonData.token_type,
-          workspaceId: jsonData.workspace_id,
-          hasOwner: !!jsonData.owner,
-        });
-
-        return jsonData;
+        return response.json();
       } catch (err: any) {
         clearTimeout(timeout);
         attempt++;
