@@ -11,7 +11,7 @@ import type { RequestHandler as RateLimitRequestHandler } from 'express';
  * Check if origin is allowed based on allowed origins list
  * Supports exact matches and wildcard patterns like *.vercel.app
  */
-function isOriginAllowed(origin: string, allowedOrigins: string[]): boolean {
+function isOriginAllowed(origin: string, allowedOrigins: readonly string[]): boolean {
   // Direct match
   if (allowedOrigins.includes(origin)) return true;
 
