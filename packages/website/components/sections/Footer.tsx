@@ -1,4 +1,4 @@
-import { Logo } from "../icons/Logo";
+import { Logo } from '../icons/Logo';
 
 export function Footer() {
   return (
@@ -10,22 +10,53 @@ export function Footer() {
               <Logo className="w-8 h-8" />
               <span className="text-base text-gray-900">Bookmark Assistant</span>
             </div>
-            <p className="text-sm text-gray-600">Seamlessly sync your Chrome bookmarks to Notion.</p>
+            <p className="text-sm text-gray-600">
+              Seamlessly sync your Chrome bookmarks to Notion.
+            </p>
           </div>
           <div>
             <h4 className="text-base text-gray-900 mb-3">Product</h4>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li><a className="hover:text-gray-900" href="#features">Features</a></li>
-              <li><a className="hover:text-gray-900" href="#pricing">Pricing</a></li>
-              <li><a className="hover:text-gray-900" href="#faq">FAQ</a></li>
+              <li>
+                <a className="hover:text-gray-900" href="#features">
+                  Features
+                </a>
+              </li>
+              <li>
+                <a className="hover:text-gray-900" href="#pricing">
+                  Pricing
+                </a>
+              </li>
+              <li>
+                <a className="hover:text-gray-900" href="#faq">
+                  FAQ
+                </a>
+              </li>
             </ul>
           </div>
           <div>
             <h4 className="text-base text-gray-900 mb-3">Resources</h4>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li><a className="hover:text-gray-900" href="/docs">Documentation</a></li>
-              <li><a className="hover:text-gray-900" href="/support">Support</a></li>
-              <li><a className="hover:text-gray-900" href="https://github.com/Aries-0331/bookmarks_to_notion" target="_blank" rel="noreferrer">GitHub</a></li>
+              <li>
+                <a className="hover:text-gray-900" href="/docs">
+                  Documentation
+                </a>
+              </li>
+              <li>
+                <a className="hover:text-gray-900" href="/support">
+                  Support
+                </a>
+              </li>
+              <li>
+                <a
+                  className="hover:text-gray-900"
+                  href="https://github.com/Aries-0331/bookmarks_to_notion"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  GitHub
+                </a>
+              </li>
             </ul>
           </div>
           <div>
@@ -66,7 +97,15 @@ export function Footer() {
         </div>
         <div className="pt-8 border-t border-gray-200 text-center text-sm text-gray-600">
           <div className="mb-2">
-            Powered by <a href="https://www.paddle.com" target="_blank" rel="noreferrer" className="underline hover:text-gray-800">Paddle</a>
+            Powered by{' '}
+            <a
+              href="https://www.paddle.com"
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:text-gray-800"
+            >
+              Paddle
+            </a>
           </div>
           <div>© 2025 Notion Bookmark Sync. All rights reserved.</div>
         </div>

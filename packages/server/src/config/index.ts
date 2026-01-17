@@ -35,15 +35,18 @@ export const config = {
   },
 
   // Website Configuration
-  websiteUrl: process.env.WEBSITE_URL || 'http://localhost:3006',
+  // Support multiple domains: comma-separated URLs or single URL
+  websiteUrl: process.env.WEBSITE_URL?.split(',')[0] || 'http://localhost:3006',
 
   // CORS Configuration
+  // Parse WEBSITE_URL (comma-separated) into array for CORS origins
   allowedOrigins: [
     `chrome-extension://${process.env.ALLOWED_EXTENSION_ID}`,
     'http://localhost:3000', // Next.js website dev server
     'http://localhost:5173', // Vite extension dev server
     'http://localhost:3006', // Alternative Next.js port
-    process.env.WEBSITE_URL || 'http://localhost:3006', // Production website
+    // Production website domains (comma-separated in env var)
+    ...(process.env.WEBSITE_URL?.split(',').map((url) => url.trim()) || []),
   ],
 
   // Session Configuration

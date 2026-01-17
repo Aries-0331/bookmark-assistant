@@ -26,7 +26,10 @@ const ProductHuntBadge = () => (
 
 export function Hero() {
   const openChromeStore = () => {
-    window.open('https://chromewebstore.google.com/detail/khffaaemphidjmhokafmiilkcjpgiije?utm_source=item-share-cb', '_blank');
+    window.open(
+      'https://chromewebstore.google.com/detail/khffaaemphidjmhokafmiilkcjpgiije?utm_source=item-share-cb',
+      '_blank'
+    );
   };
 
   const openTemplate = () => {
@@ -36,7 +39,7 @@ export function Hero() {
   return (
     <>
       <section className="pt-20 pb-20 bg-white">
-        <div className="max-w-5xl mx-auto px-6 pt-6">
+        <div className="max-w-5xl mx-auto px-6 pt-12">
           {/* Title and Description - centered */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -60,7 +63,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-10"
+            className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12"
           >
             <Button onClick={openChromeStore} size="lg">
               <Download className="h-5 w-5 mr-2" /> Add to Chrome{' '}
@@ -72,18 +75,6 @@ export function Hero() {
               </Button>
               <ProductHuntBadge />
             </div>
-          </motion.div>
-
-          {/* Trust indicators - simple text */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex flex-wrap justify-center gap-8 text-sm text-gray-500 mb-16"
-          >
-            <span className="flex items-center">🔒 OAuth Secure</span>
-            <span className="flex items-center">💰 Free Tier Available</span>
-            <span className="flex items-center">⚡ Auto Sync</span>
           </motion.div>
 
           {/* Main Image - clean, no floating cards */}

@@ -8,6 +8,32 @@ import { auditLog } from '../utils';
 import type { RequestHandler as RateLimitRequestHandler } from 'express';
 
 /**
+ * Check if origin is allowed based on allowed origins list
+ * Supports exact matches and wildcard patterns like *.vercel.app
+ */
+function isOriginAllowed(origin: string, allowedOrigins: string[]): boolean {
+  // Direct match
+  if (allowedOrigins.includes(origin)) return true;
+
+  // Wildcard pattern matching (e.g., *.vercel.app)
+  for (const pattern of allowedOrigins) {
+    // Convert wildcard pattern to regex
+    // *.example.com -> regex: ^.*\.example\.com$
+    if (pattern.includes('*')) {
+      const regexPattern = pattern
+        .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Escape special regex chars
+        .replace(/\\\*\\\*/g, '.*') // ** -> .*
+        .replace(/\\\*/g, '[a-zA-Z0-9-]+'); // * -> [a-zA-Z0-9-]+
+      
+      const regex = new RegExp(`^${regexPattern}$`);
+      if (regex.test(origin)) return true;
+    }
+  }
+
+  return false;
+}
+
+/**
  * CORS configuration
  * Only allows requests from authorized origins
  */
@@ -15,9 +41,12 @@ export const corsMiddleware = cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
+    
     // Normalize origin
     const isChromeExt = origin.startsWith('chrome-extension://');
-    const allowed = config.allowedOrigins.includes(origin as any);
+    
+    // Check if origin is in allowed list (supports wildcards)
+    const allowed = isOriginAllowed(origin, config.allowedOrigins);
 
     // In development, if the origin is a chrome extension and matches the configured extension ID, allow it
     if (isChromeExt) {
