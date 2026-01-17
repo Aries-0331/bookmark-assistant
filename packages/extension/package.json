@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --open /src/dev/index.html",
-    "build": "tsc -b && vite build --mode development",
+    "build": "tsc -b && vite build --mode production",
+    "build:dev": "tsc -b && vite build --mode development",
     "build:prod": "tsc -b && vite build --mode production",
     "clean": "rm -rf dist",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
