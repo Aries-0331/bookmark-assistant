@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { SectionEyebrow } from '@/components/ui/SectionEyebrow';
 import {
   Crown,
@@ -13,219 +13,17 @@ import {
   Gift,
   AlertCircle,
 } from 'lucide-react';
-import { initializePaddle, Paddle } from '@paddle/paddle-js';
-
-// Singleton Paddle instance
-let paddleInstance: Paddle | null = null;
-let paddlePromise: Promise<Paddle | undefined> | null = null;
-
-/**
- * Get price ID based on billing period
- * Matches the extension pattern for consistency
- */
-function getPriceId(billing: 'monthly' | 'lifetime'): string {
-  const monthly = process.env.NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID;
-  const lifetime = process.env.NEXT_PUBLIC_PADDLE_PRO_LIFETIME_PRICE_ID;
-
-  if (billing === 'lifetime') {
-    return lifetime || monthly || '';
-  }
-  return monthly || '';
-}
-
-async function getPaddleInstance(): Promise<Paddle | null> {
-  if (paddleInstance) return paddleInstance;
-  if (paddlePromise) {
-    const instance = await paddlePromise;
-    return instance || null;
-  }
-
-  const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
-  const env = (process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || 'sandbox') as 'sandbox' | 'production';
-
-  // Only log in development mode
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔧 Initializing Paddle with token:', token ? '***configured***' : 'undefined');
-  }
-
-  if (!token) {
-    // Only warn in development mode
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('⚠️ NEXT_PUBLIC_PADDLE_CLIENT_TOKEN is not configured');
-    }
-    return null;
-  }
-
-  try {
-    paddlePromise = initializePaddle({
-      token,
-      environment: env,
-      eventCallback: (event) => {
-        // Only log events in development mode
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🎫 Paddle event:', event.name, event.data);
-        }
-      },
-    });
-
-    const instance = await paddlePromise;
-    if (instance) {
-      paddleInstance = instance;
-      if (process.env.NODE_ENV === 'development') {
-        console.log('✅ Paddle initialized:', env);
-      }
-    }
-    return instance || null;
-  } catch (error) {
-    console.error('❌ Failed to initialize Paddle:', error);
-    paddlePromise = null; // Reset promise on failure
-    return null;
-  }
-}
 
 export function Pricing() {
-  const [billing, setBilling] = useState<'monthly' | 'lifetime'>('monthly');
-  const [paddleReady, setPaddleReady] = useState(false);
-  const [paymentsEnabled, setPaymentsEnabled] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [pricing, setPricing] = useState({
-    monthly: 2.99,
-    lifetime: 29.9,
+  const [billing, setBilling] = useState<'monthly' | 'lifetime'>('lifetime');
+  const pricing = {
+    monthly: 2.5,
+    lifetime: 30,
     currencySymbol: '$',
-  });
+  };
 
   const displayPrice = billing === 'lifetime' ? pricing.lifetime : pricing.monthly;
   const priceLabel = billing === 'lifetime' ? 'one-time' : '/month';
-
-  // Initialize Paddle and fetch pricing
-  useEffect(() => {
-    const init = async () => {
-      // Check if Paddle is configured first
-      const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
-      const monthlyId = process.env.NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID;
-      const lifetimeId = process.env.NEXT_PUBLIC_PADDLE_PRO_LIFETIME_PRICE_ID;
-
-      // Mark if payments are enabled
-      const isConfigured = !!(token && monthlyId && lifetimeId);
-      setPaymentsEnabled(isConfigured);
-
-      // If Paddle not configured, use default pricing and skip initialization
-      if (!isConfigured) {
-        console.log('💰 Paddle not configured, using default pricing');
-        setPaddleReady(true);
-        return;
-      }
-
-      const paddle = await getPaddleInstance();
-      if (!paddle) {
-        setPaddleReady(true); // Still mark as ready to show UI
-        return;
-      }
-      setPaddleReady(true);
-
-      // 1. Check for transaction (existing logic)
-      const urlParams = new URLSearchParams(window.location.search);
-      const transactionId = urlParams.get('_ptxn');
-      const successUrl = urlParams.get('_ptxn_success_url');
-
-      if (transactionId) {
-        console.log('🎫 Opening checkout for transaction:', transactionId);
-        paddle.Checkout.open({
-          transactionId,
-          settings: {
-            theme: 'light',
-            displayMode: 'overlay',
-            ...(successUrl && { successUrl: decodeURIComponent(successUrl) }),
-          },
-        });
-      }
-
-      // 2. Fetch dynamic pricing
-      // monthlyId and lifetimeId already defined above
-
-      if (monthlyId && lifetimeId) {
-        try {
-          const preview = await paddle.PricePreview({
-            items: [
-              { priceId: monthlyId, quantity: 1 },
-              { priceId: lifetimeId, quantity: 1 },
-            ],
-          });
-
-          const monthlyItem = preview.data.details.lineItems.find(
-            (item) => item.price.id === monthlyId
-          );
-          const lifetimeItem = preview.data.details.lineItems.find(
-            (item) => item.price.id === lifetimeId
-          );
-
-          if (monthlyItem && lifetimeItem) {
-            const currencyCode = monthlyItem.price.unitPrice.currencyCode;
-
-            // Paddle returns amounts in minor units (e.g. cents), so we need to divide by 100
-            // unless it's a zero-decimal currency like JPY
-            const isZeroDecimal = ['JPY', 'KRW', 'HUF', 'TWD'].includes(currencyCode);
-            const divisor = isZeroDecimal ? 1 : 100;
-
-            const monthlyAmount = parseFloat(monthlyItem.price.unitPrice.amount) / divisor;
-            const lifetimeAmount = parseFloat(lifetimeItem.price.unitPrice.amount) / divisor;
-
-            // Simple symbol mapping
-            const formatter = new Intl.NumberFormat('en-US', {
-              style: 'currency',
-              currency: currencyCode,
-            });
-            const parts = formatter.formatToParts(0);
-            const symbol = parts.find((part) => part.type === 'currency')?.value || '$';
-
-            setPricing({
-              monthly: monthlyAmount,
-              lifetime: lifetimeAmount,
-              currencySymbol: symbol,
-            });
-          }
-        } catch (err) {
-          console.warn('Failed to fetch Paddle pricing:', err);
-        }
-      }
-    };
-
-    init();
-  }, []);
-
-  const handleUpgrade = async () => {
-    try {
-      setLoading(true);
-      const paddle = await getPaddleInstance();
-
-      if (!paddle) {
-        alert('Payment system is not configured. Please contact support.');
-        return;
-      }
-
-      const priceId = getPriceId(billing);
-
-      if (!priceId) {
-        console.error('Paddle price ID not configured');
-        alert('Payment system is not configured. Please contact support.');
-        return;
-      }
-
-      paddle.Checkout.open({
-        items: [{ priceId, quantity: 1 }],
-        settings: {
-          successUrl: `${window.location.origin}/success?source=website`,
-          theme: 'light',
-          displayMode: 'overlay',
-        },
-      });
-    } catch (error) {
-      console.error('Failed to open checkout:', error);
-      alert('Failed to open checkout. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <section id="pricing" className="py-20 bg-gray-50">
@@ -238,9 +36,7 @@ export function Pricing() {
           </p>
 
           <div className="flex items-center justify-center gap-2 mb-4 transform translate-x-12">
-            <span
-              className={`${!billing || billing === 'monthly' ? 'text-gray-900' : 'text-gray-600'}`}
-            >
+            <span className={billing === 'monthly' ? 'text-gray-900' : 'text-gray-600'}>
               Monthly
             </span>
             <button
@@ -272,7 +68,7 @@ export function Pricing() {
           </div>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 max-w-3xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-[720px] mx-auto">
           {/* Free */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 flex flex-col">
             <div className="text-lg font-semibold text-gray-900 mb-1">Free</div>
@@ -280,12 +76,7 @@ export function Pricing() {
               {pricing.currencySymbol}0<span className="text-gray-400 ml-1">/ month</span>
             </div>
             <div className="text-sm text-gray-600 mb-4">Basic bookmark syncing</div>
-            <button
-              className="w-full text-sm px-4 py-2 mb-4 rounded-lg border border-gray-200 text-gray-500 cursor-default"
-              disabled
-            >
-              Current Plan
-            </button>
+
             <ul className="space-y-2 text-sm flex-grow">
               <li className="flex items-center gap-2 text-gray-800">
                 <Check className="w-4 h-4 text-gray-600" />
@@ -335,23 +126,7 @@ export function Pricing() {
               </div>
             </div>
             <div className="text-sm text-gray-600 mb-4">Advanced features for power users</div>
-            <button
-              className="w-full text-sm px-4 py-2 mb-4 rounded-lg bg-amber-600 text-white hover:bg-amber-700 shadow inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={handleUpgrade}
-              disabled={loading || !paddleReady || !paymentsEnabled}
-              title={!paymentsEnabled ? 'Payment system coming soon!' : undefined}
-            >
-              <Crown className="w-4 h-4" />
-              {!paymentsEnabled ? (
-                <>Coming Soon</>
-              ) : loading ? (
-                'Loading...'
-              ) : paddleReady ? (
-                'Upgrade to Pro'
-              ) : (
-                'Loading Payment...'
-              )}
-            </button>
+
             <ul className="space-y-2 text-sm">
               {billing === 'lifetime' ? (
                 <>

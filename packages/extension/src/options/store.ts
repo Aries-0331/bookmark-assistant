@@ -11,8 +11,8 @@ export const PRO_MIN_INTERVAL_MINUTES = Math.round(PRO_MIN_INTERVAL_HOURS * 60);
 
 // Pricing constants
 export const PRICE_MONTHLY_REGULAR_USD = 5; // Regular $/month
-export const PRICE_MONTHLY_EARLY_BIRD_USD = 2.99; // Early bird $/month
-export const PRICE_LIFETIME_USD = 29.9; // $ one-time purchase
+export const PRICE_MONTHLY_EARLY_BIRD_USD = 2.5; // Early bird $/month
+export const PRICE_LIFETIME_USD = 30; // $ one-time purchase
 
 export type AppState = {
   // Overview

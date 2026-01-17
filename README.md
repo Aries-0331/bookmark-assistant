@@ -52,7 +52,7 @@ Perfect for casual users and trying out the extension:
 | 🔒**Secure OAuth**       | Industry-standard authentication |
 | 📊**Change Detection**   | Only syncs when needed           |
 
-### **Pro Plan** - $2.99/month or $29.99 lifetime
+### **Pro Plan** - $2.50/month or $30 lifetime
 
 For power users who want automation:
 
@@ -64,7 +64,7 @@ For power users who want automation:
 | 💬**Priority Support**    | Get help when you need it                     |
 | 🎁**Future Features**     | Free access to upcoming AI features (Q3 2025) |
 
-> 💰 **Best Value**: Lifetime access at $29.99 - Pay once, use forever (includes all future updates)
+> 💰 **Best Value**: Lifetime access at $30 - Pay once, use forever (includes all future updates)
 
 ---
 
@@ -258,7 +258,7 @@ const { t } = useTranslation();
 
 #### **4. Enable Auto-Sync** (Pro Only)
 
-1. Upgrade to Pro ($2.99/mo or $29.99 lifetime)
+1. Upgrade to Pro ($2.50/mo or $30 lifetime)
 2. Toggle **"Auto-Sync"** in settings
 3. Choose interval (minimum 6 hours)
 4. ✅ Bookmarks sync automatically in the background!

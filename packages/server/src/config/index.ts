@@ -73,8 +73,8 @@ export const config = {
   },
 
   pricing: {
-    monthlyFallback: 2.99, // USD per month - fallback only
-    lifetimeFallback: 29.99, // USD one-time - fallback only
+    monthlyFallback: 2.5, // USD per month - fallback only
+    lifetimeFallback: 30, // USD one-time - fallback only
   },
 
   limits: {

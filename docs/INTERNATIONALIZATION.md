@@ -262,21 +262,21 @@ describe('i18n', () => {
 
 - **Font**: Ensure proper CJK font rendering
 - **Date Format**: YYYY年MM月DD日
-- **Currency**: ¥29.99 (RMB) or $29.99 USD
+- **Currency**: ¥30 (RMB) or $30 USD
 - **Content Length**: Chinese text is typically 30-40% shorter than English
 
-### Japanese (ja)
+### Japanese
 
 - **Politeness Levels**: Use appropriate keigo (敬語) for UI text
 - **Date Format**: YYYY年MM月DD日
-- **Currency**: ¥2,990 (JPY) or $29.99 USD
+- **Currency**: ¥4,500 (JPY) or $30 USD
 - **Content Length**: Similar to Chinese, ~30-40% shorter
 
 ### English (en)
 
 - **Tone**: Professional but friendly
 - **Date Format**: MM/DD/YYYY (US) or DD/MM/YYYY (UK)
-- **Currency**: $29.99 USD
+- **Currency**: $30 USD
 
 ## Chrome Web Store Listings
 

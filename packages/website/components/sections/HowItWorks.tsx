@@ -14,7 +14,7 @@ export function HowItWorks() {
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center">
           <SectionEyebrow text="Quick Setup" color="green" />
-          <h2 className="text-4xl font-medium text-gray-900 mb-4">Get started in 3 simple steps</h2>
+          <h2 className="text-4xl font-medium text-gray-900 mb-4">From zero to synced in minutes</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-16">Setting up takes less than 2 minutes.</p>
         </div>
         <div className="grid gap-8 md:grid-cols-3">

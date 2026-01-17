@@ -304,13 +304,9 @@ npx prisma studio
 
 ### Website (Required)
 
-| Variable                                   | Example                 | Where to Get            |
-| ------------------------------------------ | ----------------------- | ----------------------- |
-| `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`          | `live_abc...`           | Paddle Dashboard        |
-| `NEXT_PUBLIC_PADDLE_ENVIRONMENT`           | `production`            | Hardcoded               |
-| `NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID`  | `pri_abc...`            | Paddle Dashboard        |
-| `NEXT_PUBLIC_PADDLE_PRO_LIFETIME_PRICE_ID` | `pri_xyz...`            | Paddle Dashboard        |
-| `NEXT_PUBLIC_API_URL`                      | `https://...vercel.app` | After server deployment |
+| Variable               | Example                 | Where to Get            |
+| ---------------------- | ----------------------- | ----------------------- |
+| `NEXT_PUBLIC_API_URL`  | `https://...vercel.app` | After server deployment |
 
 ### Extension (Required)
 
