@@ -10,7 +10,7 @@
   ```
   VITE_OAUTH_SERVER_URL=http://bookmark-assistant-server.vercel.app
   VITE_DEBUG_MODE=false
-  VITE_APP_VERSION=1.0.6
+  VITE_APP_VERSION=1.0.7
   ```
 
 ### `.env.local` - Development Settings
@@ -21,7 +21,7 @@
   ```
   VITE_OAUTH_SERVER_URL=http://localhost:3333
   VITE_DEBUG_MODE=true
-  VITE_APP_VERSION=1.0.6
+  VITE_APP_VERSION=1.0.7
   ```
 
 ## 🔄 Vite Environment Precedence
@@ -95,7 +95,7 @@ vercel --prod
 | Debug Mode | false | true |
 | Website URL | Production site | localhost |
 | Support URLs | Production links | Same as prod |
-| Version | 1.0.6 | 1.0.6 |
+| Version | 1.0.7 | 1.0.7 |
 
 ## 🔐 Sensitive Data
 
