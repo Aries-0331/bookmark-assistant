@@ -8,10 +8,9 @@
 
 ### Essential Documents
 
-- [`../README.md`](../README.md) - Project overview and setup
+- [`../README.md`](../README.md) - Project overview, features, and quick start
 - [`../CLAUDE.md`](../CLAUDE.md) - Architecture and technical specification
-- [`../todo.md`](../todo.md) - Current tasks and roadmap
-- [`../PRODUCTION_READINESS_ANALYSIS.md`](../PRODUCTION_READINESS_ANALYSIS.md) - Launch readiness assessment
+- [`../BUILD_OPTIMIZATION.md`](../BUILD_OPTIMIZATION.md) - Optimized build process
 
 ### User & Operations Documentation
 
@@ -48,13 +47,13 @@
 | **Features**     | AUTO_SYNC.md, DESCRIPTION_CACHE.md                      | Feature specifications     |
 | **Integration**  | NOTION_INTEGRATION.md, PADDLE_INTEGRATION.md           | API integrations          |
 | **Operations**   | DEPLOYMENT.md, CHROME_WEB_STORE_SUBMISSION.md          | Deployment and launch     |
-| **User-Facing**  | FAQ_SUPPORT.md, PERMISSIONS_JUSTIFICATION.md            | User support and policies |
+| **User-Facing**  | FAQ_SUPPORT.md, PERMISSIONS_JUSTIFICATION.md           | User support and policies |
 
 ### By Priority
 
 | Priority            | Documents                                              | When to Read       |
 | ------------------- | ------------------------------------------------------ | ------------------ |
-| **P0 - Essential**  | README.md, CLAUDE.md, PRODUCTION_READINESS_ANALYSIS.md | Start here         |
+| **P0 - Essential**  | README.md, CLAUDE.md                                   | Start here         |
 | **P1 - Important**  | STATE_MANAGEMENT.md, AUTO_SYNC.md, NOTION_INTEGRATION.md | Before development |
 | **P2 - Reference**  | DESCRIPTION_CACHE.md, PADDLE_INTEGRATION.md            | As needed          |
 | **P3 - Background** | INTERNATIONALIZATION.md                               | Future features    |
@@ -66,12 +65,15 @@
 ### Extension Package
 
 - [`../packages/extension/ENV_USAGE.md`](../packages/extension/ENV_USAGE.md) - Environment variable guide
-- [`../packages/extension/DESCRIPTION_GENERATOR_REVIEW.md`](../packages/extension/DESCRIPTION_GENERATOR_REVIEW.md) - Description generation design
+- [`../packages/extension/public/manifest.json`](../packages/extension/public/manifest.json) - Extension configuration
 
 ### Server Package
 
-- [`../packages/server/DESCRIPTION_GENERATION_DESIGN.md`](../packages/server/DESCRIPTION_GENERATION_DESIGN.md) - Server-side description generation
-- [`../packages/server/DESCRIPTION_GENERATION_IMPLEMENTATION.md`](../packages/server/DESCRIPTION_GENERATION_IMPLEMENTATION.md) - Implementation details
+- [`../packages/server/ENVIRONMENT_SETUP.md`](../packages/server/ENVIRONMENT_SETUP.md) - Server environment configuration
+
+### Shared Package
+
+- [`../packages/shared/README.md`](../packages/shared/README.md) - Shared utilities and design tokens
 
 ---
 
@@ -81,7 +83,7 @@ Historical and superseded documentation is stored in [`archive/`](archive/):
 
 - DESCRIPTION_CACHE_IMPLEMENTATION_PLAN.md - Original cache plan
 - DESCRIPTION_OPTIMIZATION.md - Initial optimization analysis
-- TEST_COVERAGE_IMPLEVEMENT_PLAN.md - Original test plan
+- TEST_COVERAGE_IMPROVEMENT_PLAN.md - Original test plan
 - TEST_COVERAGE_PROGRESS_REPORT.md - Progress tracking
 - DOCUMENTATION_REORGANIZATION.md - Documentation structure changes
 
@@ -98,15 +100,16 @@ Historical and superseded documentation is stored in [`archive/`](archive/):
 
 ### Feature Development
 
-1. Check [`../todo.md`](../todo.md) - Current priorities
-2. Review feature-specific docs (AUTO_SYNC.md, DESCRIPTION_CACHE.md)
-3. Reference [NOTION_INTEGRATION.md](NOTION_INTEGRATION.md) - API patterns
+1. Review feature-specific docs (AUTO_SYNC.md, DESCRIPTION_CACHE.md)
+2. Reference [NOTION_INTEGRATION.md](NOTION_INTEGRATION.md) - API patterns
+3. Check [BUILD_OPTIMIZATION.md](../BUILD_OPTIMIZATION.md) - Build process
 
 ### Production Operations
 
 1. Review [`../DEPLOYMENT.md`](../DEPLOYMENT.md) - Deploy procedures
 2. Check [`../CHROME_WEB_STORE_SUBMISSION.md`](../CHROME_WEB_STORE_SUBMISSION.md) - Store submission
 3. Reference [`../PERMISSIONS_JUSTIFICATION.md`](../PERMISSIONS_JUSTIFICATION.md) - Permissions
+4. Use [`../BUILD_OPTIMIZATION.md`](../BUILD_OPTIMIZATION.md) - Build process
 
 ### User Support
 
@@ -118,8 +121,8 @@ Historical and superseded documentation is stored in [`archive/`](archive/):
 
 ### Active Documents (Updated Regularly)
 
-- [`../todo.md`](../todo.md) - Weekly updates
-- [`../PRODUCTION_READINESS_ANALYSIS.md`](../PRODUCTION_READINESS_ANALYSIS.md) - Pre-launch updates
+- [`../BUILD_OPTIMIZATION.md`](../BUILD_OPTIMIZATION.md) - Build process documentation
+- [STATE_MANAGEMENT.md](STATE_MANAGEMENT.md) - Pattern reference
 
 ### Reference Documents (Stable)
 
@@ -143,6 +146,7 @@ Documents are archived when:
 
 - Feature docs: `FEATURE_NAME.md` (e.g., AUTO_SYNC.md)
 - Technical docs: `TOPIC_INTEGRATION.md` (e.g., NOTION_INTEGRATION.md)
+- Operations docs: `OPERATION_NAME.md` (e.g., DEPLOYMENT.md)
 
 ### Document Structure
 
@@ -173,7 +177,7 @@ Documents are archived when:
 # Follow README.md instructions
 
 # 3. Start developing
-# Check ../todo.md for current priorities
+# Check BUILD_OPTIMIZATION.md for build process
 ```
 
 ### For Operations
@@ -187,6 +191,9 @@ Documents are archived when:
 
 # 3. User Support
 ../FAQ_SUPPORT.md
+
+# 4. Build Process
+../BUILD_OPTIMIZATION.md
 ```
 
 ---
@@ -207,6 +214,6 @@ Documents are archived when:
 
 ---
 
-**Last Updated:** December 26, 2025
+**Last Updated:** January 21, 2026
 **Maintainer:** Development Team
 **Status:** Current and maintained

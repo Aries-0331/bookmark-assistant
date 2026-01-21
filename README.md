@@ -6,7 +6,7 @@
 [![React](https://img.shields.io/badge/React-18.2-61dafb)](https://reactjs.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![Tests](<https://img.shields.io/badge/Tests-185%20(82%25%20passing)-green>)](tests/)
-[![Version](https://img.shields.io/badge/Version-1.0.6-orange)](packages/extension/)
+[![Version](https://img.shields.io/badge/Version-1.0.8-orange)](packages/extension/)
 
 **Transform your Chrome bookmarks into an organized Notion database** with one click. Bookmark Assistant is a production-ready extension that automatically extracts descriptions, syncs changes, and keeps your bookmarks perfectly organized in Notion—no manual copying required.
 
@@ -269,21 +269,27 @@ const { t } = useTranslation();
 
 ### **User Guides**
 
-- [Getting Started Guide](docs/getting-started.md) — Installation and setup walkthrough
-- [Database Setup Guide](docs/database-setup.md) — Notion database configuration
-- [Sync Settings Guide](docs/sync-settings.md) — Auto-sync and interval configuration
+- [FAQ & Support](FAQ_SUPPORT.md) — Comprehensive FAQ and support guide
+- [Chrome Web Store Submission](CHROME_WEB_STORE_SUBMISSION.md) — Installation and setup guide
+- [Permissions Justification](PERMISSIONS_JUSTIFICATION.md) — Why we ask for each permission
 
 ### **Developer Guides**
 
-- [Technical Specification](docs/spec/PAYMENT.md) — Payment and user system
-- [Paddle Integration](docs/PADDLE_INTEGRATION.md) — Payment setup and configuration
-- [Auto-Sync Implementation](docs/AUTO_SYNC.md) — Auto-sync feature details
-- [Internationalization](docs/INTERNATIONALIZATION.md) — Multi-language support strategy
-- [Notion Template Structures](docs/NOTION_TEMPLATES.md) — Full-page vs inline database handling
+- [Architecture Overview](CLAUDE.md) — System architecture and technical decisions
 - [State Management](docs/STATE_MANAGEMENT.md) — Extension state architecture
+- [Notion Integration](docs/NOTION_INTEGRATION.md) — Notion API integration details
+- [Auto-Sync Implementation](docs/AUTO_SYNC.md) — Automatic background synchronization
+- [Paddle Integration](docs/PADDLE_INTEGRATION.md) — Payment processing integration
+- [Description Cache](docs/DESCRIPTION_CACHE.md) — Caching strategy and implementation
+- [Internationalization](docs/INTERNATIONALIZATION.md) — Multi-language support plan
+- [Environment Usage](packages/extension/ENV_USAGE.md) — Environment variable configuration
 - [Testing Guide](tests/README.md) — Testing infrastructure and examples
-- [Paddle Testing Checklist](docs/TESTING_CHECKLIST.md) — Payment integration testing
-- [Quick Start Auth](QUICK_START_AUTH.md) — OAuth and upgrade flow testing
+- [Build Optimization](BUILD_OPTIMIZATION.md) — Optimized build process for Chrome Web Store
+
+### **Operations & Deployment**
+
+- [Deployment Guide](DEPLOYMENT.md) — Production deployment (Vercel)
+- [Environment Setup](packages/server/ENVIRONMENT_SETUP.md) — Server environment configuration
 
 ---
 
@@ -370,7 +376,7 @@ This is a commercial project. The source code is not open source and may not be 
 | Metric               | Status                       |
 | -------------------- | ---------------------------- |
 | **Development**      | 🚀 Production Ready          |
-| **Version**          | 1.0.6 (Production)           |
+| **Version**          | 1.0.8 (Production)           |
 | **Test Coverage**    | 82% (185 tests, 152 passing) |
 | **Grade**            | A- (Launch Ready)            |
 | **Chrome Web Store** | Submission Ready             |
