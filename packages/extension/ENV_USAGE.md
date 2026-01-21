@@ -38,7 +38,7 @@ Vite loads environment variables in this order (later overrides earlier):
 ### Development Build
 ```bash
 # Uses .env.local (overrides .env)
-pnpm build
+pnpm build:dev
 # or
 pnpm dev
 ```
@@ -46,8 +46,23 @@ pnpm dev
 ### Production Build
 ```bash
 # Uses .env only (no .env.local in production)
-NODE_ENV=production pnpm build
-# or use build:prod script
+pnpm build:prod
+# or use build script (defaults to production)
+pnpm build
+```
+
+### Chrome Web Store Release Build
+```bash
+# ⭐ RECOMMENDED for publishing
+# Automatically:
+# 1. Backs up .env.local
+# 2. Builds with production config
+# 3. Creates publish-ready zip file
+# 4. Restores .env.local
+pnpm build:zip
+
+# Output: bookmark-assistant-v{version}.zip
+# Ready to upload directly to Chrome Web Store!
 ```
 
 ## 📋 Version Management
@@ -74,16 +89,21 @@ All version numbers should be kept in sync:
 ```bash
 # .env.local is automatically used
 pnpm dev  # Uses localhost:3333
-pnpm build # Uses localhost for dev build
+pnpm build:dev # Uses localhost for dev build
 ```
 
 ### Production Deployment
 ```bash
-# .env.local is ignored in production
-NODE_ENV=production pnpm build
+# Standard production build
+pnpm build:prod
 # Uses production server URLs
 
-# Deploy to Vercel
+# Chrome Web Store Release (RECOMMENDED)
+pnpm build:zip
+# Creates bookmark-assistant-v{version}.zip
+# Upload this zip directly to Chrome Web Store!
+
+# Deploy server to Vercel
 vercel --prod
 ```
 
@@ -115,7 +135,10 @@ vercel --prod
 ## 🔍 Troubleshooting
 
 ### Issue: Build uses localhost instead of production
-**Solution**: Ensure `.env.local` is not present in production environment
+**Solution**: Use `pnpm build:zip` instead of `pnpm build`
+- This automatically backs up `.env.local` before building
+- Ensures production URLs are embedded in the build
+- Creates a ready-to-upload zip file
 
 ### Issue: Version mismatch
 **Solution**: Manually sync version numbers across all files
@@ -125,3 +148,9 @@ vercel --prod
 1. Check file names (`.env`, not `env`)
 2. Ensure variables start with `VITE_`
 3. Restart dev server after changes
+
+### Issue: Need to manually zip files for Chrome Web Store
+**Solution**: Use `pnpm build:zip`
+- Automatically creates `bookmark-assistant-v{version}.zip`
+- Only includes necessary files
+- Ready to upload directly to Chrome Web Store

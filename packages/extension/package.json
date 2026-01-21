@@ -1,6 +1,6 @@
 {
   "name": "@bookmark-assistant/extension",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Transform Chrome bookmarks into organized Notion databases. One-click sync, smart descriptions, auto-sync Pro features.",
   "type": "module",
   "scripts": {
@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build --mode production",
     "build:dev": "tsc -b && vite build --mode development",
     "build:prod": "tsc -b && vite build --mode production",
+    "build:zip": "npm run clean && node scripts/build-zip.js",
     "clean": "rm -rf dist",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test": "vitest run",
@@ -27,6 +28,7 @@
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.1.1",
     "autoprefixer": "^10.4.16",
+    "jszip": "^3.10.1",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.3.6",
     "typescript": "^5.9.2",

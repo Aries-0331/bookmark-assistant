@@ -12,6 +12,7 @@
     "dev:server": "pnpm -F @bookmark-assistant/server dev",
     "dev:website": "pnpm -F @bookmark-assistant/website dev",
     "build": "pnpm -F @bookmark-assistant/extension build",
+    "build:zip": "pnpm -F @bookmark-assistant/extension build:zip",
     "build:server": "pnpm -F @bookmark-assistant/server build",
     "build:website": "pnpm -F @bookmark-assistant/website build",
     "build:all": "pnpm -r build",
