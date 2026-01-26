@@ -26,8 +26,8 @@ router.get('/', async (req, res) => {
     res.json({
       success: true,
       pricing: {
-        monthly: 2.99, // Fallback
-        lifetime: 29.99, // Fallback
+        monthly: 2.50, // Fallback
+        lifetime: 30.00, // Fallback
       },
     });
   }

@@ -445,7 +445,7 @@ export function BillingSection() {
             ) : (
               <>
                 <span className="text-gray-400 line-through text-base">{formatCurrency(5)}</span>
-                <span className="text-gray-900 text-xl font-semibold">{formatCurrency(2.99)}</span>
+                <span className="text-gray-900 text-xl font-semibold">{formatCurrency(2.50)}</span>
                 <span className="text-gray-500 text-sm">/ month</span>
               </>
             )}

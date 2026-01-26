@@ -1,8 +1,16 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/**
+ * Optimized Scrollbar Styles
+ * Shared across extension, website, and server packages
+ *
+ * Features:
+ * - Thin, modern scrollbars
+ * - Subtle colors that work with light/dark themes
+ * - Smooth transitions on hover/active
+ * - Transparent tracks with padding
+ * - Cross-browser support (Firefox, Chrome, Safari, Edge)
+ */
 
-/* Optimized Scrollbar Styles */
+/* Global scrollbar settings */
 * {
   /* Firefox */
   scrollbar-width: thin;
@@ -54,7 +62,7 @@
   }
 }
 
-/* Horizontal scrollbar */
+/* Horizontal scrollbar - thinner height */
 *::-webkit-scrollbar-horizontal {
   height: 8px;
 }
@@ -73,4 +81,45 @@
   background: transparent;
 }
 
-html, body { height: 100%; }
+/* Utility classes for specific scrollbar sizes */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom scrollbar with brand colors (optional) */
+.scrollbar-brand::-webkit-scrollbar-thumb {
+  background-color: rgba(245, 158, 11, 0.5);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.scrollbar-brand::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(245, 158, 11, 0.7);
+}
+
+@media (prefers-color-scheme: dark) {
+  .scrollbar-brand::-webkit-scrollbar-thumb {
+    background-color: rgba(245, 158, 11, 0.6);
+  }
+
+  .scrollbar-brand::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(245, 158, 11, 0.8);
+  }
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}

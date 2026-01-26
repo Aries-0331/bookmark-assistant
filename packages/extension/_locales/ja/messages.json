@@ -1,0 +1,82 @@
+{
+  "appName": {
+    "message": "Bookmark Assistant - NotionブックマークマネージャーとWebクリッパー",
+    "description": "The name of the extension"
+  },
+  "appDesc": {
+    "message": "ワンクリックでChromeブックマークをNotionデータベースに同期。ファビコン、メタデータを自動取得し、知識ベースを視覚的に管理。",
+    "description": "The description of the extension"
+  },
+  "extensionTitle": {
+    "message": "Bookmark Assistant",
+    "description": "Short title for the extension action"
+  },
+  "syncNow": {
+    "message": "今すぐ同期",
+    "description": "Button to sync bookmarks"
+  },
+  "connectToNotion": {
+    "message": "Notionに接続",
+    "description": "Button to connect to Notion"
+  },
+  "connected": {
+    "message": "接続済み",
+    "description": "Status when connected to Notion"
+  },
+  "connecting": {
+    "message": "接続中...",
+    "description": "Status when connecting to Notion"
+  },
+  "disconnect": {
+    "message": "切断",
+    "description": "Button to disconnect from Notion"
+  },
+  "lastSync": {
+    "message": "最終同期：",
+    "description": "Label for last sync time"
+  },
+  "never": {
+    "message": "一度もなし",
+    "description": "When sync never happened"
+  },
+  "bookmarks": {
+    "message": "ブックマーク",
+    "description": "Number of bookmarks"
+  },
+  "syncing": {
+    "message": "同期中...",
+    "description": "Status when syncing"
+  },
+  "error": {
+    "message": "エラー",
+    "description": "Error message prefix"
+  },
+  "success": {
+    "message": "成功",
+    "description": "Success message"
+  },
+  "openOptions": {
+    "message": "オプションを開く",
+    "description": "Link to open options page"
+  },
+  "free": {
+    "message": "無料版",
+    "description": "Free plan label"
+  },
+  "pro": {
+    "message": "プロ版",
+    "description": "Pro plan label"
+  },
+  "upgrade": {
+    "message": "アップグレード",
+    "description": "Button to upgrade to Pro"
+  },
+  "autoSyncEnabled": {
+    "message": "自動同期が有効",
+    "description": "Status when auto-sync is on"
+  },
+  "autoSyncDisabled": {
+    "message": "自動同期が無効",
+    "description": "Status when auto-sync is off"
+  }
+}

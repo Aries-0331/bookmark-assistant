@@ -32,6 +32,11 @@ export default defineConfig({
             if (existsSync(assetsDir)) {
               cpSync(assetsDir, resolve(distDir, 'assets'), { recursive: true });
             }
+            // Copy _locales directory for i18n support
+            const localesDir = resolve('_locales');
+            if (existsSync(localesDir)) {
+              cpSync(localesDir, resolve(distDir, '_locales'), { recursive: true });
+            }
           });
         });
       },

@@ -16,7 +16,7 @@ describe('ServerAPI - Logout Selective Cleanup', () => {
       last_sync_summary: 'success',
       oauth_template_database_id: 'template-abc-123', // Should be preserved
       description_cache_url1: { description: 'Test 1', timestamp: Date.now() }, // Should be preserved
-      cached_pricing: { monthly: 2.99, lifetime: 29.99 }, // Should be preserved
+      cached_pricing: { monthly: 2.50, lifetime: 30.00 }, // Should be preserved
       auto_sync_enabled: true,
       sync_in_progress: false,
     };
@@ -79,7 +79,7 @@ describe('ServerAPI - Logout Selective Cleanup', () => {
     // Should be preserved
     expect(mockChromeStorage.oauth_template_database_id).toBe('template-abc-123');
     expect(mockChromeStorage.description_cache_url1).toBeDefined();
-    expect(mockChromeStorage.cached_pricing).toEqual({ monthly: 2.99, lifetime: 29.99 });
+    expect(mockChromeStorage.cached_pricing).toEqual({ monthly: 2.50, lifetime: 30.00 });
   });
 
   it('should remove all authentication-related keys', async () => {

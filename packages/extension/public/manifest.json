@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Bookmark Assistant",
+  "name": "Bookmark Assistant - Notion Bookmark Manager & Web Clipper",
   "version": "1.0.8",
-  "description": "Transform Chrome bookmarks into organized Notion databases. One-click sync, smart descriptions, auto-sync Pro features.",
+  "default_locale": "en",
+  "description": "One-click sync Chrome bookmarks to Notion Database. Auto-fetch favicons, meta tags, and manage your knowledge base visually.",
   "permissions": ["bookmarks", "storage", "identity", "alarms"],
   "host_permissions": [],
   "background": {
@@ -11,7 +12,7 @@
   },
   "action": {
     "default_popup": "src/popup/popup.html",
-    "default_title": "Bookmark Assistant",
+    "default_title": "__MSG_extensionTitle__",
     "default_icon": {
       "16": "assets/favicon/favicon-16x16.png",
       "32": "assets/favicon/favicon-32x32.png",

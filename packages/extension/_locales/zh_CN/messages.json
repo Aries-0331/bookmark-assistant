@@ -1,0 +1,82 @@
+{
+  "appName": {
+    "message": "Bookmark Assistant - Notion书签管理器与网页剪裁器",
+    "description": "The name of the extension"
+  },
+  "appDesc": {
+    "message": "一键将Chrome书签同步到Notion数据库。自动获取网站图标和元数据，可视化管理您的知识库。",
+    "description": "The description of the extension"
+  },
+  "extensionTitle": {
+    "message": "书签助手",
+    "description": "Short title for the extension action"
+  },
+  "syncNow": {
+    "message": "立即同步",
+    "description": "Button to sync bookmarks"
+  },
+  "connectToNotion": {
+    "message": "连接Notion",
+    "description": "Button to connect to Notion"
+  },
+  "connected": {
+    "message": "已连接",
+    "description": "Status when connected to Notion"
+  },
+  "connecting": {
+    "message": "连接中...",
+    "description": "Status when connecting to Notion"
+  },
+  "disconnect": {
+    "message": "断开连接",
+    "description": "Button to disconnect from Notion"
+  },
+  "lastSync": {
+    "message": "上次同步：",
+    "description": "Label for last sync time"
+  },
+  "never": {
+    "message": "从未",
+    "description": "When sync never happened"
+  },
+  "bookmarks": {
+    "message": "个书签",
+    "description": "Number of bookmarks"
+  },
+  "syncing": {
+    "message": "同步中...",
+    "description": "Status when syncing"
+  },
+  "error": {
+    "message": "错误",
+    "description": "Error message prefix"
+  },
+  "success": {
+    "message": "成功",
+    "description": "Success message"
+  },
+  "openOptions": {
+    "message": "打开选项",
+    "description": "Link to open options page"
+  },
+  "free": {
+    "message": "免费版",
+    "description": "Free plan label"
+  },
+  "pro": {
+    "message": "专业版",
+    "description": "Pro plan label"
+  },
+  "upgrade": {
+    "message": "升级",
+    "description": "Button to upgrade to Pro"
+  },
+  "autoSyncEnabled": {
+    "message": "自动同步已启用",
+    "description": "Status when auto-sync is on"
+  },
+  "autoSyncDisabled": {
+    "message": "自动同步已禁用",
+    "description": "Status when auto-sync is off"
+  }
+}

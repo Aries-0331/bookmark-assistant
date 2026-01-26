@@ -1,0 +1,82 @@
+{
+  "appName": {
+    "message": "Bookmark Assistant - Gerenciador de Marcadores do Notion e Web Clipper",
+    "description": "The name of the extension"
+  },
+  "appDesc": {
+    "message": "Sincronize marcadores do Chrome para o Notion Database com um clique. Extraia automaticamente favicons, metadados e gerencie sua base de conhecimento visualmente.",
+    "description": "The description of the extension"
+  },
+  "extensionTitle": {
+    "message": "Bookmark Assistant",
+    "description": "Short title for the extension action"
+  },
+  "syncNow": {
+    "message": "Sincronizar Agora",
+    "description": "Button to sync bookmarks"
+  },
+  "connectToNotion": {
+    "message": "Conectar ao Notion",
+    "description": "Button to connect to Notion"
+  },
+  "connected": {
+    "message": "Conectado",
+    "description": "Status when connected to Notion"
+  },
+  "connecting": {
+    "message": "Conectando...",
+    "description": "Status when connecting to Notion"
+  },
+  "disconnect": {
+    "message": "Desconectar",
+    "description": "Button to disconnect from Notion"
+  },
+  "lastSync": {
+    "message": "Última sincronização:",
+    "description": "Label for last sync time"
+  },
+  "never": {
+    "message": "Nunca",
+    "description": "When sync never happened"
+  },
+  "bookmarks": {
+    "message": "marcadores",
+    "description": "Number of bookmarks"
+  },
+  "syncing": {
+    "message": "Sincronizando...",
+    "description": "Status when syncing"
+  },
+  "error": {
+    "message": "Erro",
+    "description": "Error message prefix"
+  },
+  "success": {
+    "message": "Sucesso",
+    "description": "Success message"
+  },
+  "openOptions": {
+    "message": "Abrir Opções",
+    "description": "Link to open options page"
+  },
+  "free": {
+    "message": "Gratuito",
+    "description": "Free plan label"
+  },
+  "pro": {
+    "message": "Pro",
+    "description": "Pro plan label"
+  },
+  "upgrade": {
+    "message": "Atualizar",
+    "description": "Button to upgrade to Pro"
+  },
+  "autoSyncEnabled": {
+    "message": "Auto-sincronização habilitada",
+    "description": "Status when auto-sync is on"
+  },
+  "autoSyncDisabled": {
+    "message": "Auto-sincronização desativada",
+    "description": "Status when auto-sync is off"
+  }
+}
