@@ -38,23 +38,31 @@ export function Footer() {
             <h4 className="text-base text-gray-900 mb-3">Resources</h4>
             <ul className="space-y-2 text-sm text-gray-600">
               <li>
-                <a className="hover:text-gray-900" href="/docs">
-                  Documentation
-                </a>
-              </li>
-              <li>
-                <a className="hover:text-gray-900" href="/support">
-                  Support
+                <a
+                  className="hover:text-gray-900"
+                  href="https://glow-pheasant-22f.notion.site/Bookmark-Assistant-Dashboard-2ce9466de76d80a49879d40f259ced08?pvs=143"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Notion Template
                 </a>
               </li>
               <li>
                 <a
                   className="hover:text-gray-900"
-                  href="https://github.com/Aries-0331/bookmarks_to_notion"
+                  href="https://chromewebstore.google.com/detail/khffaaemphidjmhokafmiilkcjpgiije"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  GitHub
+                  Chrome Web Store
+                </a>
+              </li>
+              <li>
+                <a
+                  className="hover:text-gray-900"
+                  href="mailto:aries0331.dev@gmail.com"
+                >
+                  Contact Support
                 </a>
               </li>
             </ul>
