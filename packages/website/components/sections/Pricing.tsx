@@ -80,7 +80,7 @@ export function Pricing() {
             <ul className="space-y-2 text-sm flex-grow">
               <li className="flex items-center gap-2 text-gray-800">
                 <Check className="w-4 h-4 text-gray-600" />
-                <span>50 bookmarks per sync</span>
+                <span>500 bookmarks per sync</span>
               </li>
               <li className="flex items-center gap-2 text-gray-800">
                 <Check className="w-4 h-4 text-gray-600" />

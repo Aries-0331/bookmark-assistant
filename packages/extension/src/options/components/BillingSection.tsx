@@ -36,7 +36,7 @@ type FeatureItem = {
 
 const PLAN_FEATURES: Record<'free' | 'pro' | 'lifetime', FeatureItem[]> = {
   free: [
-    { icon: BookmarkIcon, text: '50 bookmarks per sync' },
+    { icon: BookmarkIcon, text: '500 bookmarks per sync' },
     { icon: MousePointerClick, text: 'Manual sync only' },
     { icon: Timer, text: '24-hour interval' },
     { icon: Mail, text: 'Community support' },

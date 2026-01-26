@@ -407,7 +407,7 @@ describe('Sync Module', () => {
       });
 
       await expect(syncAllBookmarksToNotion()).rejects.toThrow(
-        'Free plan is limited to 50 bookmarks per sync'
+        'Free plan is limited to 500 bookmarks per sync'
       );
     });
 

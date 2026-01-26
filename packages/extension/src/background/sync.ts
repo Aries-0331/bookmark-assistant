@@ -107,7 +107,7 @@ export async function syncAllBookmarksToNotion() {
     // Check if this is a sync limit error
     if (error?.message?.includes('Sync Limit Exceeded') || error?.status === 403) {
       throw new Error(
-        `Free plan is limited to 50 bookmarks per sync. Upgrade to Pro for unlimited syncing.`
+        `Free plan is limited to 500 bookmarks per sync. Upgrade to Pro for unlimited syncing.`
       );
     }
 

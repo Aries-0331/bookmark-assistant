@@ -1,136 +1,31 @@
 # Bookmark Assistant
 
-> **Professional Chrome extension for seamless bookmark synchronization with Notion**
+> **Chrome extension for seamless bookmark synchronization with Notion**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18.2-61dafb)](https://reactjs.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-18.2-61dafb)](https://www.primereact.org/)
 [![Tests](<https://img.shields.io/badge/Tests-185%20(82%25%20passing)-green>)](tests/)
 [![Version](https://img.shields.io/badge/Version-1.0.8-orange)](packages/extension/)
 
-**Transform your Chrome bookmarks into an organized Notion database** with one click. Bookmark Assistant is a production-ready extension that automatically extracts descriptions, syncs changes, and keeps your bookmarks perfectly organized in Notion—no manual copying required.
+Bookmark Assistant transforms Chrome bookmarks into an organized Notion database with automatic description extraction, change detection, and background synchronization.
 
 ---
 
-- [ ] 🎯 What Makes Bookmark Assistant Special
+## 🏗️ System Architecture
 
-### **Never Lose Track of Important Links**
-
-Stop manually copying bookmarks into Notion. Bookmark Assistant automatically syncs your Chrome bookmarks with smart description extraction, intelligent caching, and change detection—so your Notion workspace always stays up-to-date.
-
-### **Production-Ready Features**
-
-- ✅ **One-Click Sync** - Export all bookmarks to Notion instantly
-- ✅ **Smart Descriptions** - Automatically extracts page descriptions (90-92% accuracy)
-- ✅ **Auto-Sync (Pro)** - Background synchronization every 6 hours
-- ✅ **Change Detection** - Only syncs when bookmarks actually change
-- ✅ **Fast & Reliable** - Intelligent caching reduces redundant operations by 80%
-- ✅ **Secure OAuth** - Bank-grade security, your credentials never exposed
-- ✅ **Generous Free Tier** - 50 bookmarks per sync, manual sync anytime
-
-### **Perfect For**
-
-- 📚 **Researchers** organizing papers and references
-- ✍️ **Content Creators** collecting inspiration and resources
-- 💻 **Developers** managing documentation and tutorials
-- 🎓 **Students** building knowledge bases
-- 📊 **Knowledge Workers** centralizing information in Notion
-
----
-
-## ✨ Features & Pricing
-
-### **Free Forever Plan**
-
-Perfect for casual users and trying out the extension:
-
-| Feature                  | Details                          |
-| ------------------------ | -------------------------------- |
-| 🔗**Manual Sync**        | One-click export anytime         |
-| 📄**50 Bookmarks/Sync**  | Generous batch limit             |
-| 🎯**Smart Descriptions** | Automatic content extraction     |
-| 🔒**Secure OAuth**       | Industry-standard authentication |
-| 📊**Change Detection**   | Only syncs when needed           |
-
-### **Pro Plan** - $2.50/month or $30 lifetime
-
-For power users who want automation:
-
-| Feature                   | Details                                       |
-| ------------------------- | --------------------------------------------- |
-| ⚡**Auto-Sync**           | Background sync every 6 hours                 |
-| ♾️**Unlimited Bookmarks** | No batch size limits                          |
-| 🚀**Priority Processing** | Faster sync speeds                            |
-| 💬**Priority Support**    | Get help when you need it                     |
-| 🎁**Future Features**     | Free access to upcoming AI features (Q3 2025) |
-
-> 💰 **Best Value**: Lifetime access at $30 - Pay once, use forever (includes all future updates)
-
----
-
-## 🗺️ Development Roadmap
-
-### **Available Now** ✅
-
-- ✅ **One-Click Sync** - Manual export anytime
-- ✅ **Auto-Sync** - Background synchronization (Pro)
-- ✅ **Smart Description Extraction** - 90-92% accuracy
-- ✅ **Intelligent Caching** - 80% performance improvement
-- ✅ **Change Detection** - Syncs only when needed
-- ✅ **Secure OAuth** - Bank-grade authentication
-- ✅ **Error Monitoring** - Production-ready reliability
-
-### **Q1 2025 - Enhanced Experience** 🎨
-
-- [ ] **Favicon Support** - Visual site icons in Notion (3 days)
-- [ ] **Progress Indicators** - Real-time sync status (2 days)
-- [ ] **Multi-language Support** - English, 简体中文, 日本語 (10 days)
-- [ ] **Enhanced Rate Limiting** - Better handling of large syncs (2 days)
-
-### **Q2 2025 - Organization** 📁
-
-- [ ] **Folder Mapping** - Chrome folders → Notion databases (7 days)
-- [ ] **Multi-Database Support** - Route bookmarks by rules (14 days)
-- [ ] **Bulk Operations** - Edit/delete multiple bookmarks (5 days)
-- [ ] **Admin Dashboard** - Cache monitoring and stats (5 days)
-
-### **Q3 2025 - AI & Premium** 🤖
-
-- [ ] **Pro+ Tier** ($9.99/mo) - Premium features
-- [ ] **AI Tagging** - Automatic categorization (credits-based)
-- [ ] **AI Summaries** - Content summaries (credits-based)
-- [ ] **Duplicate Detection** - Smart merge suggestions
-- [ ] **Custom Templates** - User-defined rules
-
-### **Q4 2025 - Enterprise** 🌍
-
-- [ ] **Multi-Browser** - Firefox, Safari support (30 days)
-- [ ] **Team Features** - Shared workspaces (21 days)
-- [ ] **Enterprise Tier** - SSO, admin controls (30 days)
-- [ ] **Mobile Apps** - iOS/Android companions (60 days)
-
----
-
-## 🏗️ Product Structure
-
-### **Monorepo Architecture**
+### **Monorepo Structure**
 
 ```
-bookmark-notion-sync/
+bookmark-assistant/
 ├── packages/
-│   ├── extension/       # Chrome MV3 extension (client)
-│   ├── server/          # OAuth & API server (backend)
-│   ├── website/         # Marketing landing page
-│   └── shared/          # Shared design tokens & utilities
-├── scripts/             # Build and development automation
-└── tests/              # E2E, integration, and unit tests
+│   ├── extension/       # Chrome MV3 extension (React + TypeScript)
+│   ├── server/          # OAuth & API backend (Express + TypeScript)
+│   ├── website/         # Marketing landing page (Next.js)
+│   └── shared/          # Shared utilities
+└── tests/               # Unit & integration tests
 ```
 
----
-
-## 🛠️ Technical Architecture
-
-### **System Architecture**
+### **Architecture Overview**
 
 ```mermaid
 graph TB
@@ -166,152 +61,170 @@ graph TB
     style DB fill:#f3e5f5
 ```
 
-### **Key Technical Decisions**
+---
 
-#### **1. Event-Driven State Management**
+## 🎯 System Specifications
 
-- **Pattern**: `chrome.storage.onChanged` listeners instead of polling
-- **Why**: MV3 service workers are ephemeral; storage is the source of truth
-- **Implementation**: Options UI listens to `session_token`, `last_sync`, `sync_in_progress` keys
+### **Core Functionality**
 
-#### **2. Sync Fingerprinting**
+- **Bookmark Sync**: Chrome bookmarks → Notion database
+- **Metadata Extraction**: Titles, descriptions, URLs, timestamps
+- **Change Detection**: SHA-256 fingerprinting to avoid redundant syncs
+- **Auto-Sync**: Background synchronization (Pro feature)
+- **OAuth Security**: Secure authentication with Notion
 
-- **Mechanism**: SHA-256 hash of bookmark titles/URLs to detect changes
-- **Benefit**: Avoids redundant syncs when no bookmarks have changed
-- **UX**: Minimal spinner duration (1.2s) to prevent flicker on "no changes" syncs
+### **Plan Limitations**
 
-#### **3. Secure OAuth Flow**
-
-- **Client Secret**: Never exposed to extension; stored server-side only
-- **Token Exchange**: Extension gets auth code via Chrome Identity API → sends to server → receives JWT
-- **API Calls**: Extension includes JWT in headers; server validates and proxies to Notion
-
-#### **4. Rate Limiting & Entitlements**
-
-- **Free Tier**: 24-hour min interval, auto-sync disabled
-- **Pro Tier**: Unlimited manual syncs, 6-hour min interval for auto-sync
-- **Enforcement**: Server checks entitlements before processing sync requests
-- **Payment**: Paddle integration for Pro subscriptions ($5/month)
-
-#### **5. Content Extraction Pipeline**
-
-```typescript
-// Extraction priority:
-1. Active tab injection (if URL matches)
-2. Find tab by URL → inject script
-3. Fallback: URL metadata (hostname, path)
-
-// Extracted fields:
-- Title (meta og:title > <title> > <h1>)
-- Description (meta description > og:description)
-- Keywords (meta keywords)
-- Content (main > article > body, max 5000 chars)
-```
-
-#### **6. Internationalization (i18n)**
-
-- **Chrome Extension**: Native `chrome.i18n` API with `_locales/` directory structure
-- **Supported Languages**: English (default), 简体中文, 日本語 (Q1 2025)
-- **Implementation**: Lightweight `useTranslation()` hook wrapping `chrome.i18n.getMessage()`
-- **Website/Server**: `next-i18next` for landing page and backend
-- **Fallback Strategy**: User preference → Browser language → English
-
-```typescript
-// Usage in React components
-const { t } = useTranslation();
-<Button text={t('action_sync_now')} />
-```
+| Plan   | Bookmarks/Sync | Auto-Sync | Sync Interval |
+|--------|---------------|-----------|--------------|
+| Free   | 500           | No        | Manual       |
+| Pro    | Unlimited     | Yes       | 6-24 hours   |
 
 ---
 
-## 🚀 Quick Start
+## 🛠️ Technical Design
 
-### **For Users** (Quick Start)
+### **1. State Management Architecture**
 
-#### **1. Install the Extension**
+**Pattern**: Event-driven state management using `chrome.storage.onChanged`
 
-```bash
-# From Chrome Web Store (coming Q1 2025)
-1. Visit Chrome Web Store listing
-2. Click "Add to Chrome"
-3. Grant permissions when prompted
+**Rationale**: MV3 service workers are ephemeral; Chrome storage acts as the source of truth
 
-# Or load unpacked (for developers)
-1. Open Chrome → Extensions → Enable Developer Mode
-2. Click "Load unpacked" → Select packages/extension/dist
+**Implementation**:
+- Background script: Single source of truth, writes all state to `chrome.storage.local`
+- Options UI: Subscribes via `chrome.storage.onChanged` listeners
+- State keys: `session_token`, `last_sync`, `sync_in_progress`, `is_pro`
+
+### **2. Sync Optimization**
+
+**Fingerprinting**: SHA-256 hash of bookmark titles/URLs
+
+**Benefits**:
+- Detects bookmark changes without full comparison
+- Avoids redundant API calls
+- Minimal UI flicker (1.2s max spinner duration)
+
+**Change Detection Flow**:
+1. Generate fingerprint of current bookmarks
+2. Compare with last sync fingerprint
+3. If changed: proceed with sync
+4. If unchanged: show "up to date" message
+
+### **3. Security Architecture**
+
+**OAuth Flow**:
+```
+Chrome Identity API → Notion OAuth → Auth Code
+Extension → Server (auth code) → JWT Token
+JWT → API Requests → Server Validates → Proxies to Notion
 ```
 
-#### **2. Connect to Notion** (30 seconds)
+**Security Measures**:
+- Client secret: Never exposed to extension (server-side only)
+- JWT tokens: Short-lived with expiration
+- HTTPS: All traffic encrypted
+- Minimal permissions: Read-only bookmarks access
 
-1. Click extension icon → **"Connect to Notion"**
-2. Complete OAuth authentication (secure, one-time)
-3. Grant workspace access
-4. ✅ Connected!
+### **4. Content Extraction Pipeline**
 
-#### **3. First Sync** (Under 1 minute)
+**Extraction Strategy**:
+1. Server-side metadata fetching (90-92% accuracy)
+2. Fallback to URL-based heuristics
+3. Caching for 30-day TTL
 
-1. Click **"Sync Now"** in the extension popup
-2. Watch progress indicator (batches of 5 bookmarks)
-3. ✅ Done! Check your Notion database
+**Extracted Fields**:
+- Title: `og:title` → `<title>` → `<h1>`
+- Description: `description` → `og:description`
+- Keywords: `keywords` meta tag
+- Content: `main` → `article` → `body` (max 5000 chars)
 
-**Note:** Extension automatically creates the database structure in Notion—no manual setup required!
+### **5. Rate Limiting & Entitlements**
 
-#### **4. Enable Auto-Sync** (Pro Only)
+**Free Tier**:
+- 500 bookmarks per sync
+- Manual sync only
+- 24-hour minimum interval
 
-1. Upgrade to Pro ($2.50/mo or $30 lifetime)
-2. Toggle **"Auto-Sync"** in settings
-3. Choose interval (minimum 6 hours)
-4. ✅ Bookmarks sync automatically in the background!
+**Pro Tier**:
+- Unlimited bookmarks
+- Auto-sync enabled (6-24 hour interval)
+- Priority processing
+
+**Enforcement**: Server validates entitlements before processing sync requests
+
+### **6. Database Schema**
+
+**User Management**:
+- `id` (UUID, primary key)
+- `email` (unique)
+- `notion_access_token` (encrypted)
+- `subscription_status` (active, cancelled, etc.)
+
+**Bookmark Storage**:
+- `id` (UUID, primary key)
+- `user_id` (foreign key)
+- `url` (text, unique per user)
+- `title` (text)
+- `description` (text, nullable)
+- `notion_page_id` (text)
+- `sync_id` (text, deduplication)
+- `created_at` / `updated_at` (timestamps)
 
 ---
 
-## 📚 Documentation
+## 📁 Documentation Structure
 
-### **User Guides**
+### **Architecture Documentation** (`/docs/`)
 
-- [FAQ & Support](FAQ_SUPPORT.md) — Comprehensive FAQ and support guide
-- [Chrome Web Store Submission](CHROME_WEB_STORE_SUBMISSION.md) — Installation and setup guide
-- [Permissions Justification](PERMISSIONS_JUSTIFICATION.md) — Why we ask for each permission
+- **[State Management](docs/STATE_MANAGEMENT.md)** — Extension state architecture
+- **[Notion Integration](docs/NOTION_INTEGRATION.md)** — Notion API integration
+- **[Auto-Sync](docs/AUTO_SYNC.md)** — Background synchronization design
+- **[Paddle Integration](docs/PADDLE_INTEGRATION.md)** — Payment processing
+- **[Description Cache](docs/DESCRIPTION_CACHE.md)** — Caching strategy
+- **[Internationalization](docs/INTERNATIONALIZATION.md)** — Multi-language architecture
 
-### **Developer Guides**
+### **Development Guide** (`/CLAUDE.md`)
 
-- [Architecture Overview](CLAUDE.md) — System architecture and technical decisions
-- [State Management](docs/STATE_MANAGEMENT.md) — Extension state architecture
-- [Notion Integration](docs/NOTION_INTEGRATION.md) — Notion API integration details
-- [Auto-Sync Implementation](docs/AUTO_SYNC.md) — Automatic background synchronization
-- [Paddle Integration](docs/PADDLE_INTEGRATION.md) — Payment processing integration
-- [Description Cache](docs/DESCRIPTION_CACHE.md) — Caching strategy and implementation
-- [Internationalization](docs/INTERNATIONALIZATION.md) — Multi-language support plan
-- [Environment Usage](packages/extension/ENV_USAGE.md) — Environment variable configuration
-- [Testing Guide](tests/README.md) — Testing infrastructure and examples
-- [Build Optimization](BUILD_OPTIMIZATION.md) — Optimized build process for Chrome Web Store
-
-### **Operations & Deployment**
-
-- [Deployment Guide](DEPLOYMENT.md) — Production deployment (Vercel)
-- [Environment Setup](packages/server/ENVIRONMENT_SETUP.md) — Server environment configuration
+- Development workflow
+- Testing infrastructure
+- Build process
+- Deployment procedures
 
 ---
 
-## 🌟 Features Roadmap
+## 🔧 Technology Stack
 
-### Core Features ✅
+### **Extension**
+- Chrome Extension API (MV3)
+- React 18 + TypeScript
+- Vite (build tool)
+- Zustand (state management)
+- Tailwind CSS (styling)
 
-- [x] Bulk bookmark sync
-- [x] OAuth authentication
-- [x] Content extraction
-- [x] Error handling
+### **Server**
+- Node.js 20+
+- Express + TypeScript
+- Prisma ORM
+- PostgreSQL
+- JWT authentication
+- Notion SDK
+- Paddle SDK
 
-### Advanced Features 🔮
+### **Website**
+- Next.js 14
+- TypeScript
+- Tailwind CSS
 
-- [ ] AI-powered tagging (OpenAI integration)
-- [ ] AI-generated summaries
-- [ ] Custom tag templates
-- [ ] Folder-based syncing
-- [ ] Bulk edit operations
-- [ ] Export/import bookmarks
-- [ ] Multiple Notion databases
-- [ ] Browser bookmark folders mapping
+---
+
+## 📊 Project Status
+
+| Metric            | Status                    |
+|-------------------|---------------------------|
+| **Development**   | ✅ Production Ready       |
+| **Version**       | 1.0.8                     |
+| **Test Coverage** | 82% (185 tests)          |
+| **Grade**         | A- (Launch Ready)        |
 
 ---
 
@@ -320,74 +233,3 @@ const { t } = useTranslation();
 **Proprietary Software** — All rights reserved.
 
 This is a commercial project. The source code is not open source and may not be copied, modified, or distributed without explicit permission.
-
----
-
-## 🗺️ Development Roadmap
-
-### **Q4 2024** ✅
-
-- [x] Core sync functionality
-- [x] OAuth integration
-- [x] Content extraction
-- [x] Freemium model with Pro tier
-- [x] Paddle payment integration
-- [x] Auto-sync with catch-up strategy
-- [x] Comprehensive test infrastructure
-
-### **Q1 2025** 🚀
-
-- [ ] **Chrome Web Store listing** (Public launch)
-- [ ] **Internationalization (i18n)** (English, 简体中文, 日本語)
-- [ ] **Bookmark Favicon support** (Visual recognition)
-- [ ] **AI-powered tagging** (OpenAI integration)
-- [ ] **Smart summaries** (AI-generated content summaries)
-- [ ] User onboarding improvements
-- [ ] Performance optimization
-
-### **Q2 2025**
-
-- [ ] **Folder-to-database mapping** (Chrome folders → Notion DBs)
-- [ ] **Multi-database support** (Route bookmarks by rules)
-- [ ] **Bulk operations UI** (Edit/delete/move multiple bookmarks)
-- [ ] Enhanced error handling
-- [ ] Analytics dashboard (basic)
-
-### **Q3 2025**
-
-- [ ] **Custom tag templates** (User-defined tagging rules)
-- [ ] **Duplicate detection** (Smart merge suggestions)
-- [ ] **Export/import bookmarks** (Data portability)
-- [ ] Search enhancement (Full-text search)
-- [ ] Mobile companion app (iOS/Android) - Research phase
-
-### **Q4 2025**
-
-- [ ] Firefox extension port
-- [ ] Safari extension port
-- [ ] Team collaboration features (Shared workspaces)
-- [ ] Enterprise tier (SSO, admin controls)
-- [ ] Advanced analytics (Content insights)
-
----
-
-## 📊 Project Status
-
-| Metric               | Status                       |
-| -------------------- | ---------------------------- |
-| **Development**      | 🚀 Production Ready          |
-| **Version**          | 1.0.8 (Production)           |
-| **Test Coverage**    | 82% (185 tests, 152 passing) |
-| **Grade**            | A- (Launch Ready)            |
-| **Chrome Web Store** | Submission Ready             |
-| **License**          | Proprietary                  |
-| **Last Updated**     | December 25, 2025            |
-
-### Technical Highlights
-
-- ✅ **185 comprehensive tests** (82% pass rate, exceeds 60% target)
-- ✅ **Connection pool optimization** (handles 100+ bookmarks)
-- ✅ **Description caching** (30-day TTL, 80% cost reduction)
-- ✅ **Error monitoring** ($0/month via Vercel logs)
-- ✅ **Security audit** (OAuth flow, rate limiting)
-- ✅ **Production monitoring** (Structured logging, error tracking)

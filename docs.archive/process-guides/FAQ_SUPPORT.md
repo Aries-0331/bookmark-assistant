@@ -92,7 +92,7 @@ The extension uses **smart change detection**:
 
 Currently, there's no trial period. However:
 
-- Start with the generous **Free plan** (50 bookmarks/sync)
+- Start with the generous **Free plan** (500 bookmarks/sync)
 - Test all core features (manual sync, description extraction)
 - Upgrade to Pro anytime for auto-sync and unlimited bookmarks
 - 14-day money-back guarantee available
@@ -201,7 +201,7 @@ All payments are **PCI-DSS compliant** and secure.
    - If not listed, reconnect via extension
 
 4. **Check Plan Limits:**
-   - Free: 50 bookmarks/sync, 24h interval
+   - Free: 500 bookmarks/sync, 24h interval
    - If exceeded, upgrade to Pro or wait 24 hours
 
 5. **Check Chrome Version:**
@@ -258,8 +258,8 @@ Or manually access via:
 
 **Normal behavior:**
 
-- 50 bookmarks: ~30-60 seconds
-- 500 bookmarks (Pro): ~5-10 minutes
+- 500 bookmarks: ~5-10 minutes
+- 1000+ bookmarks (Pro): ~10-15 minutes
 - First sync is slower (generating descriptions)
 
 **If genuinely stuck:**
