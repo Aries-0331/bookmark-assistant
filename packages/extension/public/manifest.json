@@ -7,7 +7,7 @@
   "permissions": ["bookmarks", "storage", "identity", "alarms"],
   "host_permissions": [],
   "background": {
-    "service_worker": "src/background/index.ts",
+    "service_worker": "assets/background.js",
     "type": "module"
   },
   "action": {

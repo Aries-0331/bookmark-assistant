@@ -2,21 +2,23 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
-import webExtension from '@samrum/vite-plugin-web-extension';
-import manifestJson from './public/manifest.json';
-const manifest: any = manifestJson as any;
 
 export default defineConfig({
   plugins: [
     react(),
-    webExtension({ manifest }),
     // Custom plugin to handle Chrome extension build
     {
       name: 'chrome-extension-build',
       writeBundle() {
-        import('fs').then(({ existsSync, cpSync, copyFileSync }) => {
+        import('fs').then(({ existsSync, cpSync, copyFileSync, readFileSync, writeFileSync, readdirSync, renameSync }) => {
           import('path').then(({ resolve }) => {
             const distDir = 'dist';
+            // Copy manifest.json first
+            const manifestSrc = resolve('public/manifest.json');
+            const manifestDst = resolve(distDir, 'manifest.json');
+            if (existsSync(manifestSrc)) {
+              copyFileSync(manifestSrc, manifestDst);
+            }
             const optionsSrc = resolve(distDir, 'src/options/options.html');
             const optionsDst = resolve(distDir, 'options.html');
             if (existsSync(optionsSrc)) {
@@ -37,6 +39,27 @@ export default defineConfig({
             if (existsSync(localesDir)) {
               cpSync(localesDir, resolve(distDir, '_locales'), { recursive: true });
             }
+            // Rename background script to match manifest
+            const bgAssetsDir = resolve(distDir, 'assets');
+            const bgFiles = readdirSync(bgAssetsDir).filter(f => f.startsWith('background-'));
+            if (bgFiles.length > 0) {
+              const bgFile = bgFiles[0];
+              const bgSrc = resolve(bgAssetsDir, bgFile);
+              const bgDst = resolve(bgAssetsDir, 'background.js');
+              renameSync(bgSrc, bgDst);
+            }
+            // Verify manifest was copied correctly
+            try {
+              const manifestContent = readFileSync(manifestDst, 'utf-8');
+              const manifest = JSON.parse(manifestContent);
+              if (!manifest.default_locale) {
+                console.error('WARNING: default_locale missing in manifest, fixing...');
+                manifest.default_locale = 'en';
+                writeFileSync(manifestDst, JSON.stringify(manifest, null, 2));
+              }
+            } catch (e) {
+              console.error('Error reading/parsing manifest:', e);
+            }
           });
         });
       },
@@ -53,6 +76,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         options: 'src/options/options.html',
+        background: 'src/background/index.ts',
       },
     },
     copyPublicDir: true,
