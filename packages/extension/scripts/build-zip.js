@@ -124,8 +124,8 @@ async function createPublishZip() {
     }
   }
 
-  // Copy directories (assets, src/*)
-  const dirsToCopy = ['assets', 'src'];
+  // Copy directories (assets, src, _locales)
+  const dirsToCopy = ['assets', 'src', '_locales'];
   for (const dir of dirsToCopy) {
     const srcDir = path.join(distPath, dir);
     if (fs.existsSync(srcDir)) {
