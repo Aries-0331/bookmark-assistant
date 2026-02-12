@@ -136,6 +136,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         session_token,
         sync_in_progress,
         is_connecting,
+        is_refreshing_entitlements,
       } = await chrome.storage.local.get([
         'last_sync',
         'sync_interval_hours',
@@ -144,6 +145,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         'session_token',
         'sync_in_progress',
         'is_connecting',
+        'is_refreshing_entitlements',
       ]);
 
       // Load connection state
@@ -155,6 +157,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
       if (sync_in_progress) {
         set({ isSyncing: true });
+      }
+      if (is_refreshing_entitlements) {
+        set({ isRefreshingProfile: true });
       }
 
       // Load user info
@@ -196,6 +201,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   refreshEntitlements: async (forceRefresh = false) => {
     if (get().isRefreshingProfile && !forceRefresh) return;
     set({ isRefreshingProfile: true });
+    // Set storage state for cross-component sync
+    await chrome.storage.local.set({ is_refreshing_entitlements: true });
 
     try {
       // Check cache first unless force refresh
@@ -247,6 +254,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
     } finally {
       set({ isRefreshingProfile: false });
+      // Clear storage state for cross-component sync
+      await chrome.storage.local.set({ is_refreshing_entitlements: false });
     }
   },
   refreshConnection: async () => {
@@ -366,6 +375,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       if (changes['sync_in_progress']) {
         useAppStore.setState({ isSyncing: !!changes['sync_in_progress'].newValue });
+      }
+      if (changes['is_refreshing_entitlements']) {
+        useAppStore.setState({ isRefreshingProfile: !!changes['is_refreshing_entitlements'].newValue });
       }
       if (changes['user_id']) {
         const userId = changes['user_id'].newValue as string | undefined;

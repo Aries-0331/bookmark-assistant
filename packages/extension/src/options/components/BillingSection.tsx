@@ -66,10 +66,10 @@ const PLAN_FEATURES: Record<'free' | 'pro' | 'lifetime', FeatureItem[]> = {
 
 export function BillingSection() {
   const [isLifetime, setIsLifetime] = useState(false); // false = monthly, true = lifetime
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [nextBillingDate, setNextBillingDate] = useState<string | null>(null);
-  const { isPro, getPricing, userId, userEmail, refreshEntitlements, purchaseType } = useAppStore();
+  const [isCheckingOut, setIsCheckingOut] = useState(false); // Local state for checkout (UI-driven)
+  // Use store-driven state for sync and entitlements refresh
+  const { isPro, getPricing, userId, userEmail, refreshEntitlements, purchaseType, isSyncing, isRefreshingProfile } = useAppStore();
   const { lifetime: LIFETIME_PRICE } = getPricing();
   const { show: showToast } = useToast();
 
@@ -130,7 +130,7 @@ export function BillingSection() {
 
   const handleUpgrade = async () => {
     try {
-      setLoading(true);
+      setIsCheckingOut(true);
       if (!userId) {
         console.error('❌ User ID not found');
         alert('Please connect to Notion first before upgrading.');
@@ -147,7 +147,7 @@ export function BillingSection() {
       console.error('❌ Failed to open checkout:', error);
       alert('Failed to open checkout. Please try again.');
     } finally {
-      setLoading(false);
+      setIsCheckingOut(false);
     }
   };
 
@@ -163,7 +163,7 @@ export function BillingSection() {
 
       if (!confirmed) return;
 
-      setLoading(true);
+      // isSyncing state is managed by background via storage
       const res = await sendMessage({ type: Messages.CANCEL_SUBSCRIPTION });
 
       if (res.success) {
@@ -187,14 +187,13 @@ export function BillingSection() {
         variant: 'error',
         duration: 5000,
       });
-    } finally {
-      setLoading(false);
     }
+    // isSyncing state is managed by background via storage
   };
 
   const handleRefreshStatus = async () => {
     try {
-      setRefreshing(true);
+      // isRefreshingProfile is managed by refreshEntitlements via storage
       await refreshEntitlements(true); // Force refresh from server
       showToast({
         title: '✓ Status Refreshed',
@@ -210,9 +209,8 @@ export function BillingSection() {
         variant: 'error',
         duration: 3000,
       });
-    } finally {
-      setRefreshing(false);
     }
+    // isRefreshingProfile state is managed by background via storage
   };
 
   const handleRefund = () => {
@@ -260,12 +258,12 @@ export function BillingSection() {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleRefreshStatus}
-                disabled={refreshing}
+                disabled={isRefreshingProfile}
                 className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-amber-200 text-amber-700 text-xs font-medium hover:bg-amber-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Refresh subscription status"
               >
-                <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} />
-                {refreshing ? 'Refreshing...' : 'Refresh'}
+                <RefreshCw className={`w-3 h-3 ${isRefreshingProfile ? 'animate-spin' : ''}`} />
+                {isRefreshingProfile ? 'Refreshing...' : 'Refresh'}
               </button>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium border border-green-200">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -323,11 +321,11 @@ export function BillingSection() {
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <button
                   onClick={handleCancelSubscription}
-                  disabled={loading}
+                  disabled={isSyncing}
                   className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-red-300 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 hover:border-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <AlertCircle className="w-4 h-4" />
-                  {loading ? 'Cancelling...' : 'Cancel Subscription'}
+                  {isSyncing ? 'Cancelling...' : 'Cancel Subscription'}
                 </button>
 
                 <button
@@ -460,10 +458,10 @@ export function BillingSection() {
           <button
             className="w-full text-sm px-4 py-2 mb-4 rounded-lg bg-amber-600 text-white hover:bg-amber-700 shadow inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleUpgrade}
-            disabled={loading}
+            disabled={isCheckingOut}
           >
             <Crown className="w-4 h-4" />
-            {loading ? 'Loading...' : 'Upgrade to Pro'}
+            {isCheckingOut ? 'Loading...' : 'Upgrade to Pro'}
           </button>
 
           <ul className="space-y-2 text-sm">
