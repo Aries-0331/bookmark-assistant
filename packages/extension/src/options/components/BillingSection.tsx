@@ -163,7 +163,7 @@ export function BillingSection() {
 
       if (!confirmed) return;
 
-      // isSyncing state is managed by background via storage
+      // Loading state managed via storage sync - background drives state changes
       const res = await sendMessage({ type: Messages.CANCEL_SUBSCRIPTION });
 
       if (res.success) {
@@ -188,7 +188,7 @@ export function BillingSection() {
         duration: 5000,
       });
     }
-    // isSyncing state is managed by background via storage
+    // Loading state managed via storage sync - background drives state changes
   };
 
   const handleRefreshStatus = async () => {

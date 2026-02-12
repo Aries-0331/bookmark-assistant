@@ -199,10 +199,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   refreshEntitlements: async (forceRefresh = false) => {
-    if (get().isRefreshingProfile && !forceRefresh) return;
-    set({ isRefreshingProfile: true });
-    // Set storage state for cross-component sync
+    // Set storage FIRST to prevent race conditions with concurrent calls
     await chrome.storage.local.set({ is_refreshing_entitlements: true });
+    set({ isRefreshingProfile: true });
+
+    // Check after setting storage to prevent race conditions
+    if (get().isRefreshingProfile && !forceRefresh) return;
 
     try {
       // Check cache first unless force refresh
@@ -221,8 +223,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
         if (isCacheValid && typeof is_pro === 'boolean') {
           console.log('[Entitlements] Using cached Pro status:', is_pro);
-          set({ isPro: is_pro, purchaseType: purchase_type });
-          set({ isRefreshingProfile: false });
+          // Combine into single set() for performance
+          set({ isPro: is_pro, purchaseType: purchase_type, isRefreshingProfile: false });
           return;
         }
       }
