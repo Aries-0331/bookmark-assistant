@@ -118,11 +118,12 @@ export function validateConfig(): void {
   ];
 
   // Paddle is optional for development but required for production
+  // Note: Only monthly and lifetime plans exist (no yearly)
   const paddleVars = [
     'PADDLE_API_KEY',
     'PADDLE_WEBHOOK_SECRET',
     'PADDLE_PRO_MONTHLY_PRICE_ID',
-    'PADDLE_PRO_YEARLY_PRICE_ID',
+    'PADDLE_PRO_LIFETIME_PRICE_ID',
   ];
 
   const missing = requiredVars.filter((varName) => !process.env[varName]);
