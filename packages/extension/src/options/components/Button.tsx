@@ -34,13 +34,13 @@ export default function Button({
   const isDisabled = disabled || isSyncing || isConnecting;
 
   const variantStyles = {
-    primary: 'bg-gray-900 hover:bg-gray-700 focus-visible:ring-gray-900 text-white',
-    secondary: 'bg-gray-100 hover:bg-gray-200 focus-visible:ring-gray-500 text-gray-900',
-    destructive: 'bg-red-600 hover:bg-red-700 focus-visible:ring-red-600 text-white',
+    primary: 'bg-primary hover:bg-primary/90 text-primary-foreground',
+    secondary: 'bg-secondary hover:bg-secondary/80 text-secondary-foreground',
+    destructive: 'bg-destructive hover:bg-destructive/90 text-destructive-foreground',
   };
 
   const base =
-    'h-12 rounded-xl transition-colors font-medium text-base inline-flex items-center justify-center p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2';
+    'h-12 rounded-xl transition-colors font-medium text-base inline-flex items-center justify-center p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2';
 
   return (
     <button
