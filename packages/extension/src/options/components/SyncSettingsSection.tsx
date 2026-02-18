@@ -3,6 +3,7 @@ import { useAppStore, FREE_INTERVAL_HOURS, PRO_MIN_INTERVAL_HOURS } from '../sto
 import { SectionCard } from './SectionCard';
 import { useToast } from '../hook/useToast';
 import { RouteId } from '../router';
+import { Switch } from '../../components/ui/switch';
 
 export function SyncSettingsSection({ onNavigate }: { onNavigate: (to: RouteId) => void }) {
   const { show } = useToast();
@@ -61,23 +62,16 @@ export function SyncSettingsSection({ onNavigate }: { onNavigate: (to: RouteId) 
       <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200">
         <div className="flex items-center justify-between py-1">
           <div>
-            <div className="text-sm text-gray-900">Auto Sync</div>
-            <div className="text-xs text-gray-500">
+            <div className="text-sm text-foreground">Auto Sync</div>
+            <div className="text-xs text-muted-foreground">
               Automatically sync bookmarks in the background
             </div>
           </div>
-          <button
-            role="switch"
-            aria-checked={autoSync}
-            onClick={onToggleAuto}
-            className={`w-10 h-6 rounded-full p-0.5  flex items-center transition-colors ${autoSync ? 'bg-gray-900' : 'bg-gray-300'} ${!isPro ? 'opacity-50 cursor-not-allowed' : ''}`}
+          <Switch
+            checked={autoSync}
+            onCheckedChange={onToggleAuto}
             disabled={!isPro}
-            title={!isPro ? 'Upgrade to Pro to enable Auto Sync' : undefined}
-          >
-            <span
-              className={`block w-5 h-5 bg-white rounded-full transform transition-transform ${autoSync ? 'translate-x-4' : ''}`}
-            />
-          </button>
+          />
         </div>
 
         <div className="mt-3 max-w-xs">

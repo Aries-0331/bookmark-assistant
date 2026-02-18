@@ -1,49 +1,49 @@
-import { Card, CardBody } from "@/components/ui/card";
-import { SectionEyebrow } from "@/components/ui/SectionEyebrow";
-import { Zap, BookmarkPlus, RefreshCw, Shield, Clock, Database } from "lucide-react";
+import { Card, CardBody } from '@/components/ui/card';
+import { SectionEyebrow } from '@/components/ui/SectionEyebrow';
+import { Zap, BookmarkPlus, RefreshCw, Shield, Clock, Database } from 'lucide-react';
 
 const FEATURES = [
   {
-    title: "One-Click Sync",
-    desc: "Export all your bookmarks to Notion instantly with one click.",
+    title: 'One-Click Sync',
+    desc: 'Export all your bookmarks to Notion instantly with one click.',
     icon: Zap,
-    bg: "from-blue-50 to-indigo-50",
-    iconColor: "text-blue-600",
+    bg: 'from-blue-50 to-indigo-50',
+    iconColor: 'text-blue-600',
   },
   {
-    title: "Smart Descriptions",
-    desc: "Automatically extracts page descriptions with 90-92% accuracy.",
+    title: 'Smart Descriptions',
+    desc: 'Automatically extracts page descriptions with 90-92% accuracy.',
     icon: BookmarkPlus,
-    bg: "from-purple-50 to-pink-50",
-    iconColor: "text-purple-600",
+    bg: 'from-purple-50 to-pink-50',
+    iconColor: 'text-purple-600',
   },
   {
-    title: "Auto-Sync (Pro)",
-    desc: "Background sync every 6 hours to keep Notion always up-to-date.",
+    title: 'Auto-Sync (Pro)',
+    desc: 'Background sync every 6 hours to keep Notion always up-to-date.',
     icon: RefreshCw,
-    bg: "from-green-50 to-emerald-50",
-    iconColor: "text-green-600",
+    bg: 'from-green-50 to-emerald-50',
+    iconColor: 'text-green-600',
   },
   {
-    title: "Secure OAuth",
-    desc: "Bank-grade security with encrypted tokens, credentials never exposed.",
+    title: 'Secure OAuth',
+    desc: 'Bank-grade security with encrypted tokens, credentials never exposed.',
     icon: Shield,
-    bg: "from-amber-50 to-orange-50",
-    iconColor: "text-amber-600",
+    bg: 'from-amber-50 to-orange-50',
+    iconColor: 'text-amber-600',
   },
   {
-    title: "Change Detection",
-    desc: "Only syncs when bookmarks actually change, saving time and resources.",
+    title: 'Change Detection',
+    desc: 'Only syncs when bookmarks actually change, saving time and resources.',
     icon: Clock,
-    bg: "from-cyan-50 to-blue-50",
-    iconColor: "text-cyan-600",
+    bg: 'from-cyan-50 to-blue-50',
+    iconColor: 'text-cyan-600',
   },
   {
-    title: "Intelligent Caching",
-    desc: "Smart caching reduces redundant operations by 80% for faster syncs.",
+    title: 'Intelligent Caching',
+    desc: 'Smart caching reduces redundant operations by 80% for faster syncs.',
     icon: Database,
-    bg: "from-indigo-50 to-violet-50",
-    iconColor: "text-indigo-600",
+    bg: 'from-indigo-50 to-violet-50',
+    iconColor: 'text-indigo-600',
   },
 ];
 
@@ -53,7 +53,9 @@ export function Features() {
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center">
           <SectionEyebrow text="What You Get" color="blue" />
-          <h2 className="text-4xl font-medium text-gray-900 mb-4">Everything you need to organize</h2>
+          <h2 className="text-4xl font-medium text-gray-900 mb-4">
+            Everything you need to organize
+          </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-16">
             Powerful, practical features that fit your workflow without getting in the way.
           </p>
@@ -62,7 +64,9 @@ export function Features() {
           {FEATURES.map((f) => (
             <Card key={f.title} className="hover:shadow-lg transition-shadow h-full">
               <CardBody>
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${f.bg} mb-4 flex items-center justify-center`}>
+                <div
+                  className={`w-12 h-12 rounded-lg bg-gradient-to-br ${f.bg} mb-4 flex items-center justify-center`}
+                >
                   <f.icon className={`h-6 w-6 ${f.iconColor}`} />
                 </div>
                 <h3 className="text-xl text-gray-900 mb-2 font-medium">{f.title}</h3>

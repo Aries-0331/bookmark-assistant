@@ -8,7 +8,8 @@ import { useToast } from '../hook/useToast';
 
 export function ConnectionSection() {
   const { show } = useToast();
-  const { isConnecting, isConnected, isSyncing, setIsConnecting, lastSyncSummary } = useAppStore();
+  // isConnecting is synced from storage - background drives state, don't set directly
+  const { isConnecting, isConnected, isSyncing, lastSyncSummary } = useAppStore();
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
   // Show toast when sync summary changes
@@ -24,8 +25,8 @@ export function ConnectionSection() {
     }
   }, [lastSyncSummary, show]);
 
+  // isConnecting is synced from storage - background drives state, don't set directly
   const onConnect = async () => {
-    setIsConnecting(true);
     try {
       const res = await sendMessage({ type: Messages.NOTION_OAUTH });
       if (res.success) {
@@ -47,9 +48,8 @@ export function ConnectionSection() {
         title: 'Connection Failed',
         description: 'An error occurred while connecting to Notion.',
       });
-    } finally {
-      setIsConnecting(false);
     }
+    // isConnecting is synced from storage - background drives state
   };
   const handleDisconnectClick = () => {
     setShowDisconnectConfirm(true);

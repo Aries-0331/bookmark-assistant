@@ -10,9 +10,8 @@ export const PRO_MIN_INTERVAL_HOURS = 6; // 6 hours
 export const PRO_MIN_INTERVAL_MINUTES = Math.round(PRO_MIN_INTERVAL_HOURS * 60);
 
 // Pricing constants
-export const PRICE_MONTHLY_REGULAR_USD = 5; // Regular $/month
-export const PRICE_MONTHLY_EARLY_BIRD_USD = 2.5; // Early bird $/month
-export const PRICE_LIFETIME_USD = 30; // $ one-time purchase
+export const PRICE_MONTHLY_EARLY_BIRD_USD = 1.5; // Early bird $/month
+export const PRICE_LIFETIME_USD = 15; // $ one-time purchase
 
 export type AppState = {
   // Overview
@@ -136,6 +135,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         session_token,
         sync_in_progress,
         is_connecting,
+        is_refreshing_entitlements,
       } = await chrome.storage.local.get([
         'last_sync',
         'sync_interval_hours',
@@ -144,6 +144,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         'session_token',
         'sync_in_progress',
         'is_connecting',
+        'is_refreshing_entitlements',
       ]);
 
       // Load connection state
@@ -155,6 +156,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
       if (sync_in_progress) {
         set({ isSyncing: true });
+      }
+      if (is_refreshing_entitlements) {
+        set({ isRefreshingProfile: true });
       }
 
       // Load user info
@@ -194,8 +198,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   refreshEntitlements: async (forceRefresh = false) => {
-    if (get().isRefreshingProfile && !forceRefresh) return;
+    // Set storage FIRST to prevent race conditions with concurrent calls
+    await chrome.storage.local.set({ is_refreshing_entitlements: true });
     set({ isRefreshingProfile: true });
+
+    // Check after setting storage to prevent race conditions
+    if (get().isRefreshingProfile && !forceRefresh) return;
 
     try {
       // Check cache first unless force refresh
@@ -214,8 +222,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
         if (isCacheValid && typeof is_pro === 'boolean') {
           console.log('[Entitlements] Using cached Pro status:', is_pro);
-          set({ isPro: is_pro, purchaseType: purchase_type });
-          set({ isRefreshingProfile: false });
+          // Combine into single set() for performance
+          set({ isPro: is_pro, purchaseType: purchase_type, isRefreshingProfile: false });
           return;
         }
       }
@@ -247,6 +255,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
     } finally {
       set({ isRefreshingProfile: false });
+      // Clear storage state for cross-component sync
+      await chrome.storage.local.set({ is_refreshing_entitlements: false });
     }
   },
   refreshConnection: async () => {
@@ -366,6 +376,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       if (changes['sync_in_progress']) {
         useAppStore.setState({ isSyncing: !!changes['sync_in_progress'].newValue });
+      }
+      if (changes['is_refreshing_entitlements']) {
+        useAppStore.setState({
+          isRefreshingProfile: !!changes['is_refreshing_entitlements'].newValue,
+        });
       }
       if (changes['user_id']) {
         const userId = changes['user_id'].newValue as string | undefined;

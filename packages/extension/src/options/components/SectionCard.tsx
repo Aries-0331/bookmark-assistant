@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import logoUrl from '../../assets/logo.png';
 import { Crown, Mail } from 'lucide-react';
 import { RouteId } from '../router';
+import { Card } from '../../components/ui/card';
 
 export function SectionCard({
   id,
@@ -21,12 +22,9 @@ export function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <section
-      id={id}
-      className="scroll-mt-24 bg-white rounded-xl border border-gray-200 shadow-sm p-4"
-    >
+    <Card id={id} className="scroll-mt-24 p-4">
       <span className="flex items-center gap-2 mb-2">
-        <h2 className="text-base font-medium text-gray-900">{title}</h2>
+        <h2 className="text-base font-medium text-foreground">{title}</h2>
         {advanced && (
           <Crown
             className={`w-4 h-4 cursor-pointer ${isPro ? 'text-amber-500' : 'text-gray-500 hover:text-gray-300'}`}
@@ -34,9 +32,9 @@ export function SectionCard({
           />
         )}
       </span>
-      {description ? <p className="text-sm text-gray-500 mb-3">{description}</p> : null}
+      {description ? <p className="text-sm text-muted-foreground mb-3">{description}</p> : null}
       {children}
-    </section>
+    </Card>
   );
 }
 

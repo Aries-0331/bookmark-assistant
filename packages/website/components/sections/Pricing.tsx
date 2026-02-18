@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SectionEyebrow } from '@/components/ui/SectionEyebrow';
 import {
   Crown,
@@ -14,16 +14,86 @@ import {
   AlertCircle,
 } from 'lucide-react';
 
+// Fallback prices if API fails
+const FALLBACK_PRICING = {
+  monthly: 2.5,
+  lifetime: 30,
+  currencySymbol: '$',
+};
+
+interface PricingData {
+  monthly: number;
+  lifetime: number;
+}
+
+async function fetchPricing(): Promise<PricingData> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333';
+  const response = await fetch(`${apiUrl}/api/pricing`, {
+    cache: 'no-store',
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch pricing');
+  }
+  const data = await response.json();
+  return data.pricing;
+}
+
 export function Pricing() {
   const [billing, setBilling] = useState<'monthly' | 'lifetime'>('lifetime');
-  const pricing = {
-    monthly: 2.5,
-    lifetime: 30,
-    currencySymbol: '$',
-  };
+  const [pricing, setPricing] = useState<PricingData>(FALLBACK_PRICING);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchPricing()
+      .then((data) => {
+        setPricing(data);
+        setError(null);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch pricing:', err);
+        setError('Using offline pricing');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
 
   const displayPrice = billing === 'lifetime' ? pricing.lifetime : pricing.monthly;
   const priceLabel = billing === 'lifetime' ? 'one-time' : '/month';
+
+  // Show skeleton while loading
+  if (isLoading) {
+    return (
+      <section id="pricing" className="py-20 bg-gray-50">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="text-center">
+            <SectionEyebrow text="Plans & Pricing" color="amber" />
+            <h2 className="text-4xl font-medium text-gray-900 mb-4">Simple, transparent pricing</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-12">
+              Start free, upgrade when you need more power.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-[720px] mx-auto">
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-16 mb-4"></div>
+              <div className="h-8 bg-gray-200 rounded w-24 mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+            </div>
+            <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 animate-pulse">
+              <div className="h-6 bg-amber-200 rounded w-16 mb-4"></div>
+              <div className="h-8 bg-amber-200 rounded w-32 mb-4"></div>
+              <div className="h-4 bg-amber-200 rounded w-full mb-2"></div>
+              <div className="h-4 bg-amber-200 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-amber-200 rounded w-5/6"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="pricing" className="py-20 bg-gray-50">
@@ -73,7 +143,7 @@ export function Pricing() {
           <div className="rounded-2xl border border-gray-200 bg-white p-5 flex flex-col">
             <div className="text-lg font-semibold text-gray-900 mb-1">Free</div>
             <div className="flex items-center text-sm text-gray-500 mb-1">
-              {pricing.currencySymbol}0<span className="text-gray-400 ml-1">/ month</span>
+              $0<span className="text-gray-400 ml-1">/ month</span>
             </div>
             <div className="text-sm text-gray-600 mb-4">Basic bookmark syncing</div>
 
@@ -110,15 +180,7 @@ export function Pricing() {
               </span>
             </div>
             <div className="mb-3 flex items-center gap-2 flex-wrap">
-              {billing === 'monthly' && (
-                <span className="text-gray-400 line-through text-base">
-                  {pricing.currencySymbol}5
-                </span>
-              )}
-              <span className="text-gray-900 text-xl font-semibold">
-                {pricing.currencySymbol}
-                {displayPrice}
-              </span>
+              <span className="text-gray-900 text-xl font-semibold">${displayPrice}</span>
               <span className="text-gray-500 text-sm">{priceLabel}</span>
               <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-amber-100 border border-amber-200 rounded-md">
                 <Sparkles className="w-3 h-3 text-amber-600" />
@@ -128,77 +190,34 @@ export function Pricing() {
             <div className="text-sm text-gray-600 mb-4">Advanced features for power users</div>
 
             <ul className="space-y-2 text-sm">
-              {billing === 'lifetime' ? (
-                <>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Gift className="w-4 h-4 text-amber-600" />
-                    <span>Includes all future Pro updates</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <AlertCircle className="w-4 h-4 text-amber-600" />
-                    <span>Limited to first 500 users</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Zap className="w-4 h-4 text-amber-600" />
-                    <span>Unlimited bookmarks per sync</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <RefreshCw className="w-4 h-4 text-amber-600" />
-                    <span>Set & forget auto-sync</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Timer className="w-4 h-4 text-amber-600" />
-                    <span>6-hour minimum interval</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Sparkles className="w-4 h-4 text-amber-600" />
-                    <span>Smart fingerprint deduplication</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Tags className="w-4 h-4 text-amber-600" />
-                    <span>AI tagging (coming Q1 2025)</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <FileText className="w-4 h-4 text-amber-600" />
-                    <span>AI summaries (coming Q1 2025)</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Crown className="w-4 h-4 text-amber-600" />
-                    <span>Priority support</span>
-                  </li>
-                </>
-              ) : (
-                <>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Zap className="w-4 h-4 text-amber-600" />
-                    <span>Unlimited bookmarks per sync</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <RefreshCw className="w-4 h-4 text-amber-600" />
-                    <span>Set & forget auto-sync</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Timer className="w-4 h-4 text-amber-600" />
-                    <span>6-hour minimum interval</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Sparkles className="w-4 h-4 text-amber-600" />
-                    <span>Smart fingerprint deduplication</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Tags className="w-4 h-4 text-amber-600" />
-                    <span>AI tagging (coming Q1 2025)</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <FileText className="w-4 h-4 text-amber-600" />
-                    <span>AI summaries (coming Q1 2025)</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Crown className="w-4 h-4 text-amber-600" />
-                    <span>Priority support</span>
-                  </li>
-                </>
-              )}
+              <li className="flex items-center gap-2 text-gray-900">
+                <Zap className="w-4 h-4 text-amber-600" />
+                <span>Unlimited bookmarks per sync</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-900">
+                <RefreshCw className="w-4 h-4 text-amber-600" />
+                <span>Set & forget auto-sync</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-900">
+                <Timer className="w-4 h-4 text-amber-600" />
+                <span>6-hour minimum interval</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-900">
+                <Sparkles className="w-4 h-4 text-amber-600" />
+                <span>Smart fingerprint deduplication</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-900">
+                <Tags className="w-4 h-4 text-amber-600" />
+                <span>AI tagging (coming Q1 2025)</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-900">
+                <FileText className="w-4 h-4 text-amber-600" />
+                <span>AI summaries (coming Q1 2025)</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-900">
+                <Crown className="w-4 h-4 text-amber-600" />
+                <span>Priority support</span>
+              </li>
             </ul>
           </div>
         </div>
