@@ -143,7 +143,7 @@ export function Pricing() {
           <div className="rounded-2xl border border-gray-200 bg-white p-5 flex flex-col">
             <div className="text-lg font-semibold text-gray-900 mb-1">Free</div>
             <div className="flex items-center text-sm text-gray-500 mb-1">
-              {$}0<span className="text-gray-400 ml-1">/ month</span>
+              $0<span className="text-gray-400 ml-1">/ month</span>
             </div>
             <div className="text-sm text-gray-600 mb-4">Basic bookmark syncing</div>
 
@@ -180,15 +180,7 @@ export function Pricing() {
               </span>
             </div>
             <div className="mb-3 flex items-center gap-2 flex-wrap">
-              {billing === 'monthly' && (
-                <span className="text-gray-400 line-through text-base">
-                  {$}5
-                </span>
-              )}
-              <span className="text-gray-900 text-xl font-semibold">
-                {$}
-                {displayPrice}
-              </span>
+              <span className="text-gray-900 text-xl font-semibold">${displayPrice}</span>
               <span className="text-gray-500 text-sm">{priceLabel}</span>
               <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-amber-100 border border-amber-200 rounded-md">
                 <Sparkles className="w-3 h-3 text-amber-600" />
@@ -198,77 +190,34 @@ export function Pricing() {
             <div className="text-sm text-gray-600 mb-4">Advanced features for power users</div>
 
             <ul className="space-y-2 text-sm">
-              {billing === 'lifetime' ? (
-                <>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Gift className="w-4 h-4 text-amber-600" />
-                    <span>Includes all future Pro updates</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <AlertCircle className="w-4 h-4 text-amber-600" />
-                    <span>Limited to first 500 users</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Zap className="w-4 h-4 text-amber-600" />
-                    <span>Unlimited bookmarks per sync</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <RefreshCw className="w-4 h-4 text-amber-600" />
-                    <span>Set & forget auto-sync</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Timer className="w-4 h-4 text-amber-600" />
-                    <span>6-hour minimum interval</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Sparkles className="w-4 h-4 text-amber-600" />
-                    <span>Smart fingerprint deduplication</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Tags className="w-4 h-4 text-amber-600" />
-                    <span>AI tagging (coming Q1 2025)</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <FileText className="w-4 h-4 text-amber-600" />
-                    <span>AI summaries (coming Q1 2025)</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Crown className="w-4 h-4 text-amber-600" />
-                    <span>Priority support</span>
-                  </li>
-                </>
-              ) : (
-                <>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Zap className="w-4 h-4 text-amber-600" />
-                    <span>Unlimited bookmarks per sync</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <RefreshCw className="w-4 h-4 text-amber-600" />
-                    <span>Set & forget auto-sync</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Timer className="w-4 h-4 text-amber-600" />
-                    <span>6-hour minimum interval</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Sparkles className="w-4 h-4 text-amber-600" />
-                    <span>Smart fingerprint deduplication</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Tags className="w-4 h-4 text-amber-600" />
-                    <span>AI tagging (coming Q1 2025)</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <FileText className="w-4 h-4 text-amber-600" />
-                    <span>AI summaries (coming Q1 2025)</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-900">
-                    <Crown className="w-4 h-4 text-amber-600" />
-                    <span>Priority support</span>
-                  </li>
-                </>
-              )}
+              <li className="flex items-center gap-2 text-gray-900">
+                <Zap className="w-4 h-4 text-amber-600" />
+                <span>Unlimited bookmarks per sync</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-900">
+                <RefreshCw className="w-4 h-4 text-amber-600" />
+                <span>Set & forget auto-sync</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-900">
+                <Timer className="w-4 h-4 text-amber-600" />
+                <span>6-hour minimum interval</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-900">
+                <Sparkles className="w-4 h-4 text-amber-600" />
+                <span>Smart fingerprint deduplication</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-900">
+                <Tags className="w-4 h-4 text-amber-600" />
+                <span>AI tagging (coming Q1 2025)</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-900">
+                <FileText className="w-4 h-4 text-amber-600" />
+                <span>AI summaries (coming Q1 2025)</span>
+              </li>
+              <li className="flex items-center gap-2 text-gray-900">
+                <Crown className="w-4 h-4 text-amber-600" />
+                <span>Priority support</span>
+              </li>
             </ul>
           </div>
         </div>

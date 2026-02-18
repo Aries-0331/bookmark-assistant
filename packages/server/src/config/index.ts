@@ -51,7 +51,7 @@ export const config = {
     `chrome-extension://${process.env.ALLOWED_EXTENSION_ID}`,
     'http://localhost:3000', // Next.js website dev server
     'http://localhost:5173', // Vite extension dev server
-    'http://localhost:3006', // Alternative Next.js port
+    'http://localhost:3001', // Alternative Next.js port
     // Production website domains (comma-separated in env var)
     ...(process.env.WEBSITE_URL?.split(',').map((url) => url.trim()) || []),
   ],
@@ -102,7 +102,7 @@ export const config = {
     webhookSecret: process.env.PADDLE_WEBHOOK_SECRET || '',
     priceIds: {
       proMonthly: process.env.PADDLE_PRO_MONTHLY_PRICE_ID || '',
-      proLifetime: process.env.PADDLE_PRO_LIFETIME_PRICE_ID || '', // Previously YEARLY
+      proLifetime: process.env.PADDLE_PRO_LIFETIME_PRICE_ID || '',
     },
   },
 } as const;

@@ -14,8 +14,6 @@ import {
   FileText,
   MousePointerClick,
   RefreshCw,
-  Infinity as InfiniteIcon,
-  Gift,
   AlertCircle,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -34,7 +32,7 @@ type FeatureItem = {
   text: string;
 };
 
-const PLAN_FEATURES: Record<'free' | 'pro' | 'lifetime', FeatureItem[]> = {
+const PLAN_FEATURES: Record<'free' | 'pro', FeatureItem[]> = {
   free: [
     { icon: BookmarkIcon, text: '500 bookmarks per sync' },
     { icon: MousePointerClick, text: 'Manual sync only' },
@@ -50,18 +48,6 @@ const PLAN_FEATURES: Record<'free' | 'pro' | 'lifetime', FeatureItem[]> = {
     { icon: FileText, text: 'AI summaries (coming Q1 2025)' },
     { icon: Crown, text: 'Priority support' },
   ],
-  lifetime: [
-    { icon: InfiniteIcon, text: 'Pay once, keep forever' },
-    { icon: Gift, text: 'Includes all future Pro updates' },
-    { icon: AlertCircle, text: 'Limited to first 500 users' },
-    { icon: Zap, text: 'Unlimited bookmarks per sync' },
-    { icon: RefreshCw, text: 'Set & forget auto-sync' },
-    { icon: Timer, text: '6-hour minimum interval' },
-    { icon: Sparkles, text: 'Smart fingerprint deduplication' },
-    { icon: Tags, text: 'AI tagging (coming Q1 2025)' },
-    { icon: FileText, text: 'AI summaries (coming Q1 2025)' },
-    { icon: Crown, text: 'Priority support' },
-  ],
 };
 
 export function BillingSection() {
@@ -69,8 +55,17 @@ export function BillingSection() {
   const [nextBillingDate, setNextBillingDate] = useState<string | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false); // Local state for checkout (UI-driven)
   // Use store-driven state for sync and entitlements refresh
-  const { isPro, getPricing, userId, userEmail, refreshEntitlements, purchaseType, isSyncing, isRefreshingProfile } = useAppStore();
-  const { lifetime: LIFETIME_PRICE } = getPricing();
+  const {
+    isPro,
+    getPricing,
+    userId,
+    userEmail,
+    refreshEntitlements,
+    purchaseType,
+    isSyncing,
+    isRefreshingProfile,
+  } = useAppStore();
+  const { monthly, lifetime: LIFETIME_PRICE } = getPricing();
   const { show: showToast } = useToast();
 
   // Check for upgrade success in URL and refresh entitlements
@@ -442,8 +437,9 @@ export function BillingSection() {
               </>
             ) : (
               <>
-                <span className="text-gray-400 line-through text-base">{formatCurrency(5)}</span>
-                <span className="text-gray-900 text-xl font-semibold">{formatCurrency(2.50)}</span>
+                <span className="text-gray-900 text-xl font-semibold">
+                  {formatCurrency(monthly)}
+                </span>
                 <span className="text-gray-500 text-sm">/ month</span>
               </>
             )}
@@ -465,7 +461,7 @@ export function BillingSection() {
           </button>
 
           <ul className="space-y-2 text-sm">
-            {PLAN_FEATURES[isLifetime ? 'lifetime' : 'pro'].map((f, i) => (
+            {PLAN_FEATURES.pro.map((f, i) => (
               <li key={i} className="flex items-center gap-2 text-gray-900">
                 <f.icon className="w-4 h-4 text-amber-600" />
                 <span>{f.text}</span>
