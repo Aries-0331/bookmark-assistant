@@ -49,10 +49,7 @@ export const config = {
   // Parse WEBSITE_URL (comma-separated) into array for CORS origins
   allowedOrigins: [
     `chrome-extension://${process.env.ALLOWED_EXTENSION_ID}`,
-    'http://localhost:3000', // Next.js website dev server
-    'http://localhost:5173', // Vite extension dev server
-    'http://localhost:3001', // Alternative Next.js port
-    // Production website domains (comma-separated in env var)
+    'http://localhost:3001',
     ...(process.env.WEBSITE_URL?.split(',').map((url) => url.trim()) || []),
   ],
 

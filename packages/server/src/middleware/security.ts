@@ -24,7 +24,7 @@ function isOriginAllowed(origin: string, allowedOrigins: readonly string[]): boo
         .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Escape special regex chars
         .replace(/\\\*\\\*/g, '.*') // ** -> .*
         .replace(/\\\*/g, '[a-zA-Z0-9-]+'); // * -> [a-zA-Z0-9-]+
-      
+
       const regex = new RegExp(`^${regexPattern}$`);
       if (regex.test(origin)) return true;
     }
@@ -41,10 +41,10 @@ export const corsMiddleware = cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
-    
+
     // Normalize origin
     const isChromeExt = origin.startsWith('chrome-extension://');
-    
+
     // Check if origin is in allowed list (supports wildcards)
     const allowed = isOriginAllowed(origin, config.allowedOrigins);
 
