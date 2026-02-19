@@ -27,7 +27,7 @@ interface PricingData {
 }
 
 async function fetchPricing(): Promise<PricingData> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://bookmark-assistant-server.vercel.app';
   const response = await fetch(`${apiUrl}/api/pricing`, {
     cache: 'no-store',
   });
