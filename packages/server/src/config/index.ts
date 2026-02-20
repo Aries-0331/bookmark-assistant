@@ -47,11 +47,27 @@ export const config = {
 
   // CORS Configuration
   // Parse WEBSITE_URL (comma-separated) into array for CORS origins
-  allowedOrigins: [
-    `chrome-extension://${process.env.ALLOWED_EXTENSION_ID}`,
-    'http://localhost:3001',
-    ...(process.env.WEBSITE_URL?.split(',').map((url) => url.trim()) || []),
-  ],
+  // Automatically includes both www and non-www variants
+  allowedOrigins: (() => {
+    const origins = [
+      `chrome-extension://${process.env.ALLOWED_EXTENSION_ID}`,
+      'http://localhost:3001', // Alternative Next.js port
+    ];
+
+    // Add website URLs (both www and non-www variants)
+    const websiteUrls = process.env.WEBSITE_URL?.split(',').map((url) => url.trim()) || [];
+    for (const url of websiteUrls) {
+      origins.push(url);
+      // Add www variant if not already present
+      if (url.startsWith('https://') && !url.includes('www.')) {
+        origins.push(url.replace('https://', 'https://www.'));
+      } else if (url.startsWith('http://') && !url.includes('www.')) {
+        origins.push(url.replace('http://', 'http://www.'));
+      }
+    }
+
+    return origins;
+  })(),
 
   // Session Configuration
   session: {
