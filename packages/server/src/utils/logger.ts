@@ -4,12 +4,28 @@ import fs from 'fs';
 import path from 'path';
 import { config } from '../config';
 
-const LOG_DIR = process.env.LOG_DIR || '/tmp';
-const MAX_SIZE = Number(process.env.LOG_MAX_SIZE) || 5 * 1024 * 1024; // 5MB default
-const MAX_FILES = Number(process.env.LOG_MAX_FILES) || 3;
+// Use config values (with fallback to env vars for backward compatibility)
+const LOG_DIR = config.logDir || process.env.LOG_DIR || '/tmp';
+const MAX_SIZE = config.logMaxSize || Number(process.env.LOG_MAX_SIZE) || 5 * 1024 * 1024;
+const MAX_FILES = config.logMaxFiles || Number(process.env.LOG_MAX_FILES) || 3;
 
 // Check if we're in a serverless environment (Vercel)
 const isServerless = !!process.env.VERCEL;
+
+/**
+ * Sanitize log input to prevent log injection attacks
+ * Escapes control characters that could create fake log entries
+ */
+function sanitizeLogInput(str: string): string {
+  return str.replace(/[\r\n\t]/g, (c) => {
+    const escapeMap: Record<string, string> = {
+      '\r': '\\r',
+      '\n': '\\n',
+      '\t': '\\t',
+    };
+    return escapeMap[c] || c;
+  });
+}
 
 class CircularFileLogger {
   private logFile: string;
@@ -79,8 +95,14 @@ class CircularFileLogger {
 
   write(level: string, message: string, ...args: any[]) {
     const timestamp = new Date().toISOString();
-    const data = args.length ? ` ${JSON.stringify(args)}` : '';
-    const logLine = `[${timestamp}] [${level}] ${message}${data}`;
+    // Sanitize message and args to prevent log injection
+    const sanitizedMessage = sanitizeLogInput(message);
+    const sanitizedArgs = args.map((arg) => {
+      if (typeof arg === 'string') return sanitizeLogInput(arg);
+      return arg;
+    });
+    const data = sanitizedArgs.length ? ` ${JSON.stringify(sanitizedArgs)}` : '';
+    const logLine = `[${timestamp}] [${level}] ${sanitizedMessage}${data}`;
 
     // In serverless production: use console.log (goes to Vercel logs)
     // In development: write to file + console

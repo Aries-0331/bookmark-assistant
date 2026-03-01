@@ -3,30 +3,27 @@
 import { AuditLogEntry, BookmarkItem } from '../types';
 import { randomUUID } from 'crypto';
 import { config } from '../config';
+import { logger } from './logger';
 
 // Re-export logger
 export { logger } from './logger';
 
 /**
- * Debug logging utility - only outputs when DEBUG=true
+ * Debug logging utility - delegates to logger
+ * @deprecated Use logger.debug() instead
  */
 export const debugLog = (message: string, ...args: any[]): void => {
-  if (config.debug) {
-    console.log(`[DEBUG] ${new Date().toISOString()} ${message}`, ...args);
-  }
+  // Delegate to logger - kept for backward compatibility
+  logger.debug(message, ...args);
 };
 
 /**
  * Audit logging utility for security and debugging
+ * Writes to logger for persistence
  */
 export const auditLog = (action: string, userId: string, details: any = {}): void => {
-  const timestamp = new Date().toISOString();
-  const _logEntry: AuditLogEntry = {
-    timestamp,
-    action,
-    userId,
-    details,
-  };
+  // Log audit events using the logger for persistence
+  logger.info(`[AUDIT] ${action}`, { userId, ...details });
 };
 
 /**
