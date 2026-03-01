@@ -2,6 +2,19 @@
 
 import { AuditLogEntry, BookmarkItem } from '../types';
 import { randomUUID } from 'crypto';
+import { config } from '../config';
+
+// Re-export logger
+export { logger } from './logger';
+
+/**
+ * Debug logging utility - only outputs when DEBUG=true
+ */
+export const debugLog = (message: string, ...args: any[]): void => {
+  if (config.debug) {
+    console.log(`[DEBUG] ${new Date().toISOString()} ${message}`, ...args);
+  }
+};
 
 /**
  * Audit logging utility for security and debugging

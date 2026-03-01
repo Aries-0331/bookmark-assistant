@@ -14,19 +14,22 @@ import {
   notFoundHandler,
   securityHeaders,
 } from './middleware';
-import { auditLog } from './utils';
+import { auditLog, logger } from './utils';
 import { scheduleCleanupJob } from './jobs/cache-cleanup';
 
 // Validate configuration before starting
 try {
   validateConfig();
 } catch (error) {
-  console.error('❌ Configuration validation failed:', error);
+  logger.error('Configuration validation failed:', error);
   process.exit(1);
 }
 
 const app: import('express').Application = express();
 const PORT = config.port;
+
+// Trust proxy for accurate IP detection behind Vercel
+app.set('trust proxy', 1);
 
 // 🛡️ Security middleware
 app.use(helmet());
@@ -54,21 +57,21 @@ app.use('*', notFoundHandler);
 
 // Graceful shutdown handling
 process.on('SIGTERM', () => {
-  console.log('🛑 SIGTERM received, shutting down gracefully...');
+  logger.info('SIGTERM received, shutting down gracefully...');
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
-  console.log('🛑 SIGINT received, shutting down gracefully...');
+  logger.info('SIGINT received, shutting down gracefully...');
   process.exit(0);
 });
 
 // 🎯 Start server (only when not running on Vercel serverless)
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`🚀 Bookmark Notion Sync Server running on port ${PORT}`);
-    console.log(`🔐 Environment: ${config.nodeEnv}`);
-    console.log(`🎯 Health check: http://localhost:${PORT}/health`);
+    logger.info(`Bookmark Notion Sync Server running on port ${PORT}`);
+    logger.info(`Environment: ${config.nodeEnv}`);
+    logger.info(`Log file: ${process.env.LOG_DIR || '/tmp'}/server-${new Date().toISOString().split('T')[0]}.log`);
 
     // Schedule cache cleanup job
     scheduleCleanupJob();

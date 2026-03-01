@@ -13,6 +13,13 @@ export const config = {
   // Server Configuration
   port: process.env.PORT || 3333,
   nodeEnv: process.env.NODE_ENV || 'development',
+  // Debug mode for verbose logging
+  debug: process.env.DEBUG === 'true',
+
+  // Logging Configuration
+  logDir: process.env.LOG_DIR || '/tmp',
+  logMaxSize: Number(process.env.LOG_MAX_SIZE) || 5 * 1024 * 1024,
+  logMaxFiles: Number(process.env.LOG_MAX_FILES) || 3,
   // Edition (controls entitlements). Accepts 'pro' to enable Pro features; defaults to 'open-source'
   isPro: process.env.isPro === 'true',
 

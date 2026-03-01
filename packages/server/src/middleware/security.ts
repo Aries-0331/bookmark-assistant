@@ -89,6 +89,8 @@ export const corsMiddleware = cors({
 export const authRateLimit: RateLimitRequestHandler = rateLimit({
   windowMs: config.rateLimits.auth.windowMs,
   max: config.rateLimits.auth.max,
+  // @ts-expect-error - trustProxy is supported in express-rate-limit v7
+  trustProxy: 1,
   message: {
     error: 'Too Many Requests',
     message: 'Too many authentication attempts, please try again later.',
@@ -118,6 +120,8 @@ export const authRateLimit: RateLimitRequestHandler = rateLimit({
 export const apiRateLimit: RateLimitRequestHandler = rateLimit({
   windowMs: config.rateLimits.api.windowMs,
   max: config.rateLimits.api.max,
+  // @ts-expect-error - trustProxy is supported in express-rate-limit v7
+  trustProxy: 1,
   message: {
     error: 'Too Many Requests',
     message: 'Too many API requests, please try again later.',
@@ -151,6 +155,8 @@ export const createRateLimit: (
   return rateLimit({
     windowMs,
     max,
+    // @ts-expect-error - trustProxy is supported in express-rate-limit v7
+    trustProxy: 1,
     message: {
       error: 'Too Many Requests',
       message,
