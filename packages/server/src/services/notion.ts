@@ -3,6 +3,7 @@
 import { Client, APIResponseError } from '@notionhq/client';
 import { config } from '../config';
 import { BookmarkItem } from '../types';
+import { isValidUrl } from '../utils';
 
 /**
  * Property mapping configuration
@@ -707,13 +708,35 @@ export class NotionService {
         for (const page of results) {
           const properties = page.properties || {};
 
-          // Extract URL
+          // Debug: log property types found in first few pages
+          if (pageCount <= 1 && config.debug) {
+            const propTypes = Object.entries(properties).map(([name, def]: [string, any]) => ({
+              name,
+              type: def?.type,
+            }));
+            console.debug('[Notion] Property types found:', propTypes);
+          }
+
+          // Extract URL - check both url type and rich_text for valid URLs
           let urlValue: string | null = null;
           for (const [propName, propDef] of Object.entries(properties)) {
             const def = propDef as any;
+            // First try native url type
             if (def?.type === 'url' && def?.url) {
               urlValue = def.url;
               break;
+            }
+            // Fallback: check rich_text for valid URLs
+            // Some Notion databases store URLs as text instead of url type
+            if (def?.type === 'rich_text' && Array.isArray(def?.rich_text)) {
+              const text = def.rich_text
+                .map((t: any) => t?.plain_text || '')
+                .join('')
+                .trim();
+              if (isValidUrl(text)) {
+                urlValue = text;
+                break;
+              }
             }
           }
           if (urlValue) {

@@ -7,6 +7,30 @@ import { auditLog } from '../utils';
 
 import type { RequestHandler as RateLimitRequestHandler } from 'express';
 
+// Pre-compiled regex cache to avoid ReDoS and improve performance
+const regexCache = new Map<string, RegExp>();
+
+/**
+ * Get or create a compiled regex for the given wildcard pattern
+ * Uses [^.]+ instead of .* to prevent catastrophic backtracking
+ */
+function getCompiledRegex(pattern: string): RegExp {
+  if (regexCache.has(pattern)) {
+    return regexCache.get(pattern)!;
+  }
+
+  // Convert wildcard pattern to regex
+  // *.example.com -> regex: ^[^.]+\.example\.com$
+  const regexPattern = pattern
+    .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Escape special regex chars
+    .replace(/\\\*\\\*/g, '[^.]*') // ** -> [^.]* (zero or more, but not greedy)
+    .replace(/\\\*/g, '[^.]+'); // * -> [^.]+ (one or more, not greedy)
+
+  const regex = new RegExp(`^${regexPattern}$`);
+  regexCache.set(pattern, regex);
+  return regex;
+}
+
 /**
  * Check if origin is allowed based on allowed origins list
  * Supports exact matches and wildcard patterns like *.vercel.app
@@ -17,15 +41,8 @@ function isOriginAllowed(origin: string, allowedOrigins: readonly string[]): boo
 
   // Wildcard pattern matching (e.g., *.vercel.app)
   for (const pattern of allowedOrigins) {
-    // Convert wildcard pattern to regex
-    // *.example.com -> regex: ^.*\.example\.com$
     if (pattern.includes('*')) {
-      const regexPattern = pattern
-        .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Escape special regex chars
-        .replace(/\\\*\\\*/g, '.*') // ** -> .*
-        .replace(/\\\*/g, '[a-zA-Z0-9-]+'); // * -> [a-zA-Z0-9-]+
-
-      const regex = new RegExp(`^${regexPattern}$`);
+      const regex = getCompiledRegex(pattern);
       if (regex.test(origin)) return true;
     }
   }
@@ -89,6 +106,8 @@ export const corsMiddleware = cors({
 export const authRateLimit: RateLimitRequestHandler = rateLimit({
   windowMs: config.rateLimits.auth.windowMs,
   max: config.rateLimits.auth.max,
+  // @ts-expect-error - trustProxy is supported in express-rate-limit v7
+  trustProxy: 1,
   message: {
     error: 'Too Many Requests',
     message: 'Too many authentication attempts, please try again later.',
@@ -118,6 +137,8 @@ export const authRateLimit: RateLimitRequestHandler = rateLimit({
 export const apiRateLimit: RateLimitRequestHandler = rateLimit({
   windowMs: config.rateLimits.api.windowMs,
   max: config.rateLimits.api.max,
+  // @ts-expect-error - trustProxy is supported in express-rate-limit v7
+  trustProxy: 1,
   message: {
     error: 'Too Many Requests',
     message: 'Too many API requests, please try again later.',
@@ -151,6 +172,8 @@ export const createRateLimit: (
   return rateLimit({
     windowMs,
     max,
+    // @ts-expect-error - trustProxy is supported in express-rate-limit v7
+    trustProxy: 1,
     message: {
       error: 'Too Many Requests',
       message,
