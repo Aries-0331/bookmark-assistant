@@ -161,14 +161,19 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ isRefreshingProfile: true });
       }
 
+      // Load cached is_pro and purchase_type for immediate display
+      // Server will still be queried to verify, but user sees cached value first
+      const { is_pro, purchase_type } = await chrome.storage.local.get(['is_pro', 'purchase_type']);
+      if (typeof is_pro === 'boolean') {
+        set({
+          isPro: is_pro,
+          purchaseType: purchase_type as 'monthly' | 'lifetime' | undefined,
+        });
+      }
+
       // Load user info
       if (user_id) set({ userId: user_id });
       if (user_email) set({ userEmail: user_email });
-
-      // NOTE: is_pro is no longer loaded from localStorage as truth
-      // Pro status is determined by server response only
-      // See: refreshEntitlements() which fetches from server
-      // Users CANNOT bypass payment by modifying localStorage
 
       const interval = Number(sync_interval_hours);
       const minIntervalHours = FREE_INTERVAL_HOURS;
@@ -214,8 +219,8 @@ export const useAppStore = create<AppState>((set, get) => ({
           'entitlements_cached_at',
         ]);
 
-        // Use cache if less than 5 minutes old
-        const CACHE_TTL_MS = 5 * 60 * 1000;
+        // Use cache if less than 30 minutes old
+        const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
         const now = Date.now();
         const cachedAt = typeof entitlements_cached_at === 'number' ? entitlements_cached_at : 0;
         const isCacheValid = now - cachedAt < CACHE_TTL_MS;
