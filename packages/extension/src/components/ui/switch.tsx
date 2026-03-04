@@ -12,15 +12,16 @@ const Switch = React.forwardRef<
       "peer inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input",
       className
     )}
-    style={{ width: '36px', height: '20px' }}
+    style={{ width: '2.25rem', height: '1.25rem', minWidth: '2.25rem' }}
     {...props}
     ref={ref}
+    type="button"
   >
     <SwitchPrimitives.Thumb
       className={cn(
         "pointer-events-none block rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0"
       )}
-      style={{ width: '16px', height: '16px' }}
+      style={{ width: '1rem', height: '1rem' }}
     />
   </SwitchPrimitives.Root>
 ))
