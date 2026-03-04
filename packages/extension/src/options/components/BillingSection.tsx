@@ -10,8 +10,6 @@ import {
   Calendar,
   User,
   Timer,
-  Tags,
-  FileText,
   MousePointerClick,
   RefreshCw,
   AlertCircle,
@@ -44,8 +42,6 @@ const PLAN_FEATURES: Record<'free' | 'pro', FeatureItem[]> = {
     { icon: RefreshCw, text: 'Set & forget auto-sync' },
     { icon: Timer, text: '6-hour minimum interval' },
     { icon: Sparkles, text: 'Smart fingerprint deduplication' },
-    { icon: Tags, text: 'AI tagging (coming Q1 2025)' },
-    { icon: FileText, text: 'AI summaries (coming Q1 2025)' },
     { icon: Crown, text: 'Priority support' },
   ],
 };
@@ -85,7 +81,7 @@ export function BillingSection() {
 
       // Refresh entitlements with retries to handle webhook latency
       const checkEntitlements = async (retries = 3, delay = 2000) => {
-        await refreshEntitlements();
+        await refreshEntitlements(true); // Force refresh to bypass cache after payment
         const currentIsPro = useAppStore.getState().isPro;
 
         if (!currentIsPro && retries > 0) {
