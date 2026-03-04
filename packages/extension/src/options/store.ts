@@ -157,8 +157,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (sync_in_progress) {
         set({ isSyncing: true });
       }
+      // Clear any stale refreshing state from previous page loads/crashes
       if (is_refreshing_entitlements) {
-        set({ isRefreshingProfile: true });
+        console.log('[Init] Clearing stale is_refreshing_entitlements state');
+        await chrome.storage.local.set({ is_refreshing_entitlements: false });
       }
 
       // Load cached is_pro and purchase_type for immediate display
