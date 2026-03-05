@@ -34,16 +34,16 @@ type FeatureItem = {
 const PLAN_FEATURES: Record<'free' | 'pro', FeatureItem[]> = {
   free: [
     { icon: BookmarkIcon, text: '500 bookmarks per sync' },
-    { icon: MousePointerClick, text: 'Manual sync only' },
+    { icon: MousePointerClick, text: 'free_feature_manual_sync' },
     { icon: Timer, text: '24-hour interval' },
-    { icon: Mail, text: 'Community support' },
+    { icon: Mail, text: 'free_feature_community_support' },
   ],
   pro: [
-    { icon: Zap, text: 'Unlimited bookmarks per sync' },
-    { icon: RefreshCw, text: 'Set & forget auto-sync' },
+    { icon: Zap, text: 'pro_feature_unlimited_bookmarks' },
+    { icon: RefreshCw, text: 'pro_feature_auto_sync' },
     { icon: Timer, text: '6-hour minimum interval' },
-    { icon: Sparkles, text: 'Smart fingerprint deduplication' },
-    { icon: Crown, text: 'Priority support' },
+    { icon: Sparkles, text: 'pro_feature_deduplication' },
+    { icon: Crown, text: 'pro_feature_priority_support' },
   ],
 };
 
@@ -302,7 +302,7 @@ export function BillingSection() {
               {PLAN_FEATURES.pro.map((f, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
                   <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  <span>{f.text}</span>
+                  <span>{t(f.text)}</span>
                 </div>
               ))}
             </div>
@@ -318,7 +318,7 @@ export function BillingSection() {
                   className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-red-300 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 hover:border-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <AlertCircle className="w-4 h-4" />
-                  {isSyncing ? t('cancelling') : 'Cancel Subscription'}
+                  {isSyncing ? t('cancelling') : t('cancel_subscription')}
                 </button>
 
                 <button
@@ -350,13 +350,11 @@ export function BillingSection() {
   }
 
   return (
-    <SectionCard
-      id="billing"
-      title={t('choose_plan_title')}
-      description={t('choose_plan_desc')}
-    >
+    <SectionCard id="billing" title={t('choose_plan_title')} description={t('choose_plan_desc')}>
       <div className="flex items-center justify-center gap-2 mb-4">
-        <span className={classNames(!isLifetime && 'text-gray-900', 'text-gray-600')}>{t('billing_monthly')}</span>
+        <span className={classNames(!isLifetime && 'text-gray-900', 'text-gray-600')}>
+          {t('billing_monthly')}
+        </span>
         <button
           type="button"
           onClick={() => setIsLifetime((v) => !v)}
@@ -404,7 +402,7 @@ export function BillingSection() {
             {PLAN_FEATURES.free.map((f, i) => (
               <li key={i} className="flex items-center gap-2 text-gray-800">
                 <f.icon className="w-4 h-4 text-gray-600" />
-                <span>{f.text}</span>
+                <span>{t(f.text)}</span>
               </li>
             ))}
           </ul>
@@ -442,7 +440,9 @@ export function BillingSection() {
             {/* Early Access Badge */}
             <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-amber-100 border border-amber-200 rounded-md">
               <Sparkles className="w-3 h-3 text-amber-600" />
-              <span className="text-[11px] font-medium text-amber-900">{t('early_access_badge')}</span>
+              <span className="text-[11px] font-medium text-amber-900">
+                {t('early_access_badge')}
+              </span>
             </div>
           </div>
           <div className="text-sm text-gray-600 mb-4">{t('pro_plan_desc')}</div>
@@ -460,7 +460,7 @@ export function BillingSection() {
             {PLAN_FEATURES.pro.map((f, i) => (
               <li key={i} className="flex items-center gap-2 text-gray-900">
                 <f.icon className="w-4 h-4 text-amber-600" />
-                <span>{f.text}</span>
+                <span>{t(f.text)}</span>
               </li>
             ))}
           </ul>

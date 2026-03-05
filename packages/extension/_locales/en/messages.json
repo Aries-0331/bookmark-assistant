@@ -608,5 +608,37 @@
   "popup_settings_billing": {
     "message": "Settings & Billing",
     "description": "Popup settings button"
+  },
+  "free_feature_manual_sync": {
+    "message": "Manual sync only",
+    "description": "Free plan feature"
+  },
+  "free_feature_community_support": {
+    "message": "Community support",
+    "description": "Free plan feature"
+  },
+  "pro_feature_unlimited_bookmarks": {
+    "message": "Unlimited bookmarks per sync",
+    "description": "Pro plan feature"
+  },
+  "pro_feature_auto_sync": {
+    "message": "Set & forget auto-sync",
+    "description": "Pro plan feature"
+  },
+  "pro_feature_deduplication": {
+    "message": "Smart fingerprint deduplication",
+    "description": "Pro plan feature"
+  },
+  "pro_feature_priority_support": {
+    "message": "Priority support",
+    "description": "Pro plan feature"
+  },
+  "cancel_subscription": {
+    "message": "Cancel Subscription",
+    "description": "Cancel subscription button"
+  },
+  "refund_request_title": {
+    "message": "Please help us improve. Why are you requesting a refund?",
+    "description": "Refund request prompt"
   }
 }
