@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --open /src/dev/index.html",
-    "build": "tsc -b && vite build --mode production",
+    "build": "tsc -b && vite build --mode development",
     "build:dev": "tsc -b && vite build --mode development",
     "build:prod": "tsc -b && vite build --mode production",
     "build:zip": "npm run clean && node scripts/build-zip.js",

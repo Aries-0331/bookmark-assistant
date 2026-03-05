@@ -321,13 +321,8 @@ async function performBookmarkSync(): Promise<{
     };
 
     const fp = await computeFingerprint();
-    const {
-      last_sync_fingerprint: prevFp,
-      last_sync_count: prevCount,
-    } = await chrome.storage.local.get([
-      'last_sync_fingerprint',
-      'last_sync_count',
-    ]);
+    const { last_sync_fingerprint: prevFp, last_sync_count: prevCount } =
+      await chrome.storage.local.get(['last_sync_fingerprint', 'last_sync_count']);
     const currentCount = formatted.length;
     currentHash = fp; // Use existing declaration
     const previousHash = prevFp;

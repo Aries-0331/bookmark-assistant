@@ -27,9 +27,7 @@ export function normalizeUrl(url: string): string {
     // Remove empty query strings (just '?')
     if (urlObj.search && urlObj.search !== '?') {
       const params = new URLSearchParams(urlObj.search);
-      const sortedParams = Array.from(params.entries()).sort(([a], [b]) =>
-        a.localeCompare(b)
-      );
+      const sortedParams = Array.from(params.entries()).sort(([a], [b]) => a.localeCompare(b));
       urlObj.search = new URLSearchParams(sortedParams).toString();
     } else {
       // Remove empty query string
@@ -44,4 +42,3 @@ export function normalizeUrl(url: string): string {
     return url;
   }
 }
-

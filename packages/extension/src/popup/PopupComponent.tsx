@@ -3,8 +3,10 @@ import { useEffect, useRef } from 'react';
 import { useAppStore } from '../options/store';
 import { sendMessage, Messages } from '../utils/message';
 import { relativeTime } from '../utils/common';
+import { createTranslator } from '../utils/i18n';
 
 export default function Popup() {
+  const { t } = createTranslator();
   const {
     isConnected,
     lastSync,
@@ -66,7 +68,7 @@ export default function Popup() {
       <div className="bg-white text-gray-800 px-4 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <img src="/assets/logo.png" alt="Logo" className="w-8 h-8" />
-          <h1 className="text-base font-semibold">Bookmark Assistant</h1>
+          <h1 className="text-base font-semibold">{t('popup_title')}</h1>
         </div>
       </div>
 
@@ -74,38 +76,38 @@ export default function Popup() {
         {/* Status Card */}
         <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Status</span>
+            <span className="text-sm text-gray-600">{t('popup_status')}</span>
             {isConnected ? (
               <span className="inline-flex items-center px-2 py-1 rounded-md text-xs border text-green-700 bg-green-50 border-green-200">
-                <CheckCircle className="w-3.5 h-3.5 mr-1" /> Connected
+                <CheckCircle className="w-3.5 h-3.5 mr-1" /> {t('popup_connected')}
               </span>
             ) : (
               <span className="inline-flex items-center px-2 py-1 rounded-md text-xs border text-red-700 bg-red-50 border-red-200">
-                <AlertCircle className="w-3.5 h-3.5 mr-1" /> Not Connected
+                <AlertCircle className="w-3.5 h-3.5 mr-1" /> {t('popup_not_connected')}
               </span>
             )}
           </div>
 
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Last Sync</span>
+            <span className="text-gray-600">{t('popup_last_sync')}</span>
             <span className="text-gray-900">{isConnected ? relativeTime(lastSync) : '-'}</span>
           </div>
 
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Bookmarks</span>
+            <span className="text-gray-600">{t('popup_bookmarks')}</span>
             <span className="text-gray-900 font-medium">{isConnected ? bookmarkCount : '-'}</span>
           </div>
 
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Plan</span>
+            <span className="text-gray-600">{t('popup_plan')}</span>
             {isPro ? (
               <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-full">
                 <Crown className="w-3 h-3" />
-                Pro
+                {t('pro')}
               </span>
             ) : (
               <span className="flex items-center gap-1 text-xs px-2 py-0.5 bg-gray-100 text-gray-700 border border-gray-300 rounded-full">
-                Free
+                {t('free')}
               </span>
             )}
           </div>
@@ -121,12 +123,12 @@ export default function Popup() {
             {isConnecting ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                Connecting…
+                {t('popup_connecting')}
               </>
             ) : (
               <>
                 <Link className="w-4 h-4" />
-                Connect to Notion
+                {t('popup_connect_to_notion')}
               </>
             )}
           </button>
@@ -137,7 +139,7 @@ export default function Popup() {
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
           >
             <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-            {isSyncing ? 'Syncing...' : 'Sync Now'}
+            {isSyncing ? t('popup_syncing') : t('syncNow')}
           </button>
         )}
 
@@ -147,7 +149,7 @@ export default function Popup() {
           className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
         >
           <Settings className="w-4 h-4" />
-          Settings & Billing
+          {t('popup_settings_billing')}
         </button>
       </div>
     </div>

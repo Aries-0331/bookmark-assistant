@@ -11,7 +11,27 @@ export interface ChromeMockStorage {
 export function createChromeMock(initialStorage: Record<string, any> = {}) {
   const storage: ChromeMockStorage = { data: { ...initialStorage } };
 
+  // Load messages.json for i18n testing
+  let messages: Record<string, { message: string }> = {};
+  try {
+    messages = require('../../packages/extension/_locales/en/messages.json');
+  } catch {
+    // Fallback: return key as translation
+    console.warn('[chrome-mock] Could not load messages.json, using keys as fallback');
+  }
+
   return {
+    i18n: {
+      getMessage: (key: string, _substitutions?: string | string[]) => {
+        // Return translation if available, otherwise return key
+        return messages[key]?.message || key;
+      },
+      getAcceptLanguages: vi.fn().mockResolvedValue(['en']),
+      getUILanguage: () => 'en',
+      detectLanguage: vi.fn().mockResolvedValue({
+        languages: [{ language: 'en', percentage: 100 }],
+      }),
+    },
     alarms: {
       create: vi.fn(),
       clear: vi.fn(),

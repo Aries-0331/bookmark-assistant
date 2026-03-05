@@ -20,6 +20,7 @@ import { useAppStore } from '../store';
 import { openPaddleCheckout } from '../../lib/paddle';
 import { useToast } from '../hook/useToast';
 import { sendMessage, Messages } from '../../utils/message';
+import { createTranslator } from '../../utils/i18n';
 
 function classNames(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(' ');
@@ -33,20 +34,21 @@ type FeatureItem = {
 const PLAN_FEATURES: Record<'free' | 'pro', FeatureItem[]> = {
   free: [
     { icon: BookmarkIcon, text: '500 bookmarks per sync' },
-    { icon: MousePointerClick, text: 'Manual sync only' },
+    { icon: MousePointerClick, text: 'free_feature_manual_sync' },
     { icon: Timer, text: '24-hour interval' },
-    { icon: Mail, text: 'Community support' },
+    { icon: Mail, text: 'free_feature_community_support' },
   ],
   pro: [
-    { icon: Zap, text: 'Unlimited bookmarks per sync' },
-    { icon: RefreshCw, text: 'Set & forget auto-sync' },
+    { icon: Zap, text: 'pro_feature_unlimited_bookmarks' },
+    { icon: RefreshCw, text: 'pro_feature_auto_sync' },
     { icon: Timer, text: '6-hour minimum interval' },
-    { icon: Sparkles, text: 'Smart fingerprint deduplication' },
-    { icon: Crown, text: 'Priority support' },
+    { icon: Sparkles, text: 'pro_feature_deduplication' },
+    { icon: Crown, text: 'pro_feature_priority_support' },
   ],
 };
 
 export function BillingSection() {
+  const { t } = createTranslator();
   const [isLifetime, setIsLifetime] = useState(false); // false = monthly, true = lifetime
   const [nextBillingDate, setNextBillingDate] = useState<string | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false); // Local state for checkout (UI-driven)
@@ -73,8 +75,8 @@ export function BillingSection() {
 
       // Show success toast
       showToast({
-        title: '🎉 Payment Successful!',
-        description: 'Activating your Pro subscription...',
+        title: t('payment_success_title'),
+        description: t('payment_activating_desc'),
         variant: 'success',
         duration: 5000,
       });
@@ -89,8 +91,8 @@ export function BillingSection() {
           setTimeout(() => checkEntitlements(retries - 1, delay * 1.5), delay);
         } else if (currentIsPro) {
           showToast({
-            title: '✅ Pro Activated',
-            description: 'Your Pro features are now ready to use!',
+            title: t('pro_activated_title'),
+            description: t('pro_activated_desc'),
             variant: 'success',
             duration: 3000,
           });
@@ -124,7 +126,7 @@ export function BillingSection() {
       setIsCheckingOut(true);
       if (!userId) {
         console.error('❌ User ID not found');
-        alert('Please connect to Notion first before upgrading.');
+        alert(t('upgrade_requires_connection'));
         return;
       }
 
@@ -136,7 +138,7 @@ export function BillingSection() {
       });
     } catch (error) {
       console.error('❌ Failed to open checkout:', error);
-      alert('Failed to open checkout. Please try again.');
+      alert(t('error_checkout_failed'));
     } finally {
       setIsCheckingOut(false);
     }
@@ -159,8 +161,8 @@ export function BillingSection() {
 
       if (res.success) {
         showToast({
-          title: '✓ Subscription Cancelled',
-          description: `You'll have access until ${billingDate}`,
+          title: t('subscription_cancelled_title'),
+          description: t('subscription_cancelled_desc'),
           variant: 'success',
           duration: 5000,
         });
@@ -172,7 +174,7 @@ export function BillingSection() {
     } catch (error) {
       console.error('❌ Failed to cancel subscription:', error);
       showToast({
-        title: '✗ Cancellation Failed',
+        title: t('error_cancellation_failed'),
         description:
           error instanceof Error ? error.message : 'Please try again or contact support.',
         variant: 'error',
@@ -187,7 +189,7 @@ export function BillingSection() {
       // isRefreshingProfile is managed by refreshEntitlements via storage
       await refreshEntitlements(true); // Force refresh from server
       showToast({
-        title: '✓ Status Refreshed',
+        title: t('status_refreshed'),
         description: 'Your subscription status is now up to date',
         variant: 'success',
         duration: 2000,
@@ -195,7 +197,7 @@ export function BillingSection() {
     } catch (error) {
       console.error('Failed to refresh status:', error);
       showToast({
-        title: '✗ Refresh Failed',
+        title: t('error_refresh_failed'),
         description: 'Could not refresh status. Please try again.',
         variant: 'error',
         duration: 3000,
@@ -234,8 +236,8 @@ export function BillingSection() {
     return (
       <SectionCard
         id="billing"
-        title="Subscription Management"
-        description="Manage your Pro subscription and billing details"
+        title={t('subscription_management_title')}
+        description={t('subscription_management_desc')}
       >
         <div className="rounded-2xl border border-amber-200 bg-white overflow-hidden shadow-sm">
           {/* Status Banner */}
@@ -244,7 +246,7 @@ export function BillingSection() {
               <div className="p-1.5 bg-amber-100 rounded-full">
                 <Crown className="w-5 h-5 text-amber-600" />
               </div>
-              <span className="text-amber-900 font-semibold text-lg">Pro Plan Active</span>
+              <span className="text-amber-900 font-semibold text-lg">{t('pro_plan_active')}</span>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -254,11 +256,11 @@ export function BillingSection() {
                 title="Refresh subscription status"
               >
                 <RefreshCw className={`w-3 h-3 ${isRefreshingProfile ? 'animate-spin' : ''}`} />
-                {isRefreshingProfile ? 'Refreshing...' : 'Refresh'}
+                {isRefreshingProfile ? t('refreshing') : t('action_refresh')}
               </button>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium border border-green-200">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                Active
+                {t('status_active')}
               </span>
             </div>
           </div>
@@ -267,40 +269,40 @@ export function BillingSection() {
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
               <div className="text-xs text-gray-500 font-medium uppercase tracking-wider flex items-center gap-1">
-                <CreditCard className="w-3 h-3" /> Current Plan
+                <CreditCard className="w-3 h-3" /> {t('current_plan_label')}
               </div>
               <div className="text-gray-900 font-medium">
-                {purchaseType === 'lifetime' ? 'Pro (Lifetime)' : 'Pro (Monthly)'}
+                {purchaseType === 'lifetime' ? t('plan_lifetime') : t('plan_monthly')}
               </div>
             </div>
 
             {purchaseType === 'monthly' && (
               <div className="space-y-1">
                 <div className="text-xs text-gray-500 font-medium uppercase tracking-wider flex items-center gap-1">
-                  <Calendar className="w-3 h-3" /> Next Billing Date
+                  <Calendar className="w-3 h-3" /> {t('next_billing_date_label')}
                 </div>
-                <div className="text-gray-900 font-medium">{nextBillingDate || 'Loading...'}</div>
+                <div className="text-gray-900 font-medium">{nextBillingDate || t('loading')}</div>
               </div>
             )}
 
             <div className="space-y-1 md:col-span-2">
               <div className="text-xs text-gray-500 font-medium uppercase tracking-wider flex items-center gap-1">
-                <User className="w-3 h-3" /> Linked Email
+                <User className="w-3 h-3" /> {t('linked_email_label')}
               </div>
               <div className="text-gray-900 font-medium font-mono text-sm bg-gray-50 px-2 py-1 rounded w-fit">
-                {userEmail || 'No email linked'}
+                {userEmail || t('no_email_linked')}
               </div>
             </div>
           </div>
 
           {/* Features */}
           <div className="px-6 pb-6">
-            <div className="text-sm font-medium text-gray-900 mb-3">Your Pro Features</div>
+            <div className="text-sm font-medium text-gray-900 mb-3">{t('pro_features_title')}</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {PLAN_FEATURES.pro.map((f, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
                   <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  <span>{f.text}</span>
+                  <span>{t(f.text)}</span>
                 </div>
               ))}
             </div>
@@ -316,30 +318,28 @@ export function BillingSection() {
                   className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-red-300 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 hover:border-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <AlertCircle className="w-4 h-4" />
-                  {isSyncing ? 'Cancelling...' : 'Cancel Subscription'}
+                  {isSyncing ? t('cancelling') : t('cancel_subscription')}
                 </button>
 
                 <button
                   onClick={handleRefund}
                   className="text-[10px] text-gray-400 hover:text-gray-600 underline decoration-dotted"
                 >
-                  Refund Policy & Request
+                  {t('refund_policy_button')}
                 </button>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-3 py-2">
                 <div className="flex items-center gap-2 text-base font-medium text-gray-800">
                   <Crown className="w-5 h-5 text-amber-500" />
-                  <span>You are a Lifetime Pro member</span>
+                  <span>{t('lifetime_member_title')}</span>
                 </div>
-                <p className="text-sm text-gray-600 text-center">
-                  Thank you for your support! Enjoy unlimited access forever.
-                </p>
+                <p className="text-sm text-gray-600 text-center">{t('lifetime_member_desc')}</p>
                 <button
                   onClick={handleRefund}
                   className="mt-2 text-[10px] text-gray-400 hover:text-gray-600 underline decoration-dotted"
                 >
-                  Refund Policy & Request
+                  {t('refund_policy_button')}
                 </button>
               </div>
             )}
@@ -350,13 +350,11 @@ export function BillingSection() {
   }
 
   return (
-    <SectionCard
-      id="billing"
-      title="Choose Your Plan"
-      description="Unlock the full potential of Bookmark Assistant with Pro"
-    >
+    <SectionCard id="billing" title={t('choose_plan_title')} description={t('choose_plan_desc')}>
       <div className="flex items-center justify-center gap-2 mb-4">
-        <span className={classNames(!isLifetime && 'text-gray-900', 'text-gray-600')}>Monthly</span>
+        <span className={classNames(!isLifetime && 'text-gray-900', 'text-gray-600')}>
+          {t('billing_monthly')}
+        </span>
         <button
           type="button"
           onClick={() => setIsLifetime((v) => !v)}
@@ -376,10 +374,10 @@ export function BillingSection() {
             isLifetime && 'text-gray-900'
           )}
         >
-          Lifetime
+          {t('billing_lifetime')}
           <span className="flex justify-between items-center w-fit bg-green-100 text-green-700 px-2 py-0.5 rounded-md border border-green-200 text-xs font-semibold">
             <Zap className="w-3 h-3 mr-1" />
-            Best Value
+            {t('best_value_badge')}
           </span>
         </span>
       </div>
@@ -387,24 +385,24 @@ export function BillingSection() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Free card */}
         <div className="rounded-2xl border border-gray-200 bg-white p-5">
-          <div className="text-lg font-semibold text-gray-900 mb-1">Free</div>
+          <div className="text-lg font-semibold text-gray-900 mb-1">{t('free')}</div>
           <div className="h-7 flex items-center text-sm text-gray-500 mb-1">
-            $0<span className="text-gray-400 ml-1">/ month</span>
+            $0<span className="text-gray-400 ml-1">{t('per_month')}</span>
           </div>
-          <div className="text-sm text-gray-600 mb-4">Basic bookmark syncing</div>
+          <div className="text-sm text-gray-600 mb-4">{t('free_plan_desc')}</div>
           <button
             className="w-full text-sm px-4 py-2 mb-4 rounded-lg border border-gray-200 text-gray-500 cursor-default"
             disabled
             aria-disabled
             title="Current Plan"
           >
-            Current Plan
+            {t('current_plan_label')}
           </button>
           <ul className="space-y-2 text-sm">
             {PLAN_FEATURES.free.map((f, i) => (
               <li key={i} className="flex items-center gap-2 text-gray-800">
                 <f.icon className="w-4 h-4 text-gray-600" />
-                <span>{f.text}</span>
+                <span>{t(f.text)}</span>
               </li>
             ))}
           </ul>
@@ -418,7 +416,7 @@ export function BillingSection() {
             </span>
           )}
           <div className="flex items-center gap-2 mb-1">
-            <div className="text-lg font-semibold text-gray-900">Pro</div>
+            <div className="text-lg font-semibold text-gray-900">{t('pro')}</div>
             <span className="inline-flex items-center gap-1 text-[11px] bg-amber-500/90 text-white px-1.5 py-0.5 rounded">
               <Crown className="w-3 h-3" />
             </span>
@@ -429,23 +427,25 @@ export function BillingSection() {
                 <span className="text-gray-900 text-xl font-semibold">
                   {formatCurrency(LIFETIME_PRICE)}
                 </span>
-                <span className="text-gray-500 text-sm">one-time</span>
+                <span className="text-gray-500 text-sm">{t('one_time_payment')}</span>
               </>
             ) : (
               <>
                 <span className="text-gray-900 text-xl font-semibold">
                   {formatCurrency(monthly)}
                 </span>
-                <span className="text-gray-500 text-sm">/ month</span>
+                <span className="text-gray-500 text-sm">{t('per_month')}</span>
               </>
             )}
             {/* Early Access Badge */}
             <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-amber-100 border border-amber-200 rounded-md">
               <Sparkles className="w-3 h-3 text-amber-600" />
-              <span className="text-[11px] font-medium text-amber-900">Early Access</span>
+              <span className="text-[11px] font-medium text-amber-900">
+                {t('early_access_badge')}
+              </span>
             </div>
           </div>
-          <div className="text-sm text-gray-600 mb-4">Advanced features for power users</div>
+          <div className="text-sm text-gray-600 mb-4">{t('pro_plan_desc')}</div>
 
           <button
             className="w-full text-sm px-4 py-2 mb-4 rounded-lg bg-amber-600 text-white hover:bg-amber-700 shadow inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -453,14 +453,14 @@ export function BillingSection() {
             disabled={isCheckingOut}
           >
             <Crown className="w-4 h-4" />
-            {isCheckingOut ? 'Loading...' : 'Upgrade to Pro'}
+            {isCheckingOut ? t('loading') : t('action_upgrade_pro')}
           </button>
 
           <ul className="space-y-2 text-sm">
             {PLAN_FEATURES.pro.map((f, i) => (
               <li key={i} className="flex items-center gap-2 text-gray-900">
                 <f.icon className="w-4 h-4 text-amber-600" />
-                <span>{f.text}</span>
+                <span>{t(f.text)}</span>
               </li>
             ))}
           </ul>
@@ -470,8 +470,7 @@ export function BillingSection() {
       {/* Subtle hint for Free users below the grid */}
       {!isPro && (
         <div className="mt-4 text-xs text-gray-500 flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-amber-500" /> Pro unlocks advanced sync options and
-          faster intervals.
+          <Sparkles className="w-3 h-3 text-amber-500" /> {t('pro_unlock_hint')}
         </div>
       )}
     </SectionCard>

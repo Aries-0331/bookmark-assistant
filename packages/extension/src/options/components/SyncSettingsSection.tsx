@@ -4,8 +4,10 @@ import { SectionCard } from './SectionCard';
 import { useToast } from '../hook/useToast';
 import { RouteId } from '../router';
 import { Switch } from '../../components/ui/switch';
+import { createTranslator } from '../../utils/i18n';
 
 export function SyncSettingsSection({ onNavigate }: { onNavigate: (to: RouteId) => void }) {
+  const { t } = createTranslator();
   const { show } = useToast();
   const { isPro, autoSync, intervalHours, setAutoSync, saveSyncSettings } = useAppStore();
   const [value, setValue] = useState<number>(intervalHours);
@@ -24,8 +26,8 @@ export function SyncSettingsSection({ onNavigate }: { onNavigate: (to: RouteId) 
     if (next && !isPro) {
       show({
         variant: 'error',
-        title: 'Pro Feature',
-        description: 'Auto-sync is a Pro feature. Please upgrade to enable.',
+        title: t('pro_feature_title'),
+        description: t('pro_feature_desc'),
       });
       return;
     }
@@ -44,7 +46,7 @@ export function SyncSettingsSection({ onNavigate }: { onNavigate: (to: RouteId) 
     } catch (e) {
       show({
         variant: 'error',
-        title: 'Failed to save sync settings',
+        title: t('error_save_settings_failed'),
         description: String(e),
       });
     }
@@ -53,8 +55,8 @@ export function SyncSettingsSection({ onNavigate }: { onNavigate: (to: RouteId) 
   return (
     <SectionCard
       id="sync"
-      title="Sync Settings"
-      description="Configure how and when your bookmarks are synchronized"
+      title={t('nav_sync_settings')}
+      description={t('sync_settings_desc')}
       advanced={true}
       isPro={isPro}
       onNavigate={onNavigate}
@@ -62,10 +64,8 @@ export function SyncSettingsSection({ onNavigate }: { onNavigate: (to: RouteId) 
       <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200">
         <div className="flex items-center justify-between py-1">
           <div>
-            <div className="text-sm text-foreground">Auto Sync</div>
-            <div className="text-xs text-muted-foreground">
-              Automatically sync bookmarks in the background
-            </div>
+            <div className="text-sm text-foreground">{t('auto_sync_label')}</div>
+            <div className="text-xs text-muted-foreground">{t('auto_sync_desc')}</div>
           </div>
           <div className="flex-shrink-0 w-fit">
             <Switch checked={autoSync} onCheckedChange={onToggleAuto} disabled={!isPro} />
@@ -74,7 +74,7 @@ export function SyncSettingsSection({ onNavigate }: { onNavigate: (to: RouteId) 
 
         <div className="mt-3 max-w-xs">
           <label className="grid gap-1 text-xs">
-            <span className="text-gray-600">Sync Interval (hours)</span>
+            <span className="text-gray-600">{t('sync_interval_label')}</span>
             <input
               type="number"
               min={minIntervalHours}
@@ -87,8 +87,8 @@ export function SyncSettingsSection({ onNavigate }: { onNavigate: (to: RouteId) 
             />
           </label>
           <div id="sync-interval-note" className="text-[11px] text-gray-500 mt-1">
-            Minimum: {minIntervalHours} hours
-            {!autoSync ? ` · Free plan uses a fixed ${minIntervalHours}-hour interval` : ''}
+            {t('sync_interval_min', [String(minIntervalHours)])}
+            {!autoSync ? ` · ${t('sync_interval_free_note')}` : ''}
           </div>
         </div>
       </div>

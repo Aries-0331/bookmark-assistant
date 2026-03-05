@@ -1,15 +1,8 @@
 import { LayoutGrid, Info, CircleDollarSign, HelpCircle } from 'lucide-react';
 import { RouteId } from '../router';
+import { createTranslator } from '../../utils/i18n';
 
-type Item = { id: RouteId; label: string; icon: JSX.Element };
-
-const items: Item[] = [
-  { id: 'general', label: 'General', icon: <LayoutGrid className="w-4 h-4" /> },
-  { id: 'billing', label: 'Billing & Plan', icon: <CircleDollarSign className="w-4 h-4" /> },
-  // { id: 'tutorials', label: 'Tutorials', icon: <BookOpen className="w-4 h-4" /> },
-  { id: 'faq', label: 'FAQ', icon: <HelpCircle className="w-4 h-4" /> },
-  { id: 'about', label: 'About', icon: <Info className="w-4 h-4" /> },
-];
+type Item = { id: RouteId; labelKey: string; icon: JSX.Element };
 
 export function Sidebar({
   active,
@@ -18,6 +11,16 @@ export function Sidebar({
   active: RouteId;
   onNavigate: (to: RouteId) => void;
 }) {
+  const { t } = createTranslator();
+
+  const items: Item[] = [
+    { id: 'general', labelKey: 'nav_general', icon: <LayoutGrid className="w-4 h-4" /> },
+    { id: 'billing', labelKey: 'nav_billing', icon: <CircleDollarSign className="w-4 h-4" /> },
+    // { id: 'tutorials', label: 'Tutorials', icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'faq', labelKey: 'nav_faq', icon: <HelpCircle className="w-4 h-4" /> },
+    { id: 'about', labelKey: 'nav_about', icon: <Info className="w-4 h-4" /> },
+  ];
+
   return (
     <nav
       className="hidden md:block w-64 pr-6 sticky top-16 self-start max-h-[calc(100vh-4rem)] overflow-auto"
@@ -34,7 +37,7 @@ export function Sidebar({
               aria-current={active === i.id ? 'page' : undefined}
             >
               {i.icon}
-              <span className="text-base">{i.label}</span>
+              <span className="text-base">{t(i.labelKey)}</span>
             </button>
           </li>
         ))}
