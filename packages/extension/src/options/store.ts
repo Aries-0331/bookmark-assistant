@@ -210,12 +210,19 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   refreshEntitlements: async (forceRefresh = false) => {
+    // Check BEFORE setting state - this prevents the bug where we check after setting to true
+    // which always returns true (causing the function to never complete)
+    const { is_refreshing_entitlements } = await chrome.storage.local.get([
+      'is_refreshing_entitlements',
+    ]);
+    if (is_refreshing_entitlements && !forceRefresh) {
+      console.log('[Entitlements] Already refreshing, skipping');
+      return;
+    }
+
     // Set storage FIRST to prevent race conditions with concurrent calls
     await chrome.storage.local.set({ is_refreshing_entitlements: true });
     set({ isRefreshingProfile: true });
-
-    // Check after setting storage to prevent race conditions
-    if (get().isRefreshingProfile && !forceRefresh) return;
 
     // Add timeout fallback - auto-reset after 30 seconds for network issues
     const TIMEOUT_MS = 30000;
