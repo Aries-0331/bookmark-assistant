@@ -564,5 +564,49 @@
   "support": {
     "message": "Support",
     "description": "Support button text"
+  },
+  "popup_title": {
+    "message": "Bookmark Assistant",
+    "description": "Popup header title"
+  },
+  "popup_status": {
+    "message": "Status",
+    "description": "Popup status label"
+  },
+  "popup_connected": {
+    "message": "Connected",
+    "description": "Popup connected status"
+  },
+  "popup_not_connected": {
+    "message": "Not Connected",
+    "description": "Popup not connected status"
+  },
+  "popup_last_sync": {
+    "message": "Last Sync",
+    "description": "Popup last sync label"
+  },
+  "popup_bookmarks": {
+    "message": "Bookmarks",
+    "description": "Popup bookmarks label"
+  },
+  "popup_plan": {
+    "message": "Plan",
+    "description": "Popup plan label"
+  },
+  "popup_connecting": {
+    "message": "Connecting…",
+    "description": "Popup connecting status"
+  },
+  "popup_connect_to_notion": {
+    "message": "Connect to Notion",
+    "description": "Popup connect button"
+  },
+  "popup_syncing": {
+    "message": "Syncing...",
+    "description": "Popup syncing status"
+  },
+  "popup_settings_billing": {
+    "message": "Settings & Billing",
+    "description": "Popup settings button"
   }
 }
