@@ -128,11 +128,7 @@ export function ConnectionSection() {
   };
 
   return (
-    <SectionCard
-      id="connection"
-      title={t('nav_connection')}
-      description={t('connection_desc')}
-    >
+    <SectionCard id="connection" title={t('nav_connection')} description={t('connection_desc')}>
       <div className="mt-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-600">
@@ -183,7 +179,9 @@ export function ConnectionSection() {
                   <AlertTriangle className="w-5 h-5 text-red-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-900">{t('confirm_disconnect_title')}</h3>
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {t('confirm_disconnect_title')}
+                  </h3>
                 </div>
               </div>
 
