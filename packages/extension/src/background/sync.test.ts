@@ -372,9 +372,7 @@ describe('Sync Module', () => {
 
       await syncAllBookmarksToNotion();
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Free plan limit')
-      );
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Free plan limit'));
 
       consoleSpy.mockRestore();
     });
@@ -390,9 +388,7 @@ describe('Sync Module', () => {
 
       mockChrome.bookmarks.getTree.mockResolvedValue(emptyBookmarkTree);
 
-      await expect(syncAllBookmarksToNotion()).rejects.toThrow(
-        'No bookmarks found to sync'
-      );
+      await expect(syncAllBookmarksToNotion()).rejects.toThrow('No bookmarks found to sync');
     });
 
     it('should handle sync limit error for free users', async () => {
@@ -417,9 +413,7 @@ describe('Sync Module', () => {
       mockChrome.storage.local.set.mockResolvedValue(undefined);
 
       const { serverAPI } = await import('./server-api');
-      vi.mocked(serverAPI.syncBookmarks).mockRejectedValue(
-        new Error('Network error')
-      );
+      vi.mocked(serverAPI.syncBookmarks).mockRejectedValue(new Error('Network error'));
 
       await expect(syncAllBookmarksToNotion()).rejects.toThrow('Network error');
     });

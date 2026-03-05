@@ -223,7 +223,9 @@ describe('URL Normalization', () => {
     });
 
     it('should handle URLs with encoded characters', () => {
-      expect(normalizeUrl('https://example.com/page%20name/')).toBe('https://example.com/page%20name');
+      expect(normalizeUrl('https://example.com/page%20name/')).toBe(
+        'https://example.com/page%20name'
+      );
     });
 
     it('should handle empty query strings', () => {

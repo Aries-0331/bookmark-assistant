@@ -59,7 +59,7 @@ export function cleanErrorReports(errorReports: ErrorReport[]): ErrorReport[] {
   }
 
   const now = Date.now();
-  const cutoff = now - (48 * 60 * 60 * 1000); // 48 hours ago
+  const cutoff = now - 48 * 60 * 60 * 1000; // 48 hours ago
 
   // Filter by time and limit count
   const recentErrors = errorReports
@@ -153,7 +153,9 @@ export async function cleanupStorage(): Promise<void> {
 
     // Final storage size check
     const finalStorage = await chrome.storage.local.get(null);
-    console.log(`[StorageCleanup] Storage cleanup complete. Total keys: ${Object.keys(finalStorage).length}`);
+    console.log(
+      `[StorageCleanup] Storage cleanup complete. Total keys: ${Object.keys(finalStorage).length}`
+    );
   } catch (error) {
     console.warn('[StorageCleanup] Storage cleanup failed:', error);
   }

@@ -14,10 +14,7 @@ interface ErrorReport {
  * Report error to server
  * Falls back gracefully if server is unreachable
  */
-export async function reportError(
-  error: Error,
-  context?: Record<string, any>
-): Promise<void> {
+export async function reportError(error: Error, context?: Record<string, any>): Promise<void> {
   try {
     const manifest = chrome.runtime.getManifest();
     const report: ErrorReport = {
@@ -43,9 +40,7 @@ export async function reportError(
 /**
  * Remove sensitive data from context
  */
-function sanitizeContext(
-  context?: Record<string, any>
-): Record<string, any> | undefined {
+function sanitizeContext(context?: Record<string, any>): Record<string, any> | undefined {
   if (!context) return undefined;
 
   const sanitized = { ...context };
@@ -125,4 +120,3 @@ export async function reportMessage(
     console.log(`[${level.toUpperCase()}]`, message, context);
   }
 }
-

@@ -27,7 +27,8 @@ export interface OpenCheckoutOptions {
  */
 export async function openPaddleCheckout(options: OpenCheckoutOptions): Promise<void> {
   try {
-    const serverUrl = import.meta.env.VITE_OAUTH_SERVER_URL || 'http://bookmark-assistant-server.vercel.app';
+    const serverUrl =
+      import.meta.env.VITE_OAUTH_SERVER_URL || 'http://bookmark-assistant-server.vercel.app';
 
     console.log('🚀 Requesting Paddle checkout URL from server:', serverUrl);
 
