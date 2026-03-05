@@ -103,20 +103,20 @@ packages/extension/
 
 ### 核心实现
 
-- [ ] 创建 `packages/extension/src/utils/i18n.ts` (createTranslator 函数)
-- [ ] 创建 `packages/extension/src/types/i18n.ts` (类型定义)
-- [ ] 添加开发环境 chrome.i18n mock 到 `chrome-mock.ts` (Vite 兼容)
-- [ ] 完善 `messages.json` 包含所有 UI 字符串 (100+ keys)
-- [ ] 更新测试 helper 添加 i18n mock 支持
+- [x] 创建 `packages/extension/src/utils/i18n.ts` (createTranslator 函数)
+- [x] 创建 `packages/extension/src/types/i18n.ts` (类型定义)
+- [x] 添加开发环境 chrome.i18n mock 到 `chrome-mock.ts` (Vite 兼容)
+- [x] 完善 `messages.json` 包含所有 UI 字符串 (100+ keys)
+- [x] 更新测试 helper 添加 i18n mock 支持
 
 ### 组件迁移
 
-- [ ] ConnectionSection 使用翻译字符串
-- [ ] SyncSettingsSection 使用翻译字符串
-- [ ] BillingSection 使用翻译字符串
-- [ ] OverviewSection 使用翻译字符串 (扩展范围)
-- [ ] Sidebar 使用翻译字符串 (扩展范围)
-- [ ] AboutSection 使用翻译字符串 (扩展范围)
+- [x] ConnectionSection 使用翻译字符串
+- [x] SyncSettingsSection 使用翻译字符串
+- [x] BillingSection 使用翻译字符串
+- [x] OverviewSection 使用翻译字符串 (扩展范围)
+- [x] Sidebar 使用翻译字符串 (扩展范围)
+- [x] AboutSection 使用翻译字符串 (扩展范围)
 
 ### 测试
 
