@@ -17,6 +17,20 @@ const storageData = {
 };
 
 const chromeMock: any = {
+  i18n: {
+    getMessage: (key: string, _substitutions?: string | string[]) => {
+      // Return key as fallback - simulates missing translation
+      return key;
+    },
+    getAcceptLanguages: async () => ['en'],
+    getUILanguage: () => 'en',
+    detectLanguage: (
+      _details: { text: string },
+      callback: (result: { languages: Array<{ language: string; percentage: number }> }) => void
+    ) => {
+      callback({ languages: [{ language: 'en', percentage: 100 }] });
+    },
+  },
   bookmarks: {
     async getTree() {
       return [

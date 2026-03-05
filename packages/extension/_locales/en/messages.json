@@ -31,6 +31,10 @@
     "message": "Disconnect",
     "description": "Button to disconnect from Notion"
   },
+  "disconnected": {
+    "message": "Disconnected",
+    "description": "Status when disconnected from Notion"
+  },
   "lastSync": {
     "message": "Last sync:",
     "description": "Label for last sync time"
@@ -78,5 +82,395 @@
   "autoSyncDisabled": {
     "message": "Auto-sync disabled",
     "description": "Status when auto-sync is off"
+  },
+
+  "nav_connection": {
+    "message": "Connection",
+    "description": "Navigation: Connection section"
+  },
+  "nav_sync_settings": {
+    "message": "Sync Settings",
+    "description": "Navigation: Sync settings section"
+  },
+  "nav_billing": {
+    "message": "Billing & Plan",
+    "description": "Navigation: Billing section"
+  },
+  "nav_general": {
+    "message": "General",
+    "description": "Navigation: General section"
+  },
+  "nav_faq": {
+    "message": "FAQ",
+    "description": "Navigation: FAQ section"
+  },
+  "nav_about": {
+    "message": "About",
+    "description": "Navigation: About section"
+  },
+
+  "action_cancel": {
+    "message": "Cancel",
+    "description": "Cancel button"
+  },
+  "action_save": {
+    "message": "Save",
+    "description": "Save button"
+  },
+  "action_refresh": {
+    "message": "Refresh",
+    "description": "Refresh button"
+  },
+  "action_syncing": {
+    "message": "Syncing...",
+    "description": "Syncing in progress"
+  },
+  "action_connecting": {
+    "message": "Connecting...",
+    "description": "Connecting in progress"
+  },
+  "action_upgrade_pro": {
+    "message": "Upgrade to Pro",
+    "description": "Upgrade to Pro button"
+  },
+
+  "status_connected": {
+    "message": "Connected",
+    "description": "Connection status: connected"
+  },
+  "status_syncing": {
+    "message": "Syncing...",
+    "description": "Sync status: in progress"
+  },
+  "status_sync_complete": {
+    "message": "Sync complete",
+    "description": "Sync status: complete"
+  },
+  "status_active": {
+    "message": "Active",
+    "description": "Status: active"
+  },
+  "status_refreshed": {
+    "message": "Status Refreshed",
+    "description": "Status refreshed message"
+  },
+
+  "error_connection_failed": {
+    "message": "Connection failed",
+    "description": "Error: connection failed"
+  },
+  "error_sync_failed": {
+    "message": "Sync failed",
+    "description": "Error: sync failed"
+  },
+  "error_save_settings_failed": {
+    "message": "Failed to save sync settings",
+    "description": "Error: failed to save settings"
+  },
+  "error_checkout_failed": {
+    "message": "Failed to open checkout",
+    "description": "Error: checkout failed"
+  },
+  "error_refresh_failed": {
+    "message": "Refresh Failed",
+    "description": "Error: refresh failed"
+  },
+  "error_cancellation_failed": {
+    "message": "Cancellation Failed",
+    "description": "Error: cancellation failed"
+  },
+
+  "connection_desc": {
+    "message": "Connect your Notion workspace to sync bookmarks",
+    "description": "Connection section description"
+  },
+  "connection_success_desc": {
+    "message": "Your Notion workspace has been successfully connected.",
+    "description": "Connection success description"
+  },
+  "connection_failed_title": {
+    "message": "Connection Failed",
+    "description": "Connection failed title"
+  },
+  "connection_failed_desc": {
+    "message": "Failed to connect to Notion. Please try again.",
+    "description": "Connection failed description"
+  },
+  "connection_error_desc": {
+    "message": "An error occurred while connecting to Notion.",
+    "description": "Connection error description"
+  },
+  "oauth_connection_title": {
+    "message": "Secure OAuth Connection",
+    "description": "OAuth connection title"
+  },
+  "oauth_connection_desc": {
+    "message": "Connect securely with Notion's OAuth. We never see your password.",
+    "description": "OAuth connection description"
+  },
+
+  "disconnected_title": {
+    "message": "Disconnected",
+    "description": "Disconnected title"
+  },
+  "disconnected_desc": {
+    "message": "Your Notion connection has been removed.",
+    "description": "Disconnected description"
+  },
+
+  "sync_no_changes_title": {
+    "message": "Everything is up to date",
+    "description": "Sync: no changes title"
+  },
+  "sync_no_changes_desc": {
+    "message": "All bookmarks are already synced to Notion.",
+    "description": "Sync: no changes description"
+  },
+  "sync_no_changes_count_desc": {
+    "message": "All $1 $2 are already synced to Notion.",
+    "description": "Sync: no changes with count"
+  },
+  "sync_failed_title": {
+    "message": "Sync Failed",
+    "description": "Sync failed title"
+  },
+  "sync_failed_desc": {
+    "message": "Failed to sync bookmarks",
+    "description": "Sync failed description"
+  },
+
+  "sync_settings_desc": {
+    "message": "Configure how and when your bookmarks are synced.",
+    "description": "Sync settings description"
+  },
+  "auto_sync_label": {
+    "message": "Auto Sync",
+    "description": "Auto sync label"
+  },
+  "auto_sync_desc": {
+    "message": "Automatically sync bookmarks at set intervals.",
+    "description": "Auto sync description"
+  },
+  "sync_interval_label": {
+    "message": "Sync Interval (hours)",
+    "description": "Sync interval label"
+  },
+  "sync_interval_min": {
+    "message": "Minimum: $1 hours",
+    "description": "Sync interval minimum"
+  },
+  "sync_interval_free_note": {
+    "message": "Free plan uses a fixed 24-hour interval.",
+    "description": "Free plan interval note"
+  },
+
+  "pro_feature_title": {
+    "message": "Pro Feature",
+    "description": "Pro feature badge"
+  },
+  "pro_feature_desc": {
+    "message": "Auto-sync is a Pro feature. Upgrade to enable automatic bookmark syncing.",
+    "description": "Pro feature description"
+  },
+
+  "confirm_disconnect_title": {
+    "message": "Disconnect from Notion?",
+    "description": "Confirm disconnect title"
+  },
+  "confirm_disconnect_message": {
+    "message": "This will remove your Notion workspace connection and clear all local settings.",
+    "description": "Confirm disconnect message"
+  },
+  "confirm_important": {
+    "message": "Important:",
+    "description": "Important label"
+  },
+  "confirm_disconnect_note_1": {
+    "message": "Your synced bookmarks in Notion will not be deleted",
+    "description": "Disconnect note 1"
+  },
+  "confirm_disconnect_note_2": {
+    "message": "Reconnecting will require setting up a new database",
+    "description": "Disconnect note 2"
+  },
+  "confirm_disconnect_note_3": {
+    "message": "You'll need to sync bookmarks again after reconnecting",
+    "description": "Disconnect note 3"
+  },
+
+  "payment_success_title": {
+    "message": "Payment Successful!",
+    "description": "Payment success title"
+  },
+  "payment_activating_desc": {
+    "message": "Activating your Pro plan...",
+    "description": "Payment activating description"
+  },
+  "pro_activated_title": {
+    "message": "Pro Activated",
+    "description": "Pro activated title"
+  },
+  "pro_activated_desc": {
+    "message": "Pro features ready",
+    "description": "Pro activated description"
+  },
+  "upgrade_requires_connection": {
+    "message": "Please connect to Notion first before upgrading.",
+    "description": "Upgrade requires connection"
+  },
+  "subscription_cancelled_title": {
+    "message": "Subscription Cancelled",
+    "description": "Subscription cancelled title"
+  },
+  "subscription_cancelled_desc": {
+    "message": "You'll have access until the end of your billing period.",
+    "description": "Subscription cancelled description"
+  },
+  "cancellation_confirm": {
+    "message": "Are you sure you want to cancel your subscription?",
+    "description": "Cancellation confirmation"
+  },
+
+  "subscription_management_title": {
+    "message": "Subscription Management",
+    "description": "Subscription management title"
+  },
+  "subscription_management_desc": {
+    "message": "Manage your Pro subscription and billing.",
+    "description": "Subscription management description"
+  },
+  "pro_plan_active": {
+    "message": "Pro Plan Active",
+    "description": "Pro plan active status"
+  },
+  "current_plan_label": {
+    "message": "Current Plan",
+    "description": "Current plan label"
+  },
+  "next_billing_date_label": {
+    "message": "Next Billing Date",
+    "description": "Next billing date label"
+  },
+  "linked_email_label": {
+    "message": "Linked Email",
+    "description": "Linked email label"
+  },
+  "no_email_linked": {
+    "message": "No email linked",
+    "description": "No email linked"
+  },
+  "pro_features_title": {
+    "message": "Your Pro Features",
+    "description": "Pro features title"
+  },
+
+  "refund_policy_message": {
+    "message": "Refund policy",
+    "description": "Refund policy link"
+  },
+  "refund_policy_button": {
+    "message": "Refund Policy & Request",
+    "description": "Refund policy button"
+  },
+
+  "lifetime_member_title": {
+    "message": "You are a Lifetime Pro member",
+    "description": "Lifetime member title"
+  },
+  "lifetime_member_desc": {
+    "message": "Thank you for your support!",
+    "description": "Lifetime member description"
+  },
+
+  "choose_plan_title": {
+    "message": "Choose Your Plan",
+    "description": "Choose plan title"
+  },
+  "choose_plan_desc": {
+    "message": "Unlock the full potential of Bookmark Assistant",
+    "description": "Choose plan description"
+  },
+  "billing_monthly": {
+    "message": "Monthly",
+    "description": "Monthly billing"
+  },
+  "billing_lifetime": {
+    "message": "Lifetime",
+    "description": "Lifetime billing"
+  },
+  "best_value_badge": {
+    "message": "Best Value",
+    "description": "Best value badge"
+  },
+  "per_month": {
+    "message": "/ month",
+    "description": "Per month suffix"
+  },
+  "one_time_payment": {
+    "message": "one-time",
+    "description": "One time payment"
+  },
+  "early_access_badge": {
+    "message": "Early Access",
+    "description": "Early access badge"
+  },
+  "pro_plan_desc": {
+    "message": "Advanced features for power users",
+    "description": "Pro plan description"
+  },
+  "free_plan_desc": {
+    "message": "Basic bookmark syncing",
+    "description": "Free plan description"
+  },
+  "plan_lifetime": {
+    "message": "Pro (Lifetime)",
+    "description": "Lifetime plan name"
+  },
+  "plan_monthly": {
+    "message": "Pro (Monthly)",
+    "description": "Monthly plan name"
+  },
+
+  "pro_unlock_hint": {
+    "message": "Pro unlocks advanced sync options and unlimited bookmarks.",
+    "description": "Pro unlock hint"
+  },
+
+  "overview_title": {
+    "message": "Overview",
+    "description": "Overview section title"
+  },
+  "overview_status": {
+    "message": "Status",
+    "description": "Overview status label"
+  },
+  "overview_plan": {
+    "message": "Plan",
+    "description": "Overview plan label"
+  },
+  "overview_bookmarks": {
+    "message": "Bookmarks",
+    "description": "Overview bookmarks label"
+  },
+  "overview_last_sync": {
+    "message": "Last sync",
+    "description": "Overview last sync label"
+  },
+
+  "loading": {
+    "message": "Loading...",
+    "description": "Loading indicator"
+  },
+  "refreshing": {
+    "message": "Refreshing...",
+    "description": "Refreshing indicator"
+  },
+  "cancelling": {
+    "message": "Cancelling...",
+    "description": "Cancelling indicator"
+  },
+  "working": {
+    "message": "Working...",
+    "description": "Working indicator"
   }
 }
