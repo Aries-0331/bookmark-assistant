@@ -161,6 +161,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (is_refreshing_entitlements) {
         console.log('[Init] Clearing stale is_refreshing_entitlements state');
         await chrome.storage.local.set({ is_refreshing_entitlements: false });
+        // Also clear the Zustand store state to ensure UI updates
+        set({ isRefreshingProfile: false });
       }
 
       // Load cached is_pro and purchase_type for immediate display
@@ -186,6 +188,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       // Load auto-sync state (default to disabled, will be enabled by refreshEntitlements if Pro)
       // Users cannot bypass payment by modifying localStorage
       set({ autoSync: false, intervalHours: coerced });
+
+      // Ensure isRefreshingProfile is false on page load (shouldn't be refreshing on initial load)
+      set({ isRefreshingProfile: false });
     } catch (error) {
       console.error('❌ Failed to initialize from storage:', error);
     }
