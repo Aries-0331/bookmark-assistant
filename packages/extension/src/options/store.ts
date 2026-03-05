@@ -212,6 +212,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     // Check after setting storage to prevent race conditions
     if (get().isRefreshingProfile && !forceRefresh) return;
 
+    // Add timeout fallback - auto-reset after 30 seconds for network issues
+    const TIMEOUT_MS = 30000;
+    const timeoutId = setTimeout(() => {
+      console.warn('[Entitlements] Refresh timeout - resetting state');
+      chrome.storage.local.set({ is_refreshing_entitlements: false });
+      set({ isRefreshingProfile: false });
+    }, TIMEOUT_MS);
+
     try {
       // Check cache first unless force refresh
       if (!forceRefresh) {
@@ -261,6 +269,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         chrome.storage.local.remove(['session_token', 'user_id', 'user_email']);
       }
     } finally {
+      clearTimeout(timeoutId);
       set({ isRefreshingProfile: false });
       // Clear storage state for cross-component sync
       await chrome.storage.local.set({ is_refreshing_entitlements: false });

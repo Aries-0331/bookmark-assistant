@@ -67,11 +67,9 @@ export function SyncSettingsSection({ onNavigate }: { onNavigate: (to: RouteId) 
               Automatically sync bookmarks in the background
             </div>
           </div>
-          <Switch
-            checked={autoSync}
-            onCheckedChange={onToggleAuto}
-            disabled={!isPro}
-          />
+          <div className="flex-shrink-0">
+            <Switch checked={autoSync} onCheckedChange={onToggleAuto} disabled={!isPro} />
+          </div>
         </div>
 
         <div className="mt-3 max-w-xs">
