@@ -88,23 +88,28 @@ export const useAppStore = create<AppState>((set, get) => ({
   autoSync: false,
   intervalHours: FREE_INTERVAL_HOURS,
   setAutoSync: async (v: boolean) => {
-    // Security: Validate with server before enabling auto-sync
+    // Optimistic update - update state FIRST so UI always reflects current state
+    set({ autoSync: v });
+
+    // Then validate with server if enabling
     // Users cannot bypass payment by modifying localStorage
     if (v) {
       try {
         const response = await sendMessage({ type: Messages.GET_USER_PROFILE });
         if (!response.success || !response.profile?.isPro) {
           console.warn('🚫 Auto-sync blocked: User is not Pro (server-verified)');
-          // Show error notification if possible
-          return; // Don't enable auto-sync
+          // Revert state if validation fails
+          set({ autoSync: false });
+          return;
         }
       } catch (error) {
         console.error('❌ Failed to verify Pro status for auto-sync:', error);
-        return; // Don't enable auto-sync on error
+        // Revert state on error
+        set({ autoSync: false });
+        return;
       }
     }
 
-    set({ autoSync: v });
     // Persist using single source of truth
     await chrome.storage.local.set({
       auto_sync_enabled: v,
