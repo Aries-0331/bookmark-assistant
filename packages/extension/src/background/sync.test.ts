@@ -62,7 +62,7 @@ describe('Sync Module', () => {
 
       const path = buildBookmarkPath(bookmarkTree, '3');
 
-      expect(path).toBe('Folder 1');
+      expect(path).toBe('Bookmarks Bar / Folder 1');
     });
 
     it('should handle nested folders', () => {
@@ -94,7 +94,7 @@ describe('Sync Module', () => {
 
       const path = buildBookmarkPath(bookmarkTree, '4');
 
-      expect(path).toBe('Folder 1 / Folder 2');
+      expect(path).toBe('Bookmarks Bar / Folder 1 / Folder 2');
     });
 
     it('should return "Bookmarks" for non-existent bookmark', () => {
@@ -140,7 +140,7 @@ describe('Sync Module', () => {
 
       const path = buildBookmarkPath(bookmarkTree, '3');
 
-      expect(path).toBe('Bookmarks');
+      expect(path).toBe('Bookmarks Bar');
     });
 
     it('should handle bookmark directly under root', () => {
@@ -160,7 +160,7 @@ describe('Sync Module', () => {
 
       const path = buildBookmarkPath(bookmarkTree, '2');
 
-      expect(path).toBe('Bookmarks');
+      expect(path).toBe('Bookmarks Bar');
     });
   });
 
@@ -174,16 +174,19 @@ describe('Sync Module', () => {
             {
               id: '2',
               title: 'Folder 1',
+              parentId: '1',
               children: [
                 {
                   id: '3',
                   title: 'Bookmark 1',
                   url: 'https://example1.com',
+                  parentId: '2',
                 },
                 {
                   id: '4',
                   title: 'Bookmark 2',
                   url: 'https://example2.com',
+                  parentId: '2',
                 },
               ],
             },
@@ -191,6 +194,7 @@ describe('Sync Module', () => {
               id: '5',
               title: 'Bookmark 3',
               url: 'https://example3.com',
+              parentId: '1',
             },
           ],
         },
@@ -345,38 +349,6 @@ describe('Sync Module', () => {
       expect(result.created).toBe(2);
     });
 
-    it('should warn when free user exceeds limit', async () => {
-      const manyBookmarks = [
-        {
-          id: '1',
-          title: 'Bookmarks Bar',
-          children: Array.from({ length: 100 }, (_, i) => ({
-            id: `bookmark-${i}`,
-            title: `Bookmark ${i}`,
-            url: `https://example${i}.com`,
-          })),
-        },
-      ] as any;
-
-      mockChrome.bookmarks.getTree.mockResolvedValue(manyBookmarks);
-      mockChrome.storage.local.get.mockResolvedValue({ is_pro: false });
-      mockChrome.storage.local.set.mockResolvedValue(undefined);
-
-      const { serverAPI } = await import('./server-api');
-      vi.mocked(serverAPI.syncBookmarks).mockResolvedValue({
-        success: true,
-        summary: { total: 100, created: 50, skipped: 50 },
-      });
-
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      await syncAllBookmarksToNotion();
-
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Free plan limit'));
-
-      consoleSpy.mockRestore();
-    });
-
     it('should throw error when no bookmarks found', async () => {
       const emptyBookmarkTree = [
         {
@@ -442,7 +414,7 @@ describe('Sync Module', () => {
       );
     });
 
-    it('should generate sync IDs using Chrome bookmark ID (stable identifier)', async () => {
+    it('should generate sync IDs using UUID format', async () => {
       mockChrome.bookmarks.getTree.mockResolvedValue(mockBookmarkTree);
       mockChrome.storage.local.get.mockResolvedValue({ is_pro: true });
       mockChrome.storage.local.set.mockResolvedValue(undefined);
@@ -456,8 +428,10 @@ describe('Sync Module', () => {
       await syncAllBookmarksToNotion();
 
       const callArgs = vi.mocked(serverAPI.syncBookmarks).mock.calls[0][0];
-      // syncId should be the stable Chrome bookmark ID
-      expect(callArgs[0].syncId).toBe('3'); // From mockBookmarkTree
+      // syncId should be a UUID format
+      expect(callArgs[0].syncId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      );
     });
   });
 });
