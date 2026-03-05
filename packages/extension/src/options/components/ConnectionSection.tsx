@@ -5,8 +5,10 @@ import { SectionCard } from './SectionCard';
 import { useAppStore } from '../store';
 import { Messages, sendMessage } from '../../utils/message';
 import { useToast } from '../hook/useToast';
+import { createTranslator } from '../../utils/i18n';
 
 export function ConnectionSection() {
+  const { t } = createTranslator();
   const { show } = useToast();
   // isConnecting is synced from storage - background drives state, don't set directly
   const { isConnecting, isConnected, isSyncing, lastSyncSummary } = useAppStore();
@@ -17,8 +19,8 @@ export function ConnectionSection() {
     if (lastSyncSummary?.type === 'no_changes') {
       show({
         variant: 'info',
-        title: 'Everything is up to date',
-        description: 'All bookmarks are already synced to Notion.',
+        title: t('sync_no_changes_title'),
+        description: t('sync_no_changes_desc'),
       });
       // Clear the summary so it can be shown again on the next sync
       useAppStore.getState().setLastSyncSummary(undefined);
@@ -32,21 +34,21 @@ export function ConnectionSection() {
       if (res.success) {
         show({
           variant: 'success',
-          title: 'Connected',
-          description: 'Your Notion workspace has been successfully connected.',
+          title: t('connected'),
+          description: t('connection_success_desc'),
         });
       } else {
         show({
           variant: 'error',
-          title: 'Connection Failed',
-          description: 'Failed to connect to Notion. Please try again.',
+          title: t('connection_failed_title'),
+          description: t('connection_failed_desc'),
         });
       }
     } catch {
       show({
         variant: 'error',
-        title: 'Connection Failed',
-        description: 'An error occurred while connecting to Notion.',
+        title: t('connection_failed_title'),
+        description: t('connection_error_desc'),
       });
     }
     // isConnecting is synced from storage - background drives state
@@ -58,7 +60,7 @@ export function ConnectionSection() {
   const onDisconnect = async () => {
     await sendMessage({ type: Messages.LOGOUT });
     setShowDisconnectConfirm(false);
-    
+
     // Reset Zustand store state to reflect disconnection
     useAppStore.setState({
       isConnected: false,
@@ -71,11 +73,11 @@ export function ConnectionSection() {
       lastSyncSummary: undefined,
       autoSync: false,
     });
-    
+
     show({
       variant: 'success',
-      title: 'Disconnected',
-      description: 'Your Notion connection has been removed.',
+      title: t('disconnected_title'),
+      description: t('disconnected_desc'),
     });
   };
 
@@ -91,8 +93,8 @@ export function ConnectionSection() {
       if (!result.success) {
         show({
           variant: 'error',
-          title: 'Sync Failed',
-          description: result.error || 'Failed to sync bookmarks',
+          title: t('sync_failed_title'),
+          description: result.error || t('sync_failed_desc'),
         });
       } else {
         // Fallback: directly check storage for no_changes status
@@ -108,8 +110,8 @@ export function ConnectionSection() {
             const bookmarkText = count === 1 ? 'bookmark' : 'bookmarks';
             show({
               variant: 'info',
-              title: 'Everything is up to date',
-              description: `All ${count} ${bookmarkText} are already synced to Notion.`,
+              title: t('sync_no_changes_title'),
+              description: t('sync_no_changes_count_desc', [String(count), bookmarkText]),
             });
           }
         }, 100);
@@ -118,8 +120,8 @@ export function ConnectionSection() {
       if (error instanceof Error && error.message !== 'REQUEST_TIMEOUT') {
         show({
           variant: 'error',
-          title: 'Sync Failed',
-          description: error.message || 'Failed to sync bookmarks',
+          title: t('sync_failed_title'),
+          description: error.message || t('sync_failed_desc'),
         });
       }
     }
@@ -128,8 +130,8 @@ export function ConnectionSection() {
   return (
     <SectionCard
       id="connection"
-      title="Connection"
-      description="Connect your Notion workspace to sync bookmarks"
+      title={t('nav_connection')}
+      description={t('connection_desc')}
     >
       <div className="mt-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
         <div className="flex items-start gap-4">
@@ -137,10 +139,8 @@ export function ConnectionSection() {
             <Shield className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-lg font-semibold text-gray-900">Secure OAuth Connection</div>
-            <p className="text-sm text-gray-600">
-              Connect securely with Notion's OAuth. No need to manage tokens manually.
-            </p>
+            <div className="text-lg font-semibold text-gray-900">{t('oauth_connection_title')}</div>
+            <p className="text-sm text-gray-600">{t('oauth_connection_desc')}</p>
           </div>
         </div>
         <div className="mt-3">
@@ -150,8 +150,8 @@ export function ConnectionSection() {
                 className="flex-1 gap-2"
                 onClick={onSyncNow}
                 isSyncing={isSyncing}
-                text="Sync Now"
-                loadingText="Syncing…"
+                text={t('syncNow')}
+                loadingText={t('syncing')}
                 icon={<RefreshCcw size={16} />}
                 fullWidth={false}
               />
@@ -168,8 +168,8 @@ export function ConnectionSection() {
               className="w-full"
               onClick={onConnect}
               isConnecting={isConnecting}
-              text="Connect to Notion"
-              loadingText="Connecting…"
+              text={t('connectToNotion')}
+              loadingText={t('connecting')}
             />
           )}
         </div>
@@ -183,33 +183,29 @@ export function ConnectionSection() {
                   <AlertTriangle className="w-5 h-5 text-red-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-900">Disconnect from Notion?</h3>
+                  <h3 className="text-xl font-semibold text-gray-900">{t('confirm_disconnect_title')}</h3>
                 </div>
               </div>
 
-              <p className="text-sm text-gray-600 mb-4">
-                This will remove your Notion workspace connection and clear all local settings.
-              </p>
+              <p className="text-sm text-gray-600 mb-4">{t('confirm_disconnect_message')}</p>
 
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-lg">⚠️</span>
-                  <h4 className="font-semibold text-blue-900">Important:</h4>
+                  <h4 className="font-semibold text-blue-900">{t('confirm_important')}</h4>
                 </div>
                 <ul className="space-y-2 text-sm text-blue-800">
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 mt-0.5">•</span>
-                    <span>
-                      Your synced bookmarks in Notion will <strong>not</strong> be deleted
-                    </span>
+                    <span>{t('confirm_disconnect_note_1')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 mt-0.5">•</span>
-                    <span>Reconnecting will require setting up a new database</span>
+                    <span>{t('confirm_disconnect_note_2')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 mt-0.5">•</span>
-                    <span>You'll need to sync bookmarks again after reconnecting</span>
+                    <span>{t('confirm_disconnect_note_3')}</span>
                   </li>
                 </ul>
               </div>
@@ -219,13 +215,13 @@ export function ConnectionSection() {
                   className="flex-1"
                   onClick={() => setShowDisconnectConfirm(false)}
                   variant="secondary"
-                  text="Cancel"
+                  text={t('action_cancel')}
                 />
                 <Button
                   className="flex-1"
                   onClick={onDisconnect}
                   variant="destructive"
-                  text="Disconnect"
+                  text={t('disconnect')}
                 />
               </div>
             </div>
