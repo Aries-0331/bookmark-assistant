@@ -1,6 +1,6 @@
 {
   "name": "bookmark-assistant",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Transform Chrome bookmarks into organized Notion databases. One-click sync, smart descriptions, auto-sync Pro features.",
   "private": true,
   "packageManager": "pnpm@9.12.0",
