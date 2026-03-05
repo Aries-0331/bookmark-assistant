@@ -88,23 +88,28 @@ export const useAppStore = create<AppState>((set, get) => ({
   autoSync: false,
   intervalHours: FREE_INTERVAL_HOURS,
   setAutoSync: async (v: boolean) => {
-    // Security: Validate with server before enabling auto-sync
+    // Optimistic update - update state FIRST so UI always reflects current state
+    set({ autoSync: v });
+
+    // Then validate with server if enabling
     // Users cannot bypass payment by modifying localStorage
     if (v) {
       try {
         const response = await sendMessage({ type: Messages.GET_USER_PROFILE });
         if (!response.success || !response.profile?.isPro) {
           console.warn('🚫 Auto-sync blocked: User is not Pro (server-verified)');
-          // Show error notification if possible
-          return; // Don't enable auto-sync
+          // Revert state if validation fails
+          set({ autoSync: false });
+          return;
         }
       } catch (error) {
         console.error('❌ Failed to verify Pro status for auto-sync:', error);
-        return; // Don't enable auto-sync on error
+        // Revert state on error
+        set({ autoSync: false });
+        return;
       }
     }
 
-    set({ autoSync: v });
     // Persist using single source of truth
     await chrome.storage.local.set({
       auto_sync_enabled: v,
@@ -157,8 +162,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (sync_in_progress) {
         set({ isSyncing: true });
       }
+      // Clear any stale refreshing state from previous page loads/crashes
       if (is_refreshing_entitlements) {
-        set({ isRefreshingProfile: true });
+        console.log('[Init] Clearing stale is_refreshing_entitlements state');
+        await chrome.storage.local.set({ is_refreshing_entitlements: false });
+        // Also clear the Zustand store state to ensure UI updates
+        set({ isRefreshingProfile: false });
       }
 
       // Load cached is_pro and purchase_type for immediate display
@@ -184,6 +193,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       // Load auto-sync state (default to disabled, will be enabled by refreshEntitlements if Pro)
       // Users cannot bypass payment by modifying localStorage
       set({ autoSync: false, intervalHours: coerced });
+
+      // Ensure isRefreshingProfile is false on page load (shouldn't be refreshing on initial load)
+      set({ isRefreshingProfile: false });
     } catch (error) {
       console.error('❌ Failed to initialize from storage:', error);
     }
@@ -203,12 +215,27 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   refreshEntitlements: async (forceRefresh = false) => {
+    // Check BEFORE setting state - this prevents the bug where we check after setting to true
+    // which always returns true (causing the function to never complete)
+    const { is_refreshing_entitlements } = await chrome.storage.local.get([
+      'is_refreshing_entitlements',
+    ]);
+    if (is_refreshing_entitlements && !forceRefresh) {
+      console.log('[Entitlements] Already refreshing, skipping');
+      return;
+    }
+
     // Set storage FIRST to prevent race conditions with concurrent calls
     await chrome.storage.local.set({ is_refreshing_entitlements: true });
     set({ isRefreshingProfile: true });
 
-    // Check after setting storage to prevent race conditions
-    if (get().isRefreshingProfile && !forceRefresh) return;
+    // Add timeout fallback - auto-reset after 30 seconds for network issues
+    const TIMEOUT_MS = 30000;
+    const timeoutId = setTimeout(() => {
+      console.warn('[Entitlements] Refresh timeout - resetting state');
+      chrome.storage.local.set({ is_refreshing_entitlements: false });
+      set({ isRefreshingProfile: false });
+    }, TIMEOUT_MS);
 
     try {
       // Check cache first unless force refresh
@@ -259,6 +286,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         chrome.storage.local.remove(['session_token', 'user_id', 'user_email']);
       }
     } finally {
+      clearTimeout(timeoutId);
       set({ isRefreshingProfile: false });
       // Clear storage state for cross-component sync
       await chrome.storage.local.set({ is_refreshing_entitlements: false });
