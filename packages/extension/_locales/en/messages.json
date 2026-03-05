@@ -520,5 +520,49 @@
   "made_with_love": {
     "message": "Made with $1 for the Notion community",
     "description": "Made with love message"
+  },
+  "need_help": {
+    "message": "Need Help?",
+    "description": "Footer help section title"
+  },
+  "contact_support": {
+    "message": "Contact Support",
+    "description": "Footer contact support subtitle"
+  },
+  "faq_guide": {
+    "message": "FAQ & Guide",
+    "description": "Footer FAQ section title"
+  },
+  "common_questions": {
+    "message": "Common Questions",
+    "description": "Footer FAQ subtitle"
+  },
+  "version_label": {
+    "message": "Version",
+    "description": "Version label"
+  },
+  "footer_copyright": {
+    "message": "© 2025 Bookmark Assistant. Transform your bookmarks into organized knowledge.",
+    "description": "Footer copyright text"
+  },
+  "privacy": {
+    "message": "Privacy",
+    "description": "Privacy link text"
+  },
+  "terms": {
+    "message": "Terms",
+    "description": "Terms of service link text"
+  },
+  "header_title": {
+    "message": "Bookmark Assistant",
+    "description": "Header app title"
+  },
+  "header_subtitle": {
+    "message": "Sync Bookmarks to Notion",
+    "description": "Header subtitle"
+  },
+  "support": {
+    "message": "Support",
+    "description": "Support button text"
   }
 }
