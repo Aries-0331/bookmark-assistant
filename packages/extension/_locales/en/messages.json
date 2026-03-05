@@ -472,5 +472,53 @@
   "working": {
     "message": "Working...",
     "description": "Working indicator"
+  },
+  "about_title": {
+    "message": "About",
+    "description": "About section title"
+  },
+  "about_desc": {
+    "message": "Information about Notion Bookmark Sync",
+    "description": "About section description"
+  },
+  "about_app_name": {
+    "message": "Bookmark Assistant",
+    "description": "App name displayed in about section"
+  },
+  "about_version": {
+    "message": "Version $1",
+    "description": "Version label with placeholder"
+  },
+  "about_description": {
+    "message": "Sync your Chrome bookmarks to Notion seamlessly",
+    "description": "App description in about section"
+  },
+  "license": {
+    "message": "License",
+    "description": "License label"
+  },
+  "license_mit": {
+    "message": "MIT",
+    "description": "MIT license"
+  },
+  "last_updated": {
+    "message": "Last Updated",
+    "description": "Last updated label"
+  },
+  "view_on_github": {
+    "message": "View on GitHub",
+    "description": "Link to GitHub"
+  },
+  "documentation": {
+    "message": "Documentation",
+    "description": "Link to documentation"
+  },
+  "report_issue": {
+    "message": "Report an Issue",
+    "description": "Link to report issues"
+  },
+  "made_with_love": {
+    "message": "Made with $1 for the Notion community",
+    "description": "Made with love message"
   }
 }
