@@ -26,7 +26,8 @@
     "clean": "pnpm -r clean",
     "prepare": "husky",
     "start:server": "pnpm -F @bookmark-assistant/server start",
-    "start:website": "pnpm -F @bookmark-assistant/website start"
+    "start:website": "pnpm -F @bookmark-assistant/website start",
+    "check:i18n": "node scripts/check-i18n.js"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",
