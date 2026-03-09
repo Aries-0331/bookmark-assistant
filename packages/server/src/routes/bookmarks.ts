@@ -355,9 +355,9 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
             : undefined;
 
           // Create new page (incremental create-only)
-          // In API version 2025-09-03, use data_source_id for inline databases
+          // Use verifiedDatabaseId - NOT data_source_id. data_source_id is for data source queries only.
           await notionService.createPage(
-            { type: 'data_source_id', data_source_id: verifiedDataSourceId },
+            { type: 'database_id', database_id: verifiedDatabaseId },
             properties,
             userData.notionAccessToken,
             undefined, // children
@@ -414,7 +414,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
               : undefined;
 
             await notionService.createPage(
-              { type: 'data_source_id', data_source_id: verifiedDataSourceId },
+              { type: 'database_id', database_id: verifiedDatabaseId },
               properties,
               userData.notionAccessToken,
               undefined,
