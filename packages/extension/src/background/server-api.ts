@@ -267,6 +267,7 @@ class ServerAPIClient {
       'last_sync_summary',
       'last_sync_count',
       'last_sync_fingerprint',
+      'last_sync_hash',
       'sync_in_progress',
       'is_connecting',
       'auto_sync_enabled',

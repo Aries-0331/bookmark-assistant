@@ -25,7 +25,7 @@ export function ConnectionSection() {
       // Clear the summary so it can be shown again on the next sync
       useAppStore.getState().setLastSyncSummary(undefined);
     }
-  }, [lastSyncSummary, show]);
+  }, [lastSyncSummary, show, t]);
 
   // isConnecting is synced from storage - background drives state, don't set directly
   const onConnect = async () => {
