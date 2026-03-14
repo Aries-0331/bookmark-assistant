@@ -64,7 +64,7 @@ describe('ServerAPI - Logout Selective Cleanup', () => {
     } as Response);
   });
 
-  it('should preserve oauth_template_database_id after logout', async () => {
+  it('should remove oauth_template_database_id on logout', async () => {
     await serverAPI.logout();
 
     // Should be removed
@@ -75,9 +75,9 @@ describe('ServerAPI - Logout Selective Cleanup', () => {
     expect(mockChromeStorage.purchase_type).toBeUndefined();
     expect(mockChromeStorage.last_sync).toBeUndefined();
     expect(mockChromeStorage.auto_sync_enabled).toBeUndefined();
+    expect(mockChromeStorage.oauth_template_database_id).toBeUndefined(); // Now removed
 
     // Should be preserved
-    expect(mockChromeStorage.oauth_template_database_id).toBe('template-abc-123');
     expect(mockChromeStorage.description_cache_url1).toBeDefined();
     expect(mockChromeStorage.cached_pricing).toEqual({ monthly: 2.5, lifetime: 30.0 });
   });
@@ -143,53 +143,6 @@ describe('ServerAPI - Logout Selective Cleanup', () => {
 
     // Should still clear local storage
     expect(mockChromeStorage.session_token).toBeUndefined();
-    expect(mockChromeStorage.oauth_template_database_id).toBe('template-abc-123');
-  });
-});
-
-describe('Disconnect-Reconnect-Sync Flow', () => {
-  it('should maintain oauth_template_database_id across disconnect/reconnect', async () => {
-    const mockStorage: Record<string, any> = {
-      session_token: 'old-token',
-      oauth_template_database_id: 'template-123',
-    };
-
-    global.chrome = {
-      storage: {
-        local: {
-          get: vi.fn().mockResolvedValue(mockStorage),
-          set: vi.fn().mockImplementation((items) => {
-            Object.assign(mockStorage, items);
-            return Promise.resolve();
-          }),
-          remove: vi.fn().mockImplementation((keys) => {
-            const keysArray = Array.isArray(keys) ? keys : [keys];
-            keysArray.forEach((key) => {
-              delete mockStorage[key];
-            });
-            return Promise.resolve();
-          }),
-        },
-      },
-    } as any;
-
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ success: true }),
-    } as Response);
-
-    // 1. Disconnect (logout)
-    await serverAPI.logout();
-    expect(mockStorage.session_token).toBeUndefined();
-    expect(mockStorage.oauth_template_database_id).toBe('template-123'); // ✅ Preserved
-
-    // 2. Reconnect (new OAuth)
-    mockStorage.session_token = 'new-token';
-    mockStorage.user_id = 'user-456';
-    // oauth_template_database_id is already there from before
-
-    // 3. Sync should work because oauth_template_database_id is available for server recovery
-    expect(mockStorage.oauth_template_database_id).toBe('template-123');
-    expect(mockStorage.session_token).toBe('new-token');
+    expect(mockChromeStorage.oauth_template_database_id).toBeUndefined(); // Now removed
   });
 });
