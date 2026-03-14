@@ -253,12 +253,15 @@ class ServerAPIClient {
     } catch {}
     this.sessionToken = null;
 
-    // Selective cleanup: Only remove authentication and session data
-    // Preserve: description cache, pricing cache, oauth_template_database_id (for reconnection)
+    // Selective cleanup: Remove all authentication and session data
+    // Note: We no longer preserve oauth_template_database_id because:
+    // 1. Server-side recovery was removed (each reconnection creates a new database)
+    // 2. The old template ID would cause stale cache issues
     const keysToRemove = [
       'session_token',
       'user_id',
       'user_email',
+      'oauth_template_database_id', // Remove - no longer needed, causes stale cache
       'is_pro',
       'purchase_type',
       'entitlements_cached_at', // Clear entitlements cache on logout
@@ -280,7 +283,6 @@ class ServerAPIClient {
     await chrome.storage.local.remove(keysToRemove);
 
     // Note: We intentionally preserve:
-    // - oauth_template_database_id (needed for server-side database recovery after reconnection)
     // - description_cache_* keys (user's cached descriptions - expensive to rebuild)
     // - cached_pricing (avoids unnecessary refetch)
   }

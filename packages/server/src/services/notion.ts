@@ -177,17 +177,17 @@ export class NotionService {
   }
 
   /**
-   * Verify database access and recover if needed.
-   * Recovery strategy: re-parse the duplicated template page to find the inline database.
+   * Verify database access.
+   * Note: We no longer attempt recovery from template because each reconnection
+   * creates a new duplicated database. If database is inaccessible, fail fast.
    */
   async verifyDatabaseAccess(
     databaseId: string,
-    accessToken: string,
-    duplicatedTemplateId?: string
+    accessToken: string
   ): Promise<{ databaseId: string; dataSourceId: string }> {
     const notion = this.getClient(accessToken);
 
-    // Step 1: Try accessing the stored database with retry
+    // Try accessing the stored database with retry
     try {
       console.log(`[Notion] Verifying database access for ${databaseId}...`);
       const db: any = await this.withRetry(
@@ -202,30 +202,9 @@ export class NotionService {
       }
     } catch (error: any) {
       console.error(`[Notion] ✗ Failed to access database ${databaseId}:`, error.message || error);
-      // Step 2: Attempt recovery by re-parsing the duplicated template page
-      if (duplicatedTemplateId) {
-        console.log('[Notion] Attempting database recovery from template');
-        try {
-          const resolved = await this.resolveDatabaseFromTemplate(
-            duplicatedTemplateId,
-            accessToken
-          );
-          console.log(`[Notion] ✓ Database recovered from template: ${resolved.databaseId}`);
-          return {
-            databaseId: resolved.databaseId,
-            dataSourceId: resolved.dataSourceId || resolved.databaseId,
-          };
-        } catch (resolveError) {
-          console.error(
-            '[Notion] Database recovery failed:',
-            resolveError instanceof Error ? resolveError.message : resolveError
-          );
-        }
-      }
-
-      // Step 3: Unrecoverable - user needs to reconnect
+      // Fail fast - user needs to reconnect
       throw new Error(
-        `Database ${databaseId} is not accessible and recovery failed. Please reconnect your Notion integration to re-authorize database access.`
+        `Database ${databaseId} is not accessible. Please reconnect your Notion integration to re-authorize database access.`
       );
     }
 
