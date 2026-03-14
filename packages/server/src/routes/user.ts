@@ -3,7 +3,7 @@
 import { Router, Response } from 'express';
 import { AuthenticatedRequest } from '../types';
 import { validateSession } from '../middleware/auth';
-import { userPrisma } from '../services/userPrisma';
+import { userPrisma, prisma } from '../services/userPrisma';
 import { auditLog, sanitizeError } from '../utils';
 
 const router: import('express').Router = Router();
@@ -151,17 +151,18 @@ router.get(
 
 /**
  * Logout Endpoint
- * Clear user session and tokens
+ * Delete user record to prevent stale cache conflicts on reconnection.
+ * Each reconnection creates a new duplicated database in Notion.
  */
 router.post('/logout', validateSession, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    // Best effort: remove tokens so server-side won’t use them later
-    try {
-      await userPrisma.updateTokens(userId, '', '');
-    } catch {}
-    // No server-side session to kill (JWT is stateless). Client should discard it.
-    auditLog('logout', userId, {});
+    // Delete the user record entirely to prevent stale database ID conflicts
+    // When user reconnects, they will create a fresh database in Notion
+    await prisma.user.delete({ where: { id: userId } }).catch(() => {
+      // Ignore if user doesn't exist
+    });
+    auditLog('logout', userId, { action: 'user_deleted' });
     res.json({ success: true });
   } catch (error) {
     const errorMessage = sanitizeError(error);

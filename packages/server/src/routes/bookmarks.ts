@@ -181,31 +181,14 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     console.log('[Bookmark Sync] 🔍 Verifying database access...');
     console.log('[Bookmark Sync]   Database ID:', verifiedDatabaseId);
     console.log('[Bookmark Sync]   Data Source ID:', verifiedDataSourceId);
-    console.log('[Bookmark Sync]   Duplicated Template ID:', userData.duplicatedTemplateId);
 
     try {
       const verification = await notionService.verifyDatabaseAccess(
         userData.notionDatabaseId,
-        userData.notionAccessToken,
-        userData.duplicatedTemplateId // Use duplicatedTemplateId (page ID) not templateDatabaseId
+        userData.notionAccessToken
       );
       verifiedDatabaseId = verification.databaseId;
       verifiedDataSourceId = verification.dataSourceId;
-
-      // Update user record if database changed (recovery successful)
-      if (
-        verifiedDatabaseId !== userData.notionDatabaseId ||
-        verifiedDataSourceId !== userData.notionDataSourceId
-      ) {
-        console.log('[Bookmark Sync] 🔄 Database recovered, updating user record');
-        console.log('[Bookmark Sync]   Old DB:', userData.notionDatabaseId);
-        console.log('[Bookmark Sync]   New DB:', verifiedDatabaseId);
-        await userPrisma.update(userData.id!, {
-          notionDatabaseId: verifiedDatabaseId,
-          notionDataSourceId: verifiedDataSourceId,
-          templateDatabaseId: verifiedDatabaseId, // Update templateDatabaseId to match
-        });
-      }
     } catch (error) {
       console.error('[Bookmark Sync] ❌ Database verification failed:', error);
       return res.status(400).json({
