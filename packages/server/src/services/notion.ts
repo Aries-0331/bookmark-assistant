@@ -371,10 +371,10 @@ export class NotionService {
     const encoded = Buffer.from(`${config.notionClientId}:${config.notionClientSecret}`).toString(
       'base64'
     );
-    
+
     const maxRetries = 3;
     let attempt = 0;
-    
+
     while (attempt < maxRetries) {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000);
@@ -408,10 +408,10 @@ export class NotionService {
       } catch (err: any) {
         clearTimeout(timeout);
         attempt++;
-        
+
         const errorCode = err?.code || err?.cause?.code || 'UNKNOWN';
         const errorName = err?.name || 'Error';
-        
+
         // Check if it's a retryable network error
         const isNetworkError =
           errorCode === 'ECONNRESET' ||
@@ -420,7 +420,7 @@ export class NotionService {
           errorCode === 'ECONNREFUSED' ||
           err?.message?.includes('fetch failed') ||
           err?.message?.includes('network');
-        
+
         if (isNetworkError && attempt < maxRetries) {
           // Exponential backoff: 500ms, 1000ms, 2000ms
           const delayMs = 500 * Math.pow(2, attempt - 1);
@@ -430,14 +430,14 @@ export class NotionService {
           await new Promise((resolve) => setTimeout(resolve, delayMs));
           continue;
         }
-        
+
         // If not a network error or max retries reached, throw
         throw new Error(
           `OAuth exchange network error (${errorName}:${errorCode}): ${err?.message || String(err)}`
         );
       }
     }
-    
+
     // Should never reach here, but TypeScript needs this
     throw new Error('OAuth exchange failed after all retries');
   }
@@ -450,14 +450,14 @@ export class NotionService {
     const encoded = Buffer.from(`${config.notionClientId}:${config.notionClientSecret}`).toString(
       'base64'
     );
-    
+
     const maxRetries = 3;
     let attempt = 0;
-    
+
     while (attempt < maxRetries) {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000);
-      
+
       try {
         const response = await fetch('https://api.notion.com/v1/oauth/token', {
           method: 'POST',
@@ -486,10 +486,10 @@ export class NotionService {
       } catch (err: any) {
         clearTimeout(timeout);
         attempt++;
-        
+
         const errorCode = err?.code || err?.cause?.code || 'UNKNOWN';
         const errorName = err?.name || 'Error';
-        
+
         // Check if it's a retryable network error
         const isNetworkError =
           errorCode === 'ECONNRESET' ||
@@ -498,7 +498,7 @@ export class NotionService {
           errorCode === 'ECONNREFUSED' ||
           err?.message?.includes('fetch failed') ||
           err?.message?.includes('network');
-        
+
         if (isNetworkError && attempt < maxRetries) {
           const delayMs = 500 * Math.pow(2, attempt - 1);
           console.warn(
@@ -507,14 +507,14 @@ export class NotionService {
           await new Promise((resolve) => setTimeout(resolve, delayMs));
           continue;
         }
-        
+
         // If not a network error or max retries reached, throw
         throw new Error(
           `Token refresh network error (${errorName}:${errorCode}): ${err?.message || String(err)}`
         );
       }
     }
-    
+
     throw new Error('Token refresh failed after all retries');
   }
 
@@ -623,10 +623,7 @@ export class NotionService {
         const response = await Promise.race([fetchPromise, timeoutPromise]);
         return response;
       } catch (error: any) {
-        console.warn(
-          `[Notion] Fetch attempt ${retryCount + 1} failed:`,
-          error.message || error
-        );
+        console.warn(`[Notion] Fetch attempt ${retryCount + 1} failed:`, error.message || error);
 
         // Check if it's a network/connection error
         const isNetworkError =
@@ -648,9 +645,7 @@ export class NotionService {
         // If it's a rate limit error, wait longer
         if (error.status === 429 || error.message?.includes('rate limit')) {
           const delay = baseDelay * 5; // 5 second delay for rate limits
-          console.log(
-            `[Notion] Rate limited, waiting ${delay}ms before retry...`
-          );
+          console.log(`[Notion] Rate limited, waiting ${delay}ms before retry...`);
           await new Promise((resolve) => setTimeout(resolve, delay));
           if (retryCount < maxRetries) {
             return attemptFetch(retryCount + 1);
@@ -667,14 +662,12 @@ export class NotionService {
         if (pageCount > maxPages) {
           console.warn(
             `[Notion] Reached max pages limit (${maxPages}) while fetching existing bookmarks. ` +
-            `Found ${urls.length} URLs so far.`
+              `Found ${urls.length} URLs so far.`
           );
           break;
         }
 
-        console.debug(
-          `[Notion] Fetching existing bookmarks page ${pageCount}/${maxPages}...`
-        );
+        console.debug(`[Notion] Fetching existing bookmarks page ${pageCount}/${maxPages}...`);
 
         const response = await attemptFetch();
         const results = response?.results || [];
@@ -798,13 +791,44 @@ export class NotionService {
       try {
         console.log(`[Notion] Reading children for block ${id} (depth ${depth})...`);
 
-        const children = await this.withRetry(
-          () => notion.blocks.children.list({ block_id: id, page_size: 100 }),
-          `Read children for ${id}`,
-          3
-        );
+        // Don't use withRetry here - we need to capture partial results on error
+        let children: any;
+        let childrenResults: any[] = [];
+        let fetchError: any = null;
 
-        for (const block of (children as any).results || []) {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 30000);
+
+          const response = await notion.blocks.children.list({
+            block_id: id,
+            page_size: 100
+          });
+
+          clearTimeout(timeout);
+          children = response;
+          childrenResults = (children as any)?.results || [];
+        } catch (innerError: any) {
+          // Check if we got partial results before the error
+          // The Notion SDK might have returned some blocks even with the error
+          console.log(`[Notion] ⚠️ Error during fetch:`, innerError.message);
+          fetchError = innerError;
+
+          // Try to extract any partial results from the error if possible
+          // Otherwise continue with empty results
+          childrenResults = [];
+        }
+
+        // Log children response details for debugging
+        if (fetchError) {
+          console.log(`[Notion] Warning: Error during fetch but continuing: ${fetchError.message}`);
+        }
+        if (childrenResults.length > 0) {
+          const blockTypes = [...new Set(childrenResults.map((b: any) => b?.type).filter(Boolean))];
+          console.log(`[Notion] Found ${childrenResults.length} blocks (${(children as any)?.has_more ? 'more coming' : 'complete'}):`, blockTypes);
+        }
+
+        for (const block of childrenResults) {
           const type = block?.type;
 
           if (type === 'child_database') {
@@ -853,8 +877,15 @@ export class NotionService {
             await new Promise((resolve) => setTimeout(resolve, 350));
           }
         }
+
       } catch (e: any) {
-        console.error(`[Notion] ✗ Error reading children for block ${id}:`, e.message || e);
+        // Log error details for debugging
+        const errorCode = (e as any)?.code || 'unknown';
+        const errorMessage = e.message || String(e);
+        console.error(`[Notion] Error reading children for block ${id}:`, errorMessage);
+        if (errorCode !== 'unknown') {
+          console.error(`[Notion] Error code:`, errorCode);
+        }
         // Continue processing other blocks instead of failing completely
       }
     }
