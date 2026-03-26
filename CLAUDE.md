@@ -237,17 +237,18 @@ pnpm test -- --reporter=verbose            # Verbose output
 - Next.js builds to `.next/`
 - Deploy to Vercel or similar platform
 
-See `docs/DEPLOYMENT.md` for detailed deployment steps.
+See `docs.archive/process-guides/DEPLOYMENT.md` for detailed deployment steps.
 
 ## Important Documentation
 
 - `docs/STATE_MANAGEMENT.md` - Extension state architecture
-- `docs/DEPLOYMENT.md` - Production deployment guide
 - `docs/PADDLE_INTEGRATION.md` - Payment integration
 - `docs/NOTION_INTEGRATION.md` - Notion API usage
 - `docs/AUTO_SYNC.md` - Auto-sync implementation
 - `docs/INTERNATIONALIZATION.md` - i18n strategy
-- `tests/README.md` - Testing infrastructure
+- `docs/DESCRIPTION_CACHE.md` - Content extraction caching
+
+Archived documentation: See `docs.archive/process-guides/` for deployment, Chrome Web Store, and other legacy guides.
 
 ## Code Patterns
 
