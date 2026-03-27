@@ -30,6 +30,7 @@ export type MessageMap = {
     req: { enabled: boolean; intervalHours: number };
     res: { success: boolean; error?: string };
   };
+  SAVE_CURRENT_PAGE: { req: {}; res: { success: boolean; error?: string } };
 };
 
 export type MessageType = keyof MessageMap;
@@ -49,6 +50,7 @@ export const Messages: { [K in MessageType]: K } = {
   CANCEL_SUBSCRIPTION: 'CANCEL_SUBSCRIPTION',
   GET_SUBSCRIPTION_INFO: 'GET_SUBSCRIPTION_INFO',
   SCHEDULE_AUTO_SYNC: 'SCHEDULE_AUTO_SYNC',
+  SAVE_CURRENT_PAGE: 'SAVE_CURRENT_PAGE',
 };
 
 export async function sendMessage<T extends MessageType>(
