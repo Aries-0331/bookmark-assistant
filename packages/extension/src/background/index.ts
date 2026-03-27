@@ -493,6 +493,19 @@ function setupContextMenu() {
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === 'saveToNotion') {
+    // Check if user is connected first
+    const { session_token } = await chrome.storage.local.get('session_token');
+    if (!session_token) {
+      const message = chrome.i18n.getMessage('notConnectedMessage') || 'Please connect to Notion first';
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: '/assets/favicon/favicon-32x32.png',
+        title: 'Bookmark Assistant',
+        message: message,
+      });
+      return;
+    }
+
     // If clicked on a link, save the link; otherwise save current page
     const url = info.linkUrl || tab?.url;
     const title = (info as any).linkText || tab?.title || 'Untitled';
@@ -515,14 +528,22 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       };
       await serverAPI.syncBookmarks([bookmark]);
       // Show notification on success
+      const successMsg = chrome.i18n.getMessage('saveSuccess') || 'Page saved to Notion';
       chrome.notifications?.create({
         type: 'basic',
         iconUrl: '/assets/favicon/favicon-32x32.png',
         title: 'Bookmark Assistant',
-        message: 'Page saved to Notion',
+        message: successMsg,
       });
     } catch (error) {
       console.error('[Context Menu] Save failed:', error);
+      const failMsg = chrome.i18n.getMessage('saveFailed') || 'Failed to save page';
+      chrome.notifications?.create({
+        type: 'basic',
+        iconUrl: '/assets/favicon/favicon-32x32.png',
+        title: 'Bookmark Assistant',
+        message: failMsg,
+      });
     }
   }
 });
