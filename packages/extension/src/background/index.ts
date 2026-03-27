@@ -423,6 +423,20 @@ async function performBookmarkSync(): Promise<{
 // Save current page/tab to Notion
 async function saveCurrentPage(): Promise<{ success: boolean; error?: string }> {
   try {
+    // Check if user is connected first
+    const { session_token } = await chrome.storage.local.get('session_token');
+    if (!session_token) {
+      // Show notification to connect to Notion
+      const message = chrome.i18n.getMessage('notConnectedMessage') || 'Please connect to Notion first';
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: '/assets/favicon/favicon-32x32.png',
+        title: 'Bookmark Assistant',
+        message: message,
+      });
+      return { success: false, error: 'Not connected' };
+    }
+
     // Get the current active tab
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
