@@ -185,17 +185,14 @@ export default function Popup() {
             )}
           </button>
         ) : (
-          <>
-            <SaveCurrentPageButton />
-            <button
-              onClick={handleSync}
-              disabled={isSyncing}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
-            >
-              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? t('popup_syncing') : t('syncNow')}
-            </button>
-          </>
+          <button
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? t('popup_syncing') : t('syncNow')}
+          </button>
         )}
 
         {/* Settings Link */}
@@ -206,6 +203,9 @@ export default function Popup() {
           <Settings className="w-4 h-4" />
           {t('popup_settings_billing')}
         </button>
+
+        {/* Save Current Page - Below Settings */}
+        {isConnected && <SaveCurrentPageButton />}
       </div>
     </div>
   );
