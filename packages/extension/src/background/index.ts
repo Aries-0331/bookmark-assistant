@@ -420,6 +420,43 @@ async function performBookmarkSync(): Promise<{
   }
 }
 
+// Save current page/tab to Notion
+async function saveCurrentPage(): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Get the current active tab
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    if (!tab || !tab.url || !tab.title) {
+      return { success: false, error: 'No active tab found' };
+    }
+
+    // Skip chrome:// and other internal URLs
+    if (tab.url.startsWith('chrome://') || tab.url.startsWith('about:')) {
+      return { success: false, error: 'Cannot save internal page' };
+    }
+
+    // Format bookmark for server
+    const bookmark = {
+      title: tab.title || 'Untitled',
+      url: tab.url,
+      description: '', // Let server generate description
+      path: 'Quick Saves', // Default folder for quick saves
+      dateAdded: new Date().toISOString(),
+      syncId: globalThis.crypto && 'randomUUID' in globalThis.crypto
+        ? (globalThis.crypto as any).randomUUID()
+        : `quick-save-${Date.now()}`,
+    };
+
+    // Send to server
+    await serverAPI.syncBookmarks([bookmark]);
+
+    return { success: true };
+  } catch (error) {
+    console.error('[saveCurrentPage] Failed:', error);
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
 // Setup auto-sync alarm listener
 setupAutoSyncListener(async () => {
   await performBookmarkSync();
@@ -427,6 +464,57 @@ setupAutoSyncListener(async () => {
 
 // Restore auto-sync alarm on service worker startup
 restoreAutoSync(performBookmarkSync);
+
+// Setup context menu for quick save
+function setupContextMenu() {
+  // Remove existing menu items to avoid duplicates on service worker restart
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: 'saveToNotion',
+      title: 'Save to Notion',
+      contexts: ['page', 'link'],
+    });
+  });
+}
+
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  if (info.menuItemId === 'saveToNotion') {
+    // If clicked on a link, save the link; otherwise save current page
+    const url = info.linkUrl || tab?.url;
+    const title = (info as any).linkText || tab?.title || 'Untitled';
+
+    if (!url) return;
+
+    // Skip internal URLs
+    if (url.startsWith('chrome://') || url.startsWith('about:')) return;
+
+    try {
+      const bookmark = {
+        title,
+        url,
+        description: '',
+        path: 'Quick Saves',
+        dateAdded: new Date().toISOString(),
+        syncId: globalThis.crypto && 'randomUUID' in globalThis.crypto
+          ? (globalThis.crypto as any).randomUUID()
+          : `quick-save-${Date.now()}`,
+      };
+      await serverAPI.syncBookmarks([bookmark]);
+      // Show notification on success
+      chrome.notifications?.create({
+        type: 'basic',
+        iconUrl: '/assets/favicon/favicon-32x32.png',
+        title: 'Bookmark Assistant',
+        message: 'Page saved to Notion',
+      });
+    } catch (error) {
+      console.error('[Context Menu] Save failed:', error);
+    }
+  }
+});
+
+// Initialize context menu
+setupContextMenu();
 
 addMessageListener({
   [Messages.NOTION_OAUTH]: async () => {
@@ -468,6 +556,9 @@ addMessageListener({
   },
   [Messages.SYNC_ALL_BOOKMARKS]: async () => {
     return await performBookmarkSync();
+  },
+  [Messages.SAVE_CURRENT_PAGE]: async () => {
+    return await saveCurrentPage();
   },
   [Messages.GET_USER_PROFILE]: async () => {
     try {
