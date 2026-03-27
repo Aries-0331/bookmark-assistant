@@ -640,5 +640,29 @@
   "refund_request_title": {
     "message": "Please help us improve. Why are you requesting a refund?",
     "description": "Refund request prompt"
+  },
+  "saveCurrentPage": {
+    "message": "Save Current Page",
+    "description": "Button to save current page to Notion"
+  },
+  "saveToNotion": {
+    "message": "Save to Notion",
+    "description": "Context menu item to save page to Notion"
+  },
+  "saveSuccess": {
+    "message": "Page saved to Notion",
+    "description": "Success message when page is saved"
+  },
+  "saveFailed": {
+    "message": "Failed to save page",
+    "description": "Error message when save fails"
+  },
+  "notConnectedMessage": {
+    "message": "Please connect to Notion first",
+    "description": "Message shown when user is not connected"
+  },
+  "saving": {
+    "message": "Saving...",
+    "description": "Status when saving page"
   }
 }
