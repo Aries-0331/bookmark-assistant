@@ -8,6 +8,8 @@ import { normalizeUrl } from '../utils/url-normalizer';
 import { reportError } from '../utils/error-reporter';
 import { cleanupStorage } from '../utils/storage-cleanup';
 
+console.log('[BG] Service worker starting...');
+
 // Cache for page descriptions (url -> { description: string, timestamp: number })
 const pageDescriptionCache = new Map<string, { description: string; timestamp: number }>();
 const DESCRIPTION_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -481,28 +483,49 @@ restoreAutoSync(performBookmarkSync);
 
 // Setup context menu for quick save
 function setupContextMenu() {
-  // Remove existing menu items to avoid duplicates on service worker restart
+  console.log('[BG] Setting up context menu');
+
+  // First, remove all existing context menus
   chrome.contextMenus.removeAll(() => {
+    console.log('[BG] Context menus cleared, creating saveToNotion');
+
+    // Create the context menu
     chrome.contextMenus.create({
       id: 'saveToNotion',
       title: 'Save to Notion',
       contexts: ['page', 'link'],
     });
+    console.log('[BG] Context menu created successfully');
   });
 }
 
+// Register context menu click listener BEFORE setupContextMenu is called
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  console.log('[DEBUG] Context menu clicked:', info.menuItemId);
   if (info.menuItemId === 'saveToNotion') {
+    console.log('[DEBUG] saveToNotion handler started');
     // Check if user is connected first
     const { session_token } = await chrome.storage.local.get('session_token');
+    console.log('[DEBUG] session_token:', session_token ? 'exists' : 'missing');
     if (!session_token) {
+      console.log('[DEBUG] Not connected, showing notification');
       const message = chrome.i18n.getMessage('notConnectedMessage') || 'Please connect to Notion first';
+      // Use both notifications API and alert via content script
       chrome.notifications.create({
         type: 'basic',
         iconUrl: '/assets/favicon/favicon-32x32.png',
-        title: 'Bookmark Assistant',
+        title: 'Bookmark Assistant - Not Connected',
         message: message,
       });
+      // Also try to show an alert on the active tab
+      try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (tab?.id) {
+          chrome.tabs.sendMessage(tab.id, { type: 'SHOW_ALERT', message: message });
+        }
+      } catch (e) {
+        console.log('[DEBUG] Could not send message to tab');
+      }
       return;
     }
 
@@ -510,11 +533,18 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     const url = info.linkUrl || tab?.url;
     const title = (info as any).linkText || tab?.title || 'Untitled';
 
-    if (!url) return;
+    if (!url) {
+      console.log('[DEBUG] No URL found');
+      return;
+    }
 
     // Skip internal URLs
-    if (url.startsWith('chrome://') || url.startsWith('about:')) return;
+    if (url.startsWith('chrome://') || url.startsWith('about:')) {
+      console.log('[DEBUG] Skipping internal URL:', url);
+      return;
+    }
 
+    console.log('[DEBUG] Saving:', title, url);
     try {
       const bookmark = {
         title,
@@ -527,6 +557,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
           : `quick-save-${Date.now()}`,
       };
       await serverAPI.syncBookmarks([bookmark]);
+      console.log('[DEBUG] Sync completed');
       // Show notification on success
       const successMsg = chrome.i18n.getMessage('saveSuccess') || 'Page saved to Notion';
       chrome.notifications?.create({
@@ -593,6 +624,7 @@ addMessageListener({
     return await performBookmarkSync();
   },
   [Messages.SAVE_CURRENT_PAGE]: async () => {
+    console.log('[BG] SAVE_CURRENT_PAGE message received');
     return await saveCurrentPage();
   },
   [Messages.GET_USER_PROFILE]: async () => {
@@ -707,3 +739,5 @@ if (typeof self !== 'undefined') {
     });
   });
 }
+
+console.log('[BG] Service worker initialization complete');
