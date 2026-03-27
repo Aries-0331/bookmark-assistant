@@ -1,9 +1,61 @@
-import { AlertCircle, CheckCircle, Crown, RefreshCw, Settings, Link } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { AlertCircle, CheckCircle, Crown, RefreshCw, Settings, Link, Save } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '../options/store';
 import { sendMessage, Messages } from '../utils/message';
 import { relativeTime } from '../utils/common';
 import { createTranslator } from '../utils/i18n';
+
+function SaveCurrentPageButton() {
+  const { t } = createTranslator();
+  const { isConnected } = useAppStore();
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!isConnected || isSaving) return;
+
+    setIsSaving(true);
+    try {
+      const result = await sendMessage({ type: Messages.SAVE_CURRENT_PAGE });
+      if (result.success) {
+        console.log('Page saved successfully');
+      } else {
+        console.error('Save failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (!isConnected) {
+    return (
+      <div className="text-sm text-gray-500 px-4 py-2 text-center">
+        {t('notConnectedMessage')}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleSave}
+      disabled={isSaving}
+      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+    >
+      {isSaving ? (
+        <>
+          <RefreshCw className="w-4 h-4 animate-spin" />
+          {t('saving')}
+        </>
+      ) : (
+        <>
+          <Save className="w-4 h-4" />
+          {t('saveCurrentPage')}
+        </>
+      )}
+    </button>
+  );
+}
 
 export default function Popup() {
   const { t } = createTranslator();
@@ -133,14 +185,17 @@ export default function Popup() {
             )}
           </button>
         ) : (
-          <button
-            onClick={handleSync}
-            disabled={isSyncing}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
-          >
-            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-            {isSyncing ? t('popup_syncing') : t('syncNow')}
-          </button>
+          <>
+            <SaveCurrentPageButton />
+            <button
+              onClick={handleSync}
+              disabled={isSyncing}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? t('popup_syncing') : t('syncNow')}
+            </button>
+          </>
         )}
 
         {/* Settings Link */}
