@@ -30,9 +30,7 @@ function SaveCurrentPageButton() {
 
   if (!isConnected) {
     return (
-      <div className="text-sm text-gray-500 px-4 py-2 text-center">
-        {t('notConnectedMessage')}
-      </div>
+      <div className="text-sm text-gray-500 px-4 py-2 text-center">{t('notConnectedMessage')}</div>
     );
   }
 
@@ -124,7 +122,7 @@ export default function Popup() {
         </div>
       </div>
 
-      <div className="px-4 pt-2 pb-4 space-y-4">
+      <div className="px-4 pt-2 pb-4 space-y-2">
         {/* Status Card */}
         <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 space-y-3">
           <div className="flex items-center justify-between">
