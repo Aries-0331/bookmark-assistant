@@ -428,14 +428,7 @@ async function saveCurrentPage(): Promise<{ success: boolean; error?: string }> 
     // Check if user is connected first
     const { session_token } = await chrome.storage.local.get('session_token');
     if (!session_token) {
-      // Show notification to connect to Notion
-      const message = chrome.i18n.getMessage('notConnectedMessage') || 'Please connect to Notion first';
-      chrome.notifications.create({
-        type: 'basic',
-        iconUrl: '/assets/favicon/favicon-32x32.png',
-        title: 'Bookmark Assistant',
-        message: message,
-      });
+      console.log('[saveCurrentPage] Not connected to Notion');
       return { success: false, error: 'Not connected' };
     }
 
@@ -508,14 +501,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     const { session_token } = await chrome.storage.local.get('session_token');
     console.log('[DEBUG] session_token:', session_token ? 'exists' : 'missing');
     if (!session_token) {
-      console.log('[DEBUG] Not connected, showing notification');
-      const message = chrome.i18n.getMessage('notConnectedMessage') || 'Please connect to Notion first';
-      chrome.notifications.create({
-        type: 'basic',
-        iconUrl: '/assets/favicon/favicon-32x32.png',
-        title: 'Bookmark Assistant - Not Connected',
-        message: message,
-      });
+      console.log('[Context Menu] Not connected to Notion');
       return;
     }
 
@@ -547,35 +533,9 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
           : `quick-save-${Date.now()}`,
       };
       await serverAPI.syncBookmarks([bookmark]);
-      console.log('[DEBUG] Sync completed successfully');
-      // Show notification on success
-      const successMsg = chrome.i18n.getMessage('saveSuccess') || 'Page saved to Notion';
-      console.log('[DEBUG] Showing success notification:', successMsg);
-      try {
-        chrome.notifications?.create({
-          type: 'basic',
-          iconUrl: '/assets/favicon/favicon-32x32.png',
-          title: 'Bookmark Assistant',
-          message: successMsg,
-        }, (notificationId) => {
-          console.log('[DEBUG] Notification created with ID:', notificationId);
-        });
-      } catch (e) {
-        console.error('[DEBUG] Notification creation failed:', e);
-      }
+      console.log('[Context Menu] Page saved successfully');
     } catch (error) {
       console.error('[Context Menu] Save failed:', error);
-      const failMsg = chrome.i18n.getMessage('saveFailed') || 'Failed to save page';
-      try {
-        chrome.notifications?.create({
-          type: 'basic',
-          iconUrl: '/assets/favicon/favicon-32x32.png',
-          title: 'Bookmark Assistant - Error',
-          message: failMsg,
-        });
-      } catch (e) {
-        console.error('[DEBUG] Error notification failed:', e);
-      }
     }
   }
 });
