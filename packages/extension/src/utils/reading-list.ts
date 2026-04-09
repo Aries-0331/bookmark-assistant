@@ -20,6 +20,13 @@ interface ChromeReadingListItem {
   readState: { state: 'UNREAD' | 'READ' };
 }
 
+// Chrome API type augmentation for readingList (Chrome 120+)
+interface ChromeWithReadingList {
+  readingList?: {
+    getContents(): Promise<ChromeReadingListItem[]>;
+  };
+}
+
 /**
  * Generate a UUID v4, with fallback for environments without crypto.randomUUID
  */
@@ -37,14 +44,16 @@ function generateUUID(): string {
  * @returns Array of reading list items mapped to a consistent format
  */
 export async function getReadingListItems(): Promise<ReadingListItem[]> {
-  // Check if chrome.readingList API is available (Chrome 120+)
-  if (!chrome.readingList) {
+  // Cast chrome to access readingList API (Chrome 120+)
+  const chromeWithReadingList = chrome as ChromeWithReadingList;
+
+  if (!chromeWithReadingList.readingList) {
     console.warn('[Reading List] API not available. Chrome 120+ required.');
     return [];
   }
 
   try {
-    const items = await chrome.readingList.getContents();
+    const items = await chromeWithReadingList.readingList.getContents();
 
     return items.map((item: ChromeReadingListItem) => ({
       title: item.title.content,
