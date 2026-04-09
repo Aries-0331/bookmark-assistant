@@ -69,6 +69,24 @@ const PROPERTY_MAPPING_CONFIG: PropertyMatcher[] = [
     required: false,
     builder: (value: any) => ({ rich_text: [{ text: { content: value } }] }),
   },
+  {
+    bookmarkField: 'type',
+    type: 'single_select',
+    patterns: [/type/i],
+    required: false,
+    builder: (value: any) => ({
+      single_select: value === 'reading_list' ? { name: 'Reading List' } : { name: 'Bookmark' },
+    }),
+  },
+  {
+    bookmarkField: 'readState',
+    type: 'status',
+    patterns: [/read.*state/i, /status/i],
+    required: false,
+    builder: (value: any) => ({
+      status: value === 'READ' ? { name: 'Read' } : { name: 'Unread' },
+    }),
+  },
 ];
 
 /**
