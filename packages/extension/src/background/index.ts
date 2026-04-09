@@ -298,6 +298,37 @@ async function performBookmarkSync(): Promise<{
     console.log(`[Sync] Flattened ${formatted.length} bookmarks`);
     console.log(`[Sync] Cache size: ${pageDescriptionCache.size} URLs with descriptions`);
 
+    // Collect reading list items
+    let readingListItems: any[] = [];
+    try {
+      const { getReadingListItems } = await import('../utils/reading-list');
+      readingListItems = await getReadingListItems();
+      if (readingListItems.length > 0) {
+        console.log(`[Sync] Found ${readingListItems.length} reading list items`);
+      }
+    } catch (err) {
+      console.warn('[Sync] Failed to get reading list items:', err);
+    }
+
+    // Add type='bookmark' to regular bookmarks and combine
+    const bookmarksWithType = formatted.map((bm: any) => ({
+      ...bm,
+      type: 'bookmark',
+    }));
+
+    // Combine bookmarks and reading list items for unified sync
+    const allItems = [...bookmarksWithType, ...readingListItems];
+    console.log(`[Sync] Total items to sync: ${allItems.length} (${formatted.length} bookmarks, ${readingListItems.length} reading list)`);
+
+    // Add reading list items to fingerprint computation
+    for (const item of readingListItems) {
+      minimalForHash.push({
+        url: item.url,
+        title: item.title,
+        path: 'Reading List', // Reading list has no folder hierarchy
+      });
+    }
+
     // Compute a stable fingerprint of current bookmarks to avoid redundant syncs
     const computeFingerprint = async () => {
       const sorted = minimalForHash
@@ -354,7 +385,7 @@ async function performBookmarkSync(): Promise<{
     }
 
     // Log sample of bookmarks to be synced (first 5)
-    console.log(`[Sync] Preparing to sync ${formatted.length} bookmarks to server`);
+    console.log(`[Sync] Preparing to sync ${allItems.length} items (${formatted.length} bookmarks, ${readingListItems.length} reading list) to server`);
     console.log(`[Sync] Sample bookmarks:`);
     formatted.slice(0, 5).forEach((bm, i) => {
       console.log(`[Sync]   ${i + 1}. ${bm.title} -> ${bm.url}`);
@@ -367,7 +398,7 @@ async function performBookmarkSync(): Promise<{
     }
 
     console.log('[Sync] Sending bookmarks to server...');
-    await serverAPI.syncBookmarks(formatted);
+    await serverAPI.syncBookmarks(allItems);
     console.log('[Sync] Server sync completed successfully');
 
     await setState({
