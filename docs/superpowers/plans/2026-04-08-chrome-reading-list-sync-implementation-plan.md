@@ -134,7 +134,7 @@ export async function getReadingListItems(): Promise<ReadingListItem[]> {
     return [];
   }
 
-  const items = await chrome.readingList.getContents();
+  const items = await chrome.readingList.query({});
 
   return items.map((item: any) => ({
     title: item.title || 'Untitled',

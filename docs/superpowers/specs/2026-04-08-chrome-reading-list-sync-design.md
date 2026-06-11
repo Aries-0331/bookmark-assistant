@@ -21,7 +21,7 @@ Sync Chrome's reading list to the same Notion database as bookmarks, with a "Typ
 │                        CHROME EXTENSION                             │
 ├─────────────────────────────────────────────────────────────────────┤
 │ 1. chrome.bookmarks.getTree()        → type: "bookmark"              │
-│ 2. chrome.readingList.getContents()  → type: "reading_list"         │
+│ 2. chrome.readingList.query({})      → type: "reading_list"         │
 │ 3. Combined into single bookmarks[] array with type field            │
 │ 4. SHA-256 fingerprint (includes reading list items)                │
 │ 5. POST /api/bookmarks/sync          → unified sync request          │
@@ -105,7 +105,7 @@ export async function getReadingListItems(): Promise<Omit<BookmarkItem, 'path' |
     return [];
   }
 
-  const items = await chrome.readingList.getContents();
+  const items = await chrome.readingList.query({});
   return items.map(item => ({
     title: item.title,
     url: item.url,

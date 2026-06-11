@@ -4,7 +4,7 @@
   "version": "1.0.17",
   "default_locale": "en",
   "description": "One-click sync Chrome bookmarks to Notion Database. Auto-fetch favicons, meta tags, and manage your knowledge base visually.",
-  "permissions": ["bookmarks", "storage", "identity", "alarms", "contextMenus"],
+  "permissions": ["bookmarks", "readingList", "storage", "identity", "alarms", "contextMenus"],
   "host_permissions": [],
   "background": {
     "service_worker": "assets/background.js",

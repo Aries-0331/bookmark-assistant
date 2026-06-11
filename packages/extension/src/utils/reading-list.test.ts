@@ -8,18 +8,16 @@ import { getReadingListItems } from './reading-list';
 describe('getReadingListItems', () => {
   const mockReadingListItems = [
     {
-      id: { value: 'item-1' },
-      title: { content: 'Test Article 1' },
-      url: { url: 'https://example.com/article-1' },
-      dateAdded: Date.now() - 86400000, // 1 day ago
-      readState: { state: 'UNREAD' },
+      title: 'Test Article 1',
+      url: 'https://example.com/article-1',
+      creationTime: Date.now() - 86400000, // 1 day ago
+      hasBeenRead: false,
     },
     {
-      id: { value: 'item-2' },
-      title: { content: 'Test Article 2' },
-      url: { url: 'https://example.com/article-2' },
-      dateAdded: Date.now() - 3600000, // 1 hour ago
-      readState: { state: 'READ' },
+      title: 'Test Article 2',
+      url: 'https://example.com/article-2',
+      creationTime: Date.now() - 3600000, // 1 hour ago
+      hasBeenRead: true,
     },
   ];
 
@@ -27,7 +25,7 @@ describe('getReadingListItems', () => {
     beforeEach(() => {
       vi.stubGlobal('chrome', {
         readingList: {
-          getContents: vi.fn().mockResolvedValue(mockReadingListItems),
+          query: vi.fn().mockResolvedValue(mockReadingListItems),
         },
       });
     });
@@ -46,7 +44,7 @@ describe('getReadingListItems', () => {
       });
     });
 
-    it('should extract readState from readState.state', async () => {
+    it('should map readState from hasBeenRead', async () => {
       const items = await getReadingListItems();
 
       expect(items[0].readState).toBe('UNREAD');
@@ -77,9 +75,40 @@ describe('getReadingListItems', () => {
       expect(items[1].type).toBe('reading_list');
     });
 
-    it('should call chrome.readingList.getContents', async () => {
+    it('should call chrome.readingList.query', async () => {
       await getReadingListItems();
 
+      expect(chrome.readingList.query).toHaveBeenCalledWith({});
+      expect(chrome.readingList.query).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('when legacy chrome.readingList.getContents API shape is available', () => {
+    beforeEach(() => {
+      vi.stubGlobal('chrome', {
+        readingList: {
+          getContents: vi.fn().mockResolvedValue([
+            {
+              id: { value: 'item-1' },
+              title: { content: 'Legacy Article' },
+              url: { url: 'https://example.com/legacy' },
+              dateAdded: Date.now(),
+              readState: { state: 'READ' },
+            },
+          ]),
+        },
+      });
+    });
+
+    it('should map legacy nested reading list items', async () => {
+      const items = await getReadingListItems();
+
+      expect(items[0]).toMatchObject({
+        title: 'Legacy Article',
+        url: 'https://example.com/legacy',
+        readState: 'READ',
+        type: 'reading_list',
+      });
       expect(chrome.readingList.getContents).toHaveBeenCalledTimes(1);
     });
   });
@@ -111,13 +140,13 @@ describe('getReadingListItems', () => {
     });
   });
 
-  describe('when chrome.readingList.getContents throws error', () => {
+  describe('when chrome.readingList.query throws error', () => {
     let warnSpy: ReturnType<typeof vi.fn>;
 
     beforeEach(() => {
       vi.stubGlobal('chrome', {
         readingList: {
-          getContents: vi.fn().mockRejectedValue(new Error('API Error')),
+          query: vi.fn().mockRejectedValue(new Error('API Error')),
         },
       });
       warnSpy = vi.fn();
@@ -136,7 +165,8 @@ describe('getReadingListItems', () => {
       expect(warnSpy).toHaveBeenCalled();
       const warnCalls = warnSpy.mock.calls;
       const hasExpectedMessage = warnCalls.some(
-        (call) => typeof call[0] === 'string' && call[0].includes('Failed to get reading list items')
+        (call) =>
+          typeof call[0] === 'string' && call[0].includes('Failed to get reading list items')
       );
       expect(hasExpectedMessage).toBe(true);
     });
@@ -146,7 +176,7 @@ describe('getReadingListItems', () => {
     beforeEach(() => {
       vi.stubGlobal('chrome', {
         readingList: {
-          getContents: vi.fn().mockResolvedValue([]),
+          query: vi.fn().mockResolvedValue([]),
         },
       });
     });

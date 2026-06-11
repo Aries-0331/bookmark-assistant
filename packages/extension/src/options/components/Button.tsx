@@ -34,13 +34,16 @@ export default function Button({
   const isDisabled = disabled || isSyncing || isConnecting;
 
   const variantStyles = {
-    primary: 'bg-primary hover:bg-primary/90 text-primary-foreground',
-    secondary: 'bg-secondary hover:bg-secondary/80 text-secondary-foreground',
-    destructive: 'bg-destructive hover:bg-destructive/90 text-destructive-foreground',
+    primary:
+      'bg-primary hover:bg-primary/90 text-primary-foreground disabled:bg-gray-300 disabled:text-white',
+    secondary:
+      'bg-secondary hover:bg-secondary/80 text-secondary-foreground disabled:bg-gray-300 disabled:text-white',
+    destructive:
+      'bg-destructive hover:bg-destructive/90 text-destructive-foreground disabled:bg-gray-300 disabled:text-white',
   };
 
   const base =
-    'h-12 rounded-xl transition-colors font-medium text-base inline-flex items-center justify-center p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2';
+    'h-12 rounded-xl transition-colors font-medium text-base inline-flex items-center justify-center p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed';
 
   return (
     <button

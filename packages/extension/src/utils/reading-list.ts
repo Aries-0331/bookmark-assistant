@@ -13,17 +13,19 @@ export interface ReadingListItem {
 }
 
 interface ChromeReadingListItem {
-  id: { value: string };
-  title: { content: string };
-  url: { url: string };
-  dateAdded: number;
-  readState: { state: 'UNREAD' | 'READ' };
+  title: string | { content: string };
+  url: string | { url: string };
+  creationTime?: number;
+  dateAdded?: number;
+  hasBeenRead?: boolean;
+  readState?: { state: 'UNREAD' | 'READ' };
 }
 
 // Chrome API type augmentation for readingList (Chrome 120+)
 interface ChromeWithReadingList {
   readingList?: {
-    getContents(): Promise<ChromeReadingListItem[]>;
+    query?(queryInfo?: Record<string, unknown>): Promise<ChromeReadingListItem[]>;
+    getContents?(): Promise<ChromeReadingListItem[]>;
   };
 }
 
@@ -53,13 +55,20 @@ export async function getReadingListItems(): Promise<ReadingListItem[]> {
   }
 
   try {
-    const items = await chromeWithReadingList.readingList.getContents();
+    const items = chromeWithReadingList.readingList.query
+      ? await chromeWithReadingList.readingList.query({})
+      : await chromeWithReadingList.readingList.getContents?.();
+
+    if (!items) {
+      console.warn('[Reading List] API not available. Chrome 120+ required.');
+      return [];
+    }
 
     return items.map((item: ChromeReadingListItem) => ({
-      title: item.title.content,
-      url: item.url.url,
-      dateAdded: new Date(item.dateAdded).toISOString(),
-      readState: item.readState.state,
+      title: typeof item.title === 'string' ? item.title : item.title.content,
+      url: typeof item.url === 'string' ? item.url : item.url.url,
+      dateAdded: new Date(item.creationTime ?? item.dateAdded ?? Date.now()).toISOString(),
+      readState: item.readState?.state ?? (item.hasBeenRead ? 'READ' : 'UNREAD'),
       syncId: generateUUID(),
       type: 'reading_list' as const,
     }));

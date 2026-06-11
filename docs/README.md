@@ -10,14 +10,14 @@
 
 - [`../README.md`](../README.md) - Project overview, features, and quick start
 - [`../CLAUDE.md`](../CLAUDE.md) - Architecture and technical specification
-- [`../BUILD_OPTIMIZATION.md`](../BUILD_OPTIMIZATION.md) - Optimized build process
+- [`archive/process-guides/BUILD_OPTIMIZATION.md`](archive/process-guides/BUILD_OPTIMIZATION.md) - Archived build process guide
 
 ### User & Operations Documentation
 
-- [`../FAQ_SUPPORT.md`](../FAQ_SUPPORT.md) - Comprehensive FAQ and support guide
-- [`../DEPLOYMENT.md`](../DEPLOYMENT.md) - Deployment guide (Vercel)
-- [`../CHROME_WEB_STORE_SUBMISSION.md`](../CHROME_WEB_STORE_SUBMISSION.md) - Chrome Web Store submission guide
-- [`../PERMISSIONS_JUSTIFICATION.md`](../PERMISSIONS_JUSTIFICATION.md) - Extension permissions explanation
+- [`archive/process-guides/FAQ_SUPPORT.md`](archive/process-guides/FAQ_SUPPORT.md) - Archived FAQ and support guide
+- [`archive/process-guides/DEPLOYMENT.md`](archive/process-guides/DEPLOYMENT.md) - Archived deployment guide
+- [`archive/process-guides/CHROME_WEB_STORE_SUBMISSION.md`](archive/process-guides/CHROME_WEB_STORE_SUBMISSION.md) - Archived Chrome Web Store submission guide
+- [`archive/process-guides/PERMISSIONS_JUSTIFICATION.md`](archive/process-guides/PERMISSIONS_JUSTIFICATION.md) - Archived extension permissions explanation
 
 ---
 
@@ -46,8 +46,8 @@
 | **Architecture** | CLAUDE.md, STATE_MANAGEMENT.md                          | System design and patterns |
 | **Features**     | AUTO_SYNC.md, DESCRIPTION_CACHE.md                      | Feature specifications     |
 | **Integration**  | NOTION_INTEGRATION.md, PADDLE_INTEGRATION.md           | API integrations          |
-| **Operations**   | DEPLOYMENT.md, CHROME_WEB_STORE_SUBMISSION.md          | Deployment and launch     |
-| **User-Facing**  | FAQ_SUPPORT.md, PERMISSIONS_JUSTIFICATION.md           | User support and policies |
+| **Operations**   | archive/process-guides/DEPLOYMENT.md, archive/process-guides/CHROME_WEB_STORE_SUBMISSION.md | Deployment and launch     |
+| **User-Facing**  | archive/process-guides/FAQ_SUPPORT.md, archive/process-guides/PERMISSIONS_JUSTIFICATION.md | User support and policies |
 
 ### By Priority
 
@@ -64,12 +64,12 @@
 
 ### Extension Package
 
-- [`../packages/extension/ENV_USAGE.md`](../packages/extension/ENV_USAGE.md) - Environment variable guide
+- [`archive/setup/ENV_USAGE.md`](archive/setup/ENV_USAGE.md) - Archived environment variable guide
 - [`../packages/extension/public/manifest.json`](../packages/extension/public/manifest.json) - Extension configuration
 
 ### Server Package
 
-- [`../packages/server/ENVIRONMENT_SETUP.md`](../packages/server/ENVIRONMENT_SETUP.md) - Server environment configuration
+- [`archive/setup/ENVIRONMENT_SETUP.md`](archive/setup/ENVIRONMENT_SETUP.md) - Archived server environment configuration
 
 ### Shared Package
 
@@ -102,18 +102,18 @@ Historical and superseded documentation is stored in [`archive/`](archive/):
 
 1. Review feature-specific docs (AUTO_SYNC.md, DESCRIPTION_CACHE.md)
 2. Reference [NOTION_INTEGRATION.md](NOTION_INTEGRATION.md) - API patterns
-3. Check [BUILD_OPTIMIZATION.md](../BUILD_OPTIMIZATION.md) - Build process
+3. Check [BUILD_OPTIMIZATION.md](archive/process-guides/BUILD_OPTIMIZATION.md) - Archived build process
 
 ### Production Operations
 
-1. Review [`../DEPLOYMENT.md`](../DEPLOYMENT.md) - Deploy procedures
-2. Check [`../CHROME_WEB_STORE_SUBMISSION.md`](../CHROME_WEB_STORE_SUBMISSION.md) - Store submission
-3. Reference [`../PERMISSIONS_JUSTIFICATION.md`](../PERMISSIONS_JUSTIFICATION.md) - Permissions
-4. Use [`../BUILD_OPTIMIZATION.md`](../BUILD_OPTIMIZATION.md) - Build process
+1. Review [`archive/process-guides/DEPLOYMENT.md`](archive/process-guides/DEPLOYMENT.md) - Deploy procedures
+2. Check [`archive/process-guides/CHROME_WEB_STORE_SUBMISSION.md`](archive/process-guides/CHROME_WEB_STORE_SUBMISSION.md) - Store submission
+3. Reference [`archive/process-guides/PERMISSIONS_JUSTIFICATION.md`](archive/process-guides/PERMISSIONS_JUSTIFICATION.md) - Permissions
+4. Use [`archive/process-guides/BUILD_OPTIMIZATION.md`](archive/process-guides/BUILD_OPTIMIZATION.md) - Build process
 
 ### User Support
 
-1. Direct users to [`../FAQ_SUPPORT.md`](../FAQ_SUPPORT.md) - Comprehensive FAQ
+1. Direct users to [`archive/process-guides/FAQ_SUPPORT.md`](archive/process-guides/FAQ_SUPPORT.md) - Archived FAQ
 
 ---
 
@@ -121,7 +121,7 @@ Historical and superseded documentation is stored in [`archive/`](archive/):
 
 ### Active Documents (Updated Regularly)
 
-- [`../BUILD_OPTIMIZATION.md`](../BUILD_OPTIMIZATION.md) - Build process documentation
+- [`archive/process-guides/BUILD_OPTIMIZATION.md`](archive/process-guides/BUILD_OPTIMIZATION.md) - Archived build process documentation
 - [STATE_MANAGEMENT.md](STATE_MANAGEMENT.md) - Pattern reference
 
 ### Reference Documents (Stable)
@@ -177,23 +177,23 @@ Documents are archived when:
 # Follow README.md instructions
 
 # 3. Start developing
-# Check BUILD_OPTIMIZATION.md for build process
+# Check archive/process-guides/BUILD_OPTIMIZATION.md for archived build process
 ```
 
 ### For Operations
 
 ```bash
 # 1. Deployment
-../DEPLOYMENT.md
+archive/process-guides/DEPLOYMENT.md
 
 # 2. Chrome Store
-../CHROME_WEB_STORE_SUBMISSION.md
+archive/process-guides/CHROME_WEB_STORE_SUBMISSION.md
 
 # 3. User Support
-../FAQ_SUPPORT.md
+archive/process-guides/FAQ_SUPPORT.md
 
 # 4. Build Process
-../BUILD_OPTIMIZATION.md
+archive/process-guides/BUILD_OPTIMIZATION.md
 ```
 
 ---

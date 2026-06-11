@@ -117,6 +117,7 @@ async function syncBatchToNotion(
         success: false,
         bookmark: bookmark.title,
         error: sanitizeError(error),
+        syncId: bookmark.syncId,
         retryCount: 0, // Track retry attempts
       };
     }
@@ -142,10 +143,9 @@ async function syncBatchToNotion(
     await sleep(1500);
 
     const retryPromises = retryableFailures.map(async (failed) => {
-      // Find the original bookmark by syncId (preferred) or URL
-      // Note: Cannot use title as it may not be unique
+      // Find the original bookmark by syncId first, then title as a last-resort fallback.
       const originalBookmark = batch.find(
-        (b) => b.syncId === failed.syncId || b.url === failed.bookmark
+        (b) => (failed.syncId && b.syncId === failed.syncId) || b.title === failed.bookmark
       );
       if (!originalBookmark) return { ...failed, retryCount: 1 };
 
@@ -429,10 +429,10 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
             return normalizeBookmark(bookmark);
           });
 
-          await Promise.all(batchPromises);
+          const batchWithDescriptions = await Promise.all(batchPromises);
 
           // IMMEDIATELY sync this batch to Notion after description extraction completes
-          const batchDiff = diffBookmarks(batch, urls, syncIds);
+          const batchDiff = diffBookmarks(batchWithDescriptions, urls, syncIds);
 
           if (batchDiff.toCreate.length > 0) {
             console.debug(
