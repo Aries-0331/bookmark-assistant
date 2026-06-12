@@ -88,10 +88,10 @@ graph TB
 
 These limits apply to the official hosted service. Self-hosted deployments can enable local Pro-level limits with `SELF_HOSTED=true`.
 
-| Plan   | Bookmarks/Sync | Auto-Sync | Sync Interval |
-|--------|---------------|-----------|--------------|
-| Free   | 500           | No        | Manual       |
-| Pro    | Unlimited     | Yes       | 6+ hours     |
+| Plan | Bookmarks/Sync | Auto-Sync | Sync Interval |
+| ---- | -------------- | --------- | ------------- |
+| Free | 500            | No        | Manual        |
+| Pro  | Unlimited      | Yes       | 6+ hours      |
 
 ---
 
@@ -104,6 +104,7 @@ These limits apply to the official hosted service. Self-hosted deployments can e
 **Rationale**: MV3 service workers are ephemeral; Chrome storage acts as the source of truth
 
 **Implementation**:
+
 - Background script: Single source of truth, writes all state to `chrome.storage.local`
 - Options UI: Subscribes via `chrome.storage.onChanged` listeners
 - State keys: `session_token`, `last_sync`, `sync_in_progress`, `is_pro`
@@ -113,11 +114,13 @@ These limits apply to the official hosted service. Self-hosted deployments can e
 **Fingerprinting**: SHA-256 hash of bookmark and Reading List titles/URLs
 
 **Benefits**:
+
 - Detects bookmark changes without full comparison
 - Avoids redundant API calls
 - Minimal UI flicker (1.2s max spinner duration)
 
 **Change Detection Flow**:
+
 1. Generate fingerprint of current bookmarks and Reading List items
 2. Compare with last sync fingerprint
 3. If changed: proceed with sync
@@ -126,6 +129,7 @@ These limits apply to the official hosted service. Self-hosted deployments can e
 ### **3. Security Architecture**
 
 **OAuth Flow**:
+
 ```
 Chrome Identity API → Notion OAuth → Auth Code
 Extension → Server (auth code) → JWT Token
@@ -133,6 +137,7 @@ JWT → API Requests → Server Validates → Proxies to Notion
 ```
 
 **Security Measures**:
+
 - Client secret: Never exposed to extension (server-side only)
 - JWT tokens: Short-lived with expiration
 - HTTPS: All traffic encrypted
@@ -141,11 +146,13 @@ JWT → API Requests → Server Validates → Proxies to Notion
 ### **4. Content Extraction Pipeline**
 
 **Extraction Strategy**:
+
 1. Server-side metadata fetching (90-92% accuracy)
 2. Fallback to URL-based heuristics
 3. Caching for 30-day TTL
 
 **Extracted Fields**:
+
 - Title: `og:title` → `<title>` → `<h1>`
 - Description: `description` → `og:description`
 - Keywords: `keywords` meta tag
@@ -154,11 +161,13 @@ JWT → API Requests → Server Validates → Proxies to Notion
 ### **5. Rate Limiting & Entitlements**
 
 **Free Tier**:
+
 - 500 bookmarks per sync
 - Manual sync only
 - 24-hour minimum interval
 
 **Pro Tier**:
+
 - Unlimited bookmarks
 - Auto-sync enabled (6+ hour interval)
 - Priority processing
@@ -168,6 +177,7 @@ JWT → API Requests → Server Validates → Proxies to Notion
 ### **6. Database Schema**
 
 **User Management**:
+
 - `id` (CUID, primary key)
 - `email` (unique)
 - Notion OAuth tokens and workspace/database IDs
@@ -175,6 +185,7 @@ JWT → API Requests → Server Validates → Proxies to Notion
 - `plan` and `purchaseType`
 
 **Bookmark Storage**:
+
 - Bookmark records live in the user's Notion database, not in the app database.
 - The server stores a `DescriptionCache` table for extracted URL descriptions.
 - Duplicate detection uses Notion URL and Sync ID queries during each sync.
@@ -212,6 +223,7 @@ JWT → API Requests → Server Validates → Proxies to Notion
 ## 🔧 Technology Stack
 
 ### **Extension**
+
 - Chrome Extension API (MV3)
 - React 18 + TypeScript
 - Vite (build tool)
@@ -219,6 +231,7 @@ JWT → API Requests → Server Validates → Proxies to Notion
 - Tailwind CSS (styling)
 
 ### **Server**
+
 - Node.js 20+
 - Express + TypeScript
 - Prisma ORM
@@ -228,6 +241,7 @@ JWT → API Requests → Server Validates → Proxies to Notion
 - Paddle SDK
 
 ### **Website**
+
 - Next.js 14
 - TypeScript
 - Tailwind CSS
@@ -236,12 +250,11 @@ JWT → API Requests → Server Validates → Proxies to Notion
 
 ## 📊 Project Status
 
-| Metric            | Status                    |
-|-------------------|---------------------------|
-| **Development**   | ✅ Production Ready       |
-| **Version**       | 1.0.18                    |
-| **Test Coverage** | 82% (185 tests)          |
-| **Grade**         | A- (Launch Ready)        |
+| Metric            | Status              |
+| ----------------- | ------------------- |
+| **Development**   | ✅ Production Ready |
+| **Version**       | 1.0.18              |
+| **Test Coverage** | 82% (185 tests)     |
 
 ---
 
