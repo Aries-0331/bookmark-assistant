@@ -12,7 +12,7 @@ Bookmark Assistant can be self-hosted for personal or internal use. Self-hosted 
 ## What Self-Hosting Does Not Include
 
 - The official hosted Bookmark Assistant service.
-- Official Paddle billing.
+- Official commercial billing or managed subscription services.
 - Official monitoring, uptime, or support guarantees.
 - Rights to use the official product branding for a fork or competing hosted service.
 
@@ -46,8 +46,6 @@ NOTION_CLIENT_SECRET=your-notion-client-secret
 NOTION_API_VERSION=2025-09-03
 WEBSITE_URL=http://localhost:3006
 ```
-
-Paddle variables can remain blank for self-hosted deployments.
 
 ## Extension Setup
 
@@ -87,7 +85,7 @@ Add the redirect URI shown by the extension logs to your Notion OAuth integratio
 
 When `SELF_HOSTED=true`, the server treats authenticated local users as Pro for local feature limits. This does not grant access to the official hosted service, official cloud infrastructure, or paid support.
 
-When `SELF_HOSTED=false`, Pro status comes from the official cloud database and Paddle webhooks.
+When `SELF_HOSTED=false`, Pro status is managed by the official hosted service.
 
 ## Production Notes
 
