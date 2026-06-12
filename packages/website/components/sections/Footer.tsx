@@ -115,7 +115,7 @@ export function Footer() {
               Paddle
             </a>
           </div>
-          <div>© 2025 Notion Bookmark Sync. All rights reserved.</div>
+          <div>© 2025 Bookmark Assistant. Source code licensed under AGPL-3.0-or-later.</div>
         </div>
       </div>
     </footer>

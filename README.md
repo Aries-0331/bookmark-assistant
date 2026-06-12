@@ -11,6 +11,16 @@ Bookmark Assistant transforms Chrome bookmarks and Reading List items into an or
 
 ---
 
+## Open Source Model
+
+Bookmark Assistant is open source under AGPL-3.0-or-later.
+
+The source code can be used to self-host the extension and server with your own Notion integration and database. The official hosted service remains a paid cloud product for Pro features such as higher hosted limits, automatic sync, priority processing, and managed billing.
+
+The code is open source; the official Bookmark Assistant name, logo, Chrome Web Store listing, domains, and hosted service branding are reserved. See [TRADEMARKS.md](TRADEMARKS.md).
+
+---
+
 ## 🏗️ System Architecture
 
 ### **Monorepo Structure**
@@ -75,6 +85,8 @@ graph TB
 - **OAuth Security**: Secure authentication with Notion
 
 ### **Plan Limitations**
+
+These limits apply to the official hosted service. Self-hosted deployments can enable local Pro-level limits with `SELF_HOSTED=true`.
 
 | Plan   | Bookmarks/Sync | Auto-Sync | Sync Interval |
 |--------|---------------|-----------|--------------|
@@ -180,6 +192,14 @@ JWT → API Requests → Server Validates → Proxies to Notion
 - **[Description Cache](docs/DESCRIPTION_CACHE.md)** — Caching strategy
 - **[Internationalization](docs/INTERNATIONALIZATION.md)** — Multi-language architecture
 
+### **Open Source and Operations**
+
+- **[Self-Hosting](SELF_HOSTING.md)** — Run your own extension and server
+- **[Contributing](CONTRIBUTING.md)** — Development and PR guidelines
+- **[Security](SECURITY.md)** — Vulnerability reporting and secret handling
+- **[Support](SUPPORT.md)** — Community and official cloud support scope
+- **[Trademarks](TRADEMARKS.md)** — Brand usage rules
+
 ### **Development Guide** (`/CLAUDE.md`)
 
 - Development workflow
@@ -227,6 +247,8 @@ JWT → API Requests → Server Validates → Proxies to Notion
 
 ## 📄 License
 
-**Proprietary Software** — All rights reserved.
+Bookmark Assistant is licensed under the **GNU Affero General Public License v3.0 or later**.
 
-This is a commercial project. The source code is not open source and may not be copied, modified, or distributed without explicit permission.
+See [LICENSE](LICENSE).
+
+The open source license covers the source code. Product names, logos, hosted service branding, and Chrome Web Store listing assets are not licensed for reuse as trademarks.

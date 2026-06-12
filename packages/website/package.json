@@ -2,6 +2,7 @@
   "name": "@bookmark-assistant/website",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-or-later",
   "type": "module",
   "scripts": {
     "predev": "node ../../scripts/sync-brand-assets.mjs",

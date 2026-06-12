@@ -43,6 +43,7 @@
     "vite": "^5.0.8",
     "zustand": "^4.5.7"
   },
+  "license": "AGPL-3.0-or-later",
   "engines": {
     "node": ">=18.0.0"
   }

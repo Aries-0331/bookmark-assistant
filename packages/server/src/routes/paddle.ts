@@ -19,12 +19,30 @@ const paddleEnv: Environment = (
   config.paddle.environment === 'production' ? 'production' : 'sandbox'
 ) as Environment;
 
-const paddle = new Paddle(config.paddle.apiKey, {
-  environment: paddleEnv,
-});
+const paddle = config.commerceEnabled
+  ? new Paddle(config.paddle.apiKey, {
+      environment: paddleEnv,
+    })
+  : null;
+
+function getPaddleOrRespond(res: Response): Paddle | null {
+  if (paddle) {
+    return paddle;
+  }
+
+  res.status(503).json({
+    success: false,
+    error: 'Commerce disabled',
+    message: 'Paddle billing is not configured for this deployment.',
+  });
+  return null;
+}
 
 router.post('/checkout-url', async (req: Request, res: Response) => {
   try {
+    const paddleClient = getPaddleOrRespond(res);
+    if (!paddleClient) return;
+
     const { pricing, userId, email } = req.body;
 
     if (!pricing || !userId) {
@@ -43,8 +61,15 @@ router.post('/checkout-url', async (req: Request, res: Response) => {
         ? config.paddle.priceIds.proMonthly
         : config.paddle.priceIds.proLifetime;
 
+    if (!priceId) {
+      return res.status(503).json({
+        error: 'Price not configured',
+        message: `No Paddle price ID configured for ${pricing}.`,
+      });
+    }
+
     // Create a transaction (checkout session) via Paddle API
-    const transaction = await paddle.transactions.create({
+    const transaction = await paddleClient.transactions.create({
       items: [
         {
           priceId,
@@ -89,6 +114,14 @@ router.post('/checkout-url', async (req: Request, res: Response) => {
  */
 router.post('/webhooks/paddle', async (req: Request, res: Response) => {
   try {
+    if (!config.commerceEnabled) {
+      return res.status(503).json({
+        success: false,
+        error: 'Commerce disabled',
+        message: 'Paddle webhooks are disabled for this deployment.',
+      });
+    }
+
     const signature = req.headers['paddle-signature'] as string;
     if (!signature) {
       return res.status(400).json({ error: 'Missing signature' });
@@ -348,9 +381,12 @@ router.post(
         });
       }
 
+      const paddleClient = getPaddleOrRespond(res);
+      if (!paddleClient) return;
+
       // Create portal session with correct subscription ID
       try {
-        const portalSession = await paddle.customerPortalSessions.create(user.paddleCustomerId!, [
+        const portalSession = await paddleClient.customerPortalSessions.create(user.paddleCustomerId!, [
           user.paddleSubscriptionId,
         ]);
 
@@ -428,9 +464,12 @@ router.post(
         });
       }
 
+      const paddleClient = getPaddleOrRespond(res);
+      if (!paddleClient) return;
+
       try {
         // Cancel subscription effective at end of billing period
-        await paddle.subscriptions.cancel(user.paddleSubscriptionId, {
+        await paddleClient.subscriptions.cancel(user.paddleSubscriptionId, {
           effectiveFrom: 'next_billing_period',
         });
 
@@ -502,8 +541,11 @@ router.get(
         });
       }
 
+      const paddleClient = getPaddleOrRespond(res);
+      if (!paddleClient) return;
+
       try {
-        const subscription = await paddle.subscriptions.get(user.paddleSubscriptionId);
+        const subscription = await paddleClient.subscriptions.get(user.paddleSubscriptionId);
 
         const nextBillingDate = subscription.nextBilledAt
           ? new Date(subscription.nextBilledAt).toLocaleDateString('en-US', {

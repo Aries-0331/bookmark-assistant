@@ -268,7 +268,7 @@ graph LR
 # Paddle API
 PADDLE_API_KEY=test_xxxxx
 PADDLE_ENVIRONMENT=sandbox
-PADDLE_WEBHOOK_SECRET=pdl_ntfset_xxxxx
+PADDLE_WEBHOOK_SECRET=<paddle-webhook-secret>
 PADDLE_PRO_MONTHLY_PRICE_ID=pri_xxxxx
 PADDLE_PRO_LIFETIME_PRICE_ID=pri_xxxxx
 

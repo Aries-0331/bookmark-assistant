@@ -55,7 +55,7 @@
     "node": ">=18.0.0"
   },
   "author": "Aries",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
     "url": "https://github.com/yourusername/bookmark-assistant"

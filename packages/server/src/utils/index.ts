@@ -27,6 +27,17 @@ export const auditLog = (action: string, userId: string, details: any = {}): voi
 };
 
 /**
+ * Resolve effective Pro entitlement.
+ *
+ * Official cloud deployments use the user's paid plan from the database.
+ * Self-hosted deployments default to Pro-level local limits because there is
+ * no official billing service in that environment.
+ */
+export const hasProEntitlements = (user: { plan?: string | null } | null | undefined): boolean => {
+  return config.selfHosted || user?.plan === 'pro';
+};
+
+/**
  * Retry wrapper for HTTP requests with exponential backoff
  */
 export const retryRequest = async <T>(

@@ -6,7 +6,7 @@ import { validateSession } from '../middleware/auth';
 import { notionService } from '../services/notion';
 import { userPrisma } from '../services/userPrisma';
 import { config } from '../config';
-import { auditLog, sanitizeError, validateBookmark, createBatches, sleep } from '../utils';
+import { auditLog, sanitizeError, validateBookmark, createBatches, sleep, hasProEntitlements } from '../utils';
 import { descriptionExtractor } from '../services/description-extractor';
 
 const router: import('express').Router = Router();
@@ -237,7 +237,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     }
 
     // Check plan limits
-    const isPro = userData.plan === 'pro';
+    const isPro = hasProEntitlements(userData);
     const syncLimit = isPro ? config.limits.pro.syncBatchLimit : config.limits.free.syncBatchLimit;
     let bookmarksToSync = bookmarks;
 

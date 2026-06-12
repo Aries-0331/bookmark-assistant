@@ -4,7 +4,7 @@ import { Router, Response } from 'express';
 import { AuthenticatedRequest } from '../types';
 import { validateSession } from '../middleware/auth';
 import { userPrisma, prisma } from '../services/userPrisma';
-import { auditLog, sanitizeError } from '../utils';
+import { auditLog, sanitizeError, hasProEntitlements } from '../utils';
 
 const router: import('express').Router = Router();
 
@@ -33,7 +33,7 @@ router.get('/profile', validateSession, async (req: AuthenticatedRequest, res: R
       lastActivity: userData.lastActivity,
       hasNotionAccess: !!userData.notionAccessToken,
       hasRefreshToken: !!userData.notionRefreshToken,
-      isPro: userData.plan === 'pro',
+      isPro: hasProEntitlements(userData),
       purchaseType: userData.purchaseType,
     };
 

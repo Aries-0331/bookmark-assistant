@@ -9,6 +9,8 @@ import path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true });
 
+const selfHosted = process.env.SELF_HOSTED === 'true';
+
 export const config = {
   // Server Configuration
   port: process.env.PORT || 3333,
@@ -20,8 +22,9 @@ export const config = {
   logDir: process.env.LOG_DIR || '/tmp',
   logMaxSize: Number(process.env.LOG_MAX_SIZE) || 5 * 1024 * 1024,
   logMaxFiles: Number(process.env.LOG_MAX_FILES) || 3,
-  // Edition (controls entitlements). Accepts 'pro' to enable Pro features; defaults to 'open-source'
-  isPro: process.env.isPro === 'true',
+  // Product edition. Self-hosted deployments use local entitlement defaults and do not require Paddle.
+  edition: process.env.EDITION || (selfHosted ? 'self-hosted' : 'cloud'),
+  selfHosted,
 
   // Database Configuration
   databaseUrl: process.env.DATABASE_URL!,
@@ -125,6 +128,8 @@ export const config = {
       proLifetime: process.env.PADDLE_PRO_LIFETIME_PRICE_ID || '',
     },
   },
+
+  commerceEnabled: !selfHosted && !!process.env.PADDLE_API_KEY,
 } as const;
 
 // Validation function to ensure required environment variables are set
@@ -154,8 +159,9 @@ export function validateConfig(): void {
     );
   }
 
-  // Warn if Paddle vars are missing in production
-  if (process.env.NODE_ENV === 'production') {
+  // Warn if Paddle vars are missing in production cloud mode.
+  // Self-hosted deployments intentionally run without Paddle.
+  if (process.env.NODE_ENV === 'production' && !config.selfHosted) {
     const missingPaddle = paddleVars.filter((varName) => !process.env[varName]);
     if (missingPaddle.length > 0) {
       console.warn(

@@ -61,6 +61,7 @@ vi.mock('../utils', () => ({
   sleep: vi.fn().mockResolvedValue(undefined),
   sanitizeError: vi.fn().mockImplementation((err) => String(err)),
   auditLog: vi.fn(),
+  hasProEntitlements: vi.fn().mockReturnValue(true),
 }));
 
 vi.mock('../config', () => ({
