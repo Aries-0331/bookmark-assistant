@@ -459,7 +459,6 @@ async function saveCurrentPage(): Promise<{ success: boolean; error?: string }> 
     // Check if user is connected first
     const { session_token } = await chrome.storage.local.get('session_token');
     if (!session_token) {
-      console.log('[saveCurrentPage] Not connected to Notion');
       return { success: false, error: 'Not connected' };
     }
 

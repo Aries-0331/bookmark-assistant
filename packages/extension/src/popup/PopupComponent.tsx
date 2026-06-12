@@ -11,18 +11,18 @@ function SaveCurrentPageButton() {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!isConnected || isSaving) return;
+    if (!isConnected || isSaving) {
+      return;
+    }
 
     setIsSaving(true);
     try {
       const result = await sendMessage({ type: Messages.SAVE_CURRENT_PAGE });
-      if (result.success) {
-        console.log('Page saved successfully');
-      } else {
+      if (!result.success) {
         console.error('Save failed:', result.error);
       }
     } catch (error) {
-      console.error('Save error:', error);
+      console.error('Failed to save current page:', error);
     } finally {
       setIsSaving(false);
     }
@@ -40,16 +40,16 @@ function SaveCurrentPageButton() {
     <button
       onClick={handleSave}
       disabled={isSaving}
-      className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="h-12 w-full flex items-center justify-center gap-1.5 px-3 text-xs font-medium text-gray-700 bg-gray-50 hover:text-gray-900 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {isSaving ? (
         <>
-          <RefreshCw className="w-4 h-4 animate-spin" />
+          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
           {t('saving')}
         </>
       ) : (
         <>
-          <Save className="w-4 h-4" />
+          <Save className="w-3.5 h-3.5" />
           {t('saveCurrentPage')}
         </>
       )}
@@ -120,7 +120,15 @@ export default function Popup() {
       <div className="bg-white text-gray-800 px-4 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <img src="/assets/logo.png" alt="Logo" className="w-8 h-8" />
-          <h1 className="text-base font-semibold">{t('popup_title')}</h1>
+          <h1 className="min-w-0 flex-1 text-base font-semibold">{t('popup_title')}</h1>
+          <button
+            onClick={openSettings}
+            aria-label={t('popup_settings_billing')}
+            title={t('popup_settings_billing')}
+            className="!h-8 !w-8 shrink-0 !p-0 !border-0 !bg-transparent flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-900 hover:!bg-gray-100 transition-colors"
+          >
+            <Settings aria-hidden="true" strokeWidth={2.25} className="!block !h-4 !w-4" />
+          </button>
         </div>
       </div>
 
@@ -166,46 +174,38 @@ export default function Popup() {
         </div>
 
         {/* Quick Actions */}
-        {!isConnected ? (
-          <button
-            onClick={handleConnect}
-            disabled={isConnecting}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
-          >
-            {isConnecting ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                {t('popup_connecting')}
-              </>
-            ) : (
-              <>
-                <Link className="w-4 h-4" />
-                {t('popup_connect_to_notion')}
-              </>
-            )}
-          </button>
-        ) : (
-          <button
-            onClick={handleSync}
-            disabled={isSyncing}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
-          >
-            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-            {isSyncing ? t('popup_syncing') : t('syncNow')}
-          </button>
-        )}
+        <div className={isConnected ? 'grid grid-cols-2 gap-2' : 'grid gap-2'}>
+          {!isConnected ? (
+            <button
+              onClick={handleConnect}
+              disabled={isConnecting}
+              className="h-12 flex items-center justify-center gap-2 px-4 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+            >
+              {isConnecting ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  {t('popup_connecting')}
+                </>
+              ) : (
+                <>
+                  <Link className="w-4 h-4" />
+                  {t('popup_connect_to_notion')}
+                </>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={handleSync}
+              disabled={isSyncing}
+              className="h-12 flex items-center justify-center gap-2 px-4 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? t('popup_syncing') : t('syncNow')}
+            </button>
+          )}
 
-        {/* Settings Link */}
-        <button
-          onClick={openSettings}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-        >
-          <Settings className="w-4 h-4" />
-          {t('popup_settings_billing')}
-        </button>
-
-        {/* Save Current Page - Below Settings */}
-        {isConnected && <SaveCurrentPageButton />}
+          {isConnected ? <SaveCurrentPageButton /> : null}
+        </div>
       </div>
     </div>
   );
