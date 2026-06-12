@@ -5,9 +5,9 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.2-61dafb)](https://www.primereact.org/)
 [![Tests](<https://img.shields.io/badge/Tests-185%20(82%25%20passing)-green>)](tests/)
-[![Version](https://img.shields.io/badge/Version-1.0.15-orange)](packages/extension/)
+[![Version](https://img.shields.io/badge/Version-1.0.18-orange)](packages/extension/)
 
-Bookmark Assistant transforms Chrome bookmarks into an organized Notion database with automatic description extraction, change detection, and background synchronization.
+Bookmark Assistant transforms Chrome bookmarks and Reading List items into an organized Notion database with automatic description extraction, change detection, and background synchronization.
 
 ---
 
@@ -67,9 +67,10 @@ graph TB
 
 ### **Core Functionality**
 
-- **Bookmark Sync**: Chrome bookmarks → Notion database
+- **Bookmark Sync**: Chrome bookmarks and Reading List items → Notion database
 - **Metadata Extraction**: Titles, descriptions, URLs, timestamps
 - **Change Detection**: SHA-256 fingerprinting to avoid redundant syncs
+- **Quick Save**: Save the current tab or a right-clicked link directly to Notion
 - **Auto-Sync**: Background synchronization (Pro feature)
 - **OAuth Security**: Secure authentication with Notion
 
@@ -78,7 +79,7 @@ graph TB
 | Plan   | Bookmarks/Sync | Auto-Sync | Sync Interval |
 |--------|---------------|-----------|--------------|
 | Free   | 500           | No        | Manual       |
-| Pro    | Unlimited     | Yes       | 6-24 hours   |
+| Pro    | Unlimited     | Yes       | 6+ hours     |
 
 ---
 
@@ -97,7 +98,7 @@ graph TB
 
 ### **2. Sync Optimization**
 
-**Fingerprinting**: SHA-256 hash of bookmark titles/URLs
+**Fingerprinting**: SHA-256 hash of bookmark and Reading List titles/URLs
 
 **Benefits**:
 - Detects bookmark changes without full comparison
@@ -105,7 +106,7 @@ graph TB
 - Minimal UI flicker (1.2s max spinner duration)
 
 **Change Detection Flow**:
-1. Generate fingerprint of current bookmarks
+1. Generate fingerprint of current bookmarks and Reading List items
 2. Compare with last sync fingerprint
 3. If changed: proceed with sync
 4. If unchanged: show "up to date" message
@@ -123,7 +124,7 @@ JWT → API Requests → Server Validates → Proxies to Notion
 - Client secret: Never exposed to extension (server-side only)
 - JWT tokens: Short-lived with expiration
 - HTTPS: All traffic encrypted
-- Minimal permissions: Read-only bookmarks access
+- Minimal permissions: Read-only bookmarks and Reading List access, local storage, OAuth identity, alarms, and context menus
 
 ### **4. Content Extraction Pipeline**
 
@@ -147,7 +148,7 @@ JWT → API Requests → Server Validates → Proxies to Notion
 
 **Pro Tier**:
 - Unlimited bookmarks
-- Auto-sync enabled (6-24 hour interval)
+- Auto-sync enabled (6+ hour interval)
 - Priority processing
 
 **Enforcement**: Server validates entitlements before processing sync requests
@@ -155,20 +156,16 @@ JWT → API Requests → Server Validates → Proxies to Notion
 ### **6. Database Schema**
 
 **User Management**:
-- `id` (UUID, primary key)
+- `id` (CUID, primary key)
 - `email` (unique)
-- `notion_access_token` (encrypted)
-- `subscription_status` (active, cancelled, etc.)
+- Notion OAuth tokens and workspace/database IDs
+- Paddle customer/subscription IDs
+- `plan` and `purchaseType`
 
 **Bookmark Storage**:
-- `id` (UUID, primary key)
-- `user_id` (foreign key)
-- `url` (text, unique per user)
-- `title` (text)
-- `description` (text, nullable)
-- `notion_page_id` (text)
-- `sync_id` (text, deduplication)
-- `created_at` / `updated_at` (timestamps)
+- Bookmark records live in the user's Notion database, not in the app database.
+- The server stores a `DescriptionCache` table for extracted URL descriptions.
+- Duplicate detection uses Notion URL and Sync ID queries during each sync.
 
 ---
 
@@ -222,7 +219,7 @@ JWT → API Requests → Server Validates → Proxies to Notion
 | Metric            | Status                    |
 |-------------------|---------------------------|
 | **Development**   | ✅ Production Ready       |
-| **Version**       | 1.0.8                     |
+| **Version**       | 1.0.18                    |
 | **Test Coverage** | 82% (185 tests)          |
 | **Grade**         | A- (Launch Ready)        |
 

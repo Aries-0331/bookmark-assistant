@@ -35,6 +35,8 @@ export interface BookmarkItem {
   tags?: string[];
   dateAdded?: string;
   syncId?: string;
+  type?: 'bookmark' | 'reading_list';
+  readState?: 'UNREAD' | 'READ';
 }
 
 export interface OAuthExchangeRequest {
