@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.2-61dafb)](https://www.primereact.org/)
 [![Tests](<https://img.shields.io/badge/Tests-185%20(82%25%20passing)-green>)](tests/)
-[![Version](https://img.shields.io/badge/Version-1.0.18-orange)](packages/extension/)
+[![Version](https://img.shields.io/badge/Version-1.0.19-orange)](packages/extension/)
 
 Bookmark Assistant transforms Chrome bookmarks and Reading List items into an organized Notion database with automatic description extraction, change detection, and background synchronization.
 
@@ -253,7 +253,7 @@ JWT → API Requests → Server Validates → Proxies to Notion
 | Metric            | Status              |
 | ----------------- | ------------------- |
 | **Development**   | ✅ Production Ready |
-| **Version**       | 1.0.18              |
+| **Version**       | 1.0.19              |
 | **Test Coverage** | 82% (185 tests)     |
 
 ---
