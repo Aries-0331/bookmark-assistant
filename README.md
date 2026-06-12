@@ -211,12 +211,12 @@ JWT → API Requests → Server Validates → Proxies to Notion
 - **[Support](SUPPORT.md)** — Community and official cloud support scope
 - **[Trademarks](TRADEMARKS.md)** — Brand usage rules
 
-### **Development Guide** (`/CLAUDE.md`)
+### **Development**
 
-- Development workflow
-- Testing infrastructure
-- Build process
-- Deployment procedures
+- **[Documentation Index](docs/README.md)** - Public technical docs
+- **[Contributing](CONTRIBUTING.md)** - Development workflow and PR guidelines
+- **[Self-Hosting](SELF_HOSTING.md)** - Local and self-hosted setup
+- **[Security](SECURITY.md)** - Vulnerability reporting and secret handling
 
 ---
 
