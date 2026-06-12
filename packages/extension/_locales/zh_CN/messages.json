@@ -78,5 +78,9 @@
   "autoSyncDisabled": {
     "message": "自动同步已禁用",
     "description": "Status when auto-sync is off"
+  },
+  "pro_feature_priority_processing": {
+    "message": "优先同步处理",
+    "description": "Pro plan feature"
   }
 }

@@ -363,22 +363,6 @@ describe('Sync Module', () => {
       await expect(syncAllBookmarksToNotion()).rejects.toThrow('No bookmarks found to sync');
     });
 
-    it('should handle sync limit error for free users', async () => {
-      mockChrome.bookmarks.getTree.mockResolvedValue(mockBookmarkTree);
-      mockChrome.storage.local.get.mockResolvedValue({ is_pro: false });
-      mockChrome.storage.local.set.mockResolvedValue(undefined);
-
-      const { serverAPI } = await import('./server-api');
-      vi.mocked(serverAPI.syncBookmarks).mockRejectedValue({
-        status: 403,
-        message: 'Sync Limit Exceeded',
-      });
-
-      await expect(syncAllBookmarksToNotion()).rejects.toThrow(
-        'Free plan is limited to 500 bookmarks per sync'
-      );
-    });
-
     it('should handle generic errors', async () => {
       mockChrome.bookmarks.getTree.mockResolvedValue(mockBookmarkTree);
       mockChrome.storage.local.get.mockResolvedValue({ is_pro: true });

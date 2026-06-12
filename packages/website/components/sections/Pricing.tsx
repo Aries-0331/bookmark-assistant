@@ -150,7 +150,7 @@ export function Pricing() {
             <ul className="space-y-2 text-sm flex-grow">
               <li className="flex items-center gap-2 text-gray-800">
                 <Check className="w-4 h-4 text-gray-600" />
-                <span>500 bookmarks per sync</span>
+                <span>Unlimited bookmarks per sync</span>
               </li>
               <li className="flex items-center gap-2 text-gray-800">
                 <Check className="w-4 h-4 text-gray-600" />
@@ -192,7 +192,7 @@ export function Pricing() {
             <ul className="space-y-2 text-sm">
               <li className="flex items-center gap-2 text-gray-900">
                 <Zap className="w-4 h-4 text-amber-600" />
-                <span>Unlimited bookmarks per sync</span>
+                <span>Priority sync processing</span>
               </li>
               <li className="flex items-center gap-2 text-gray-900">
                 <RefreshCw className="w-4 h-4 text-amber-600" />

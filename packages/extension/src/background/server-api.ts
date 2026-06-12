@@ -104,7 +104,7 @@ class ServerAPIClient {
 
         // Provide helpful error message
         throw new Error(
-          `Sync request timed out after ${timeoutSeconds}s. The server might be busy processing your bookmarks. Please try again or reduce the number of bookmarks per sync.`
+          `Sync request timed out after ${timeoutSeconds}s. The server might be busy processing your bookmarks. Please try again later.`
         );
       }
       throw error;

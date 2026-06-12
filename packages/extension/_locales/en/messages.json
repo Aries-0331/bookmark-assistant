@@ -432,7 +432,7 @@
   },
 
   "pro_unlock_hint": {
-    "message": "Pro unlocks advanced sync options and unlimited bookmarks.",
+    "message": "Pro unlocks advanced sync options, auto-sync, and priority processing.",
     "description": "Pro unlock hint"
   },
 
@@ -617,8 +617,8 @@
     "message": "Community support",
     "description": "Free plan feature"
   },
-  "pro_feature_unlimited_bookmarks": {
-    "message": "Unlimited bookmarks per sync",
+  "pro_feature_priority_processing": {
+    "message": "Priority sync processing",
     "description": "Pro plan feature"
   },
   "pro_feature_auto_sync": {

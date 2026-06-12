@@ -68,8 +68,8 @@ vi.mock('../config', () => ({
   config: {
     jwtSecret: 'test-jwt-secret',
     limits: {
-      free: { syncBatchLimit: 500, minIntervalHours: 24 },
-      pro: { syncBatchLimit: 10000, minIntervalHours: 6 },
+      free: { minIntervalHours: 24 },
+      pro: { minIntervalHours: 6 },
     },
     batchDefaults: {
       size: 3,

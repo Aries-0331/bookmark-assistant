@@ -78,5 +78,9 @@
   "autoSyncDisabled": {
     "message": "自動同期が無効",
     "description": "Status when auto-sync is off"
+  },
+  "pro_feature_priority_processing": {
+    "message": "優先同期処理",
+    "description": "Pro plan feature"
   }
 }

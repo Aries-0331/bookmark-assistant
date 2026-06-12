@@ -84,13 +84,13 @@ graph TB
 - **Auto-Sync**: Background synchronization (Pro feature)
 - **OAuth Security**: Secure authentication with Notion
 
-### **Plan Limitations**
+### **Plan Differences**
 
-These limits apply to the official hosted service. Self-hosted deployments can enable local Pro-level limits with `SELF_HOSTED=true`.
+These differences apply to the official hosted service. Self-hosted deployments can enable local Pro-level defaults with `SELF_HOSTED=true`.
 
 | Plan | Bookmarks/Sync | Auto-Sync | Sync Interval |
 | ---- | -------------- | --------- | ------------- |
-| Free | 500            | No        | Manual        |
+| Free | Unlimited      | No        | Manual        |
 | Pro  | Unlimited      | Yes       | 6+ hours      |
 
 ---
@@ -162,13 +162,13 @@ JWT → API Requests → Server Validates → Proxies to Notion
 
 **Free Tier**:
 
-- 500 bookmarks per sync
+- Unlimited bookmarks per sync
 - Manual sync only
 - 24-hour minimum interval
 
 **Pro Tier**:
 
-- Unlimited bookmarks
+- Unlimited bookmarks per sync
 - Auto-sync enabled (6+ hour interval)
 - Priority processing
 

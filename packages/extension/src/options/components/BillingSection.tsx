@@ -33,13 +33,13 @@ type FeatureItem = {
 
 const PLAN_FEATURES: Record<'free' | 'pro', FeatureItem[]> = {
   free: [
-    { icon: BookmarkIcon, text: '500 bookmarks per sync' },
+    { icon: BookmarkIcon, text: 'Unlimited bookmarks per sync' },
     { icon: MousePointerClick, text: 'free_feature_manual_sync' },
     { icon: Timer, text: '24-hour interval' },
     { icon: Mail, text: 'free_feature_community_support' },
   ],
   pro: [
-    { icon: Zap, text: 'pro_feature_unlimited_bookmarks' },
+    { icon: Zap, text: 'pro_feature_priority_processing' },
     { icon: RefreshCw, text: 'pro_feature_auto_sync' },
     { icon: Timer, text: '6-hour minimum interval' },
     { icon: Sparkles, text: 'pro_feature_deduplication' },

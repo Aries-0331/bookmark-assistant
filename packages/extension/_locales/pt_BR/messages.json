@@ -78,5 +78,9 @@
   "autoSyncDisabled": {
     "message": "Auto-sincronização desativada",
     "description": "Status when auto-sync is off"
+  },
+  "pro_feature_priority_processing": {
+    "message": "Processamento prioritário de sincronização",
+    "description": "Pro plan feature"
   }
 }

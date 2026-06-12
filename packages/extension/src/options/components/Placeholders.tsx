@@ -92,12 +92,12 @@ export function FAQSection() {
       a: (
         <ul className="list-disc pl-5 space-y-2">
           <li>
-            <strong>Free:</strong> 500 bookmarks per sync, manual only, 24-hour interval
+            <strong>Free:</strong> unlimited bookmarks per sync, manual only, 24-hour interval
           </li>
           <li>
-            <strong>Pro:</strong> Unlimited bookmarks per sync, automatic background sync every 6+
-            hours, smart deduplication (saves your Notion API quota), priority support, plus
-            upcoming AI tagging & summaries at no extra cost
+            <strong>Pro:</strong> unlimited bookmarks per sync, automatic background sync every 6+
+            hours, smart deduplication (saves your Notion API quota), priority processing and
+            support, plus upcoming AI tagging & summaries at no extra cost
           </li>
         </ul>
       ),
@@ -106,7 +106,7 @@ export function FAQSection() {
       q: 'How often does it sync?',
       a: (
         <ul className="list-disc pl-5">
-          <li>Free: Manual sync only, processes up to 500 bookmarks each time</li>
+          <li>Free: Manual sync only, unlimited bookmarks per sync</li>
           <li>
             Pro: Automatic background sync every {PRO_MIN_INTERVAL_MINUTES} minutes (configurable),
             unlimited bookmarks
