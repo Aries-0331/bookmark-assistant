@@ -9,10 +9,6 @@ export const FREE_INTERVAL_HOURS = 24;
 export const PRO_MIN_INTERVAL_HOURS = 6; // 6 hours
 export const PRO_MIN_INTERVAL_MINUTES = Math.round(PRO_MIN_INTERVAL_HOURS * 60);
 
-// Pricing constants
-export const PRICE_MONTHLY_EARLY_BIRD_USD = 2.5; // Fallback $/month
-export const PRICE_LIFETIME_USD = 30; // Fallback one-time purchase
-
 export type AppState = {
   // Overview
   version: string;
@@ -24,7 +20,6 @@ export type AppState = {
   bookmarkCount: number;
   lastSync: string;
   isPro: boolean;
-  purchaseType?: 'monthly' | 'lifetime';
   setIsConnecting: (v: boolean) => void;
   setIsSyncing: (v: boolean) => void;
 
@@ -52,11 +47,7 @@ export type AppState = {
   refreshEntitlements: (forceRefresh?: boolean) => Promise<void>;
   refreshConnection: () => Promise<void>;
 
-  // Config
-  pricing: { monthly: number; lifetime: number };
-  fetchPricing: () => Promise<void>;
   getEffectiveLimits: () => { minIntervalHours: number };
-  getPricing: () => { monthly: number; lifetime: number };
 };
 
 // Zustand store
@@ -78,7 +69,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   setLastSyncSummary: (summary) => set({ lastSyncSummary: summary }),
   setUserInfo: (userId: string, userEmail?: string) => {
     set({ userId, userEmail: userEmail || '' });
-    // Also persist to storage for Paddle checkout
     chrome.storage.local.set({
       user_id: userId,
       user_email: userEmail || '',
@@ -124,12 +114,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   setIntervalHours: (v: number) => set({ intervalHours: v }),
 
-  // Default pricing (fallback)
-  pricing: {
-    monthly: PRICE_MONTHLY_EARLY_BIRD_USD,
-    lifetime: PRICE_LIFETIME_USD,
-  },
-
   initFromStorage: async () => {
     try {
       const {
@@ -170,14 +154,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ isRefreshingProfile: false });
       }
 
-      // Load cached is_pro and purchase_type for immediate display
+      // Load cached is_pro for immediate display
       // Server will still be queried to verify, but user sees cached value first
-      const { is_pro, purchase_type } = await chrome.storage.local.get(['is_pro', 'purchase_type']);
+      const { is_pro } = await chrome.storage.local.get(['is_pro']);
       if (typeof is_pro === 'boolean') {
-        set({
-          isPro: is_pro,
-          purchaseType: purchase_type as 'monthly' | 'lifetime' | undefined,
-        });
+        set({ isPro: is_pro });
       }
 
       // Load user info
@@ -198,19 +179,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ isRefreshingProfile: false });
     } catch (error) {
       console.error('❌ Failed to initialize from storage:', error);
-    }
-  },
-
-  fetchPricing: async () => {
-    try {
-      const response = await sendMessage({ type: Messages.GET_PRICING });
-      if (response.success && response.pricing) {
-        set({ pricing: response.pricing });
-        // Cache it
-        chrome.storage.local.set({ cached_pricing: response.pricing });
-      }
-    } catch (error) {
-      console.error('❌ Failed to fetch pricing:', error);
     }
   },
 
@@ -240,9 +208,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       // Check cache first unless force refresh
       if (!forceRefresh) {
-        const { is_pro, purchase_type, entitlements_cached_at } = await chrome.storage.local.get([
+        const { is_pro, entitlements_cached_at } = await chrome.storage.local.get([
           'is_pro',
-          'purchase_type',
           'entitlements_cached_at',
         ]);
 
@@ -255,7 +222,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         if (isCacheValid && typeof is_pro === 'boolean') {
           console.log('[Entitlements] Using cached Pro status:', is_pro);
           // Combine into single set() for performance
-          set({ isPro: is_pro, purchaseType: purchase_type, isRefreshingProfile: false });
+          set({ isPro: is_pro, isRefreshingProfile: false });
           return;
         }
       }
@@ -266,13 +233,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       if (response.success && response.profile) {
         const isPro = response.profile.isPro === true;
-        const purchaseType = response.profile.purchaseType as 'monthly' | 'lifetime' | undefined;
-        set({ isPro, purchaseType });
+        set({ isPro });
 
         // Cache with timestamp for performance
         await chrome.storage.local.set({
           is_pro: isPro,
-          purchase_type: purchaseType,
           entitlements_cached_at: Date.now(),
         });
       }
@@ -282,7 +247,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const is401 =
         error?.status === 401 || error?.message?.includes('401') || error?.code === 'UNAUTHORIZED';
       if (is401) {
-        set({ isConnected: false, isPro: false, purchaseType: undefined });
+        set({ isConnected: false, isPro: false });
         chrome.storage.local.remove(['session_token', 'user_id', 'user_email']);
       }
     } finally {
@@ -297,7 +262,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const { session_token } = await chrome.storage.local.get(['session_token']);
 
       if (!session_token) {
-        set({ isConnected: false, isPro: false, purchaseType: undefined });
+        set({ isConnected: false, isPro: false });
         return;
       }
 
@@ -339,9 +304,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   getEffectiveLimits: () => ({ minIntervalHours: FREE_INTERVAL_HOURS }),
-  getPricing: () => {
-    return get().pricing;
-  },
 }));
 
 // Thin provider to run init effects and listeners
@@ -427,17 +389,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const isPro = !!changes['is_pro'].newValue;
         useAppStore.setState({ isPro });
       }
-      if (changes['purchase_type']) {
-        const purchaseType = changes['purchase_type'].newValue as
-          | 'monthly'
-          | 'lifetime'
-          | undefined;
-        useAppStore.setState({ purchaseType });
-      }
-      if (changes['cached_pricing']) {
-        const pricing = changes['cached_pricing'].newValue;
-        if (pricing) useAppStore.setState({ pricing });
-      }
       if (changes['auto_sync_enabled']) {
         const autoSyncEnabled = !!changes['auto_sync_enabled'].newValue;
         // Note: autoSync is now controlled by setAutoSync which validates with server
@@ -496,7 +447,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     (async () => {
       await useAppStore.getState().initFromStorage();
-      await useAppStore.getState().fetchPricing();
       // Refresh entitlements on mount if connected
       // This ensures isPro status is up-to-date when options page opens
       const { session_token } = await chrome.storage.local.get(['session_token']);

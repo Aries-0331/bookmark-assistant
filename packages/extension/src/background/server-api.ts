@@ -192,14 +192,6 @@ class ServerAPIClient {
     return { user: res.profile, isPro: res.profile.isPro };
   }
 
-  async getPricing(): Promise<{ pricing: any }> {
-    const res = await this.makeRequest<any>('/api/pricing', {
-      method: 'GET',
-      timeoutMs: 5000,
-    });
-    return { pricing: res.pricing };
-  }
-
   async isConnected(): Promise<boolean> {
     try {
       await this.loadSessionToken();
@@ -210,40 +202,6 @@ class ServerAPIClient {
     } catch (error) {
       return false;
     }
-  }
-
-  async restorePurchase(email: string): Promise<{ success: boolean; message?: string }> {
-    return await this.makeRequest<any>('/api/user/restore-purchase', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-      timeoutMs: 10000,
-    });
-  }
-
-  async getPortalLink(): Promise<{ success: boolean; url?: string; error?: string }> {
-    return await this.makeRequest<any>('/api/paddle/portal-session', {
-      method: 'POST',
-      timeoutMs: 10000,
-    });
-  }
-
-  async cancelSubscription(): Promise<{ success: boolean; error?: string }> {
-    return await this.makeRequest<any>('/api/paddle/cancel-subscription', {
-      method: 'POST',
-      timeoutMs: 10000,
-    });
-  }
-
-  async getSubscriptionInfo(): Promise<{
-    success: boolean;
-    nextBillingDate?: string;
-    status?: string;
-    error?: string;
-  }> {
-    return await this.makeRequest<any>('/api/paddle/subscription-info', {
-      method: 'GET',
-      timeoutMs: 10000,
-    });
   }
 
   // 🚪 Logout
@@ -263,7 +221,6 @@ class ServerAPIClient {
       'user_email',
       'oauth_template_database_id', // Remove - no longer needed, causes stale cache
       'is_pro',
-      'purchase_type',
       'entitlements_cached_at', // Clear entitlements cache on logout
       'last_sync',
       'last_sync_at',
@@ -284,7 +241,6 @@ class ServerAPIClient {
 
     // Note: We intentionally preserve:
     // - description_cache_* keys (user's cached descriptions - expensive to rebuild)
-    // - cached_pricing (avoids unnecessary refetch)
   }
 }
 

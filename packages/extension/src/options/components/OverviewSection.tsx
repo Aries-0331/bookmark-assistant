@@ -39,10 +39,7 @@ export function OverviewSection({ onNavigate }: { onNavigate: (to: RouteId) => v
               {t('pro')}
             </span>
           ) : (
-            <span
-              className="flex items-center gap-1 text-sm px-2.5 py-0.5 cursor-pointer bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 rounded-full"
-              onClick={() => onNavigate('billing')}
-            >
+            <span className="flex items-center gap-1 text-sm px-2.5 py-0.5 bg-gray-100 text-gray-700 border border-gray-300 rounded-full">
               <Sparkles className="w-3 h-3" />
               {t('free')}
             </span>

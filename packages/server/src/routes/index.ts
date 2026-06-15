@@ -5,8 +5,6 @@ import oauthRoutes from './oauth';
 import notionRoutes from './notion';
 import bookmarkRoutes from './bookmarks';
 import userRoutes from './user';
-import paddleRoutes from './paddle';
-import pricingRoutes from './pricing';
 import adminRoutes from './admin';
 import errorRoutes from './errors';
 
@@ -17,8 +15,6 @@ router.use('/oauth', oauthRoutes);
 router.use('/notion', notionRoutes);
 router.use('/bookmarks', bookmarkRoutes);
 router.use('/user', userRoutes);
-router.use('/paddle', paddleRoutes); // Paddle routes: /api/paddle/checkout-url and /api/paddle/webhooks/paddle
-router.use('/pricing', pricingRoutes);
 router.use('/admin', adminRoutes); // Admin routes: cache management
 router.use('/errors', errorRoutes); // Error reporting from extension
 

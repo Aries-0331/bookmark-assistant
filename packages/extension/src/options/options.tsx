@@ -2,7 +2,6 @@ import { PageHeader } from './components/SectionCard';
 import { OverviewSection } from './components/OverviewSection';
 import { ConnectionSection } from './components/ConnectionSection';
 import { SyncSettingsSection } from './components/SyncSettingsSection';
-import { BillingSection } from './components/BillingSection';
 import { Mail, FileText, Github } from 'lucide-react';
 import { createTranslator } from '../utils/i18n';
 
@@ -37,7 +36,6 @@ export default function Options() {
         <OverviewSection onNavigate={() => {}} />
         <ConnectionSection />
         <SyncSettingsSection onNavigate={() => {}} />
-        <BillingSection />
       </main>
 
       {/* Footer */}

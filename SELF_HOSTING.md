@@ -7,7 +7,7 @@ Bookmark Assistant can be self-hosted for personal or internal use. Self-hosted 
 - Chrome extension build from source.
 - Server-side Notion OAuth and bookmark sync API.
 - PostgreSQL database through Prisma.
-- Pro-level local limits when `SELF_HOSTED=true`.
+- Local managed-feature defaults when `SELF_HOSTED=true`.
 
 ## What Self-Hosting Does Not Include
 
@@ -81,11 +81,11 @@ https://<extension-id>.chromiumapp.org/callback
 
 Add the redirect URI shown by the extension logs to your Notion OAuth integration.
 
-## Entitlements
+## Local Feature Defaults
 
-When `SELF_HOSTED=true`, the server treats authenticated local users as Pro for local feature limits. This does not grant access to the official hosted service, official cloud infrastructure, or paid support.
+When `SELF_HOSTED=true`, the server enables local managed-feature defaults for authenticated users. This does not grant access to the official hosted service, official cloud infrastructure, or paid support.
 
-When `SELF_HOSTED=false`, Pro status is managed by the official hosted service.
+When `SELF_HOSTED=false`, managed commercial features are expected to be handled by the private official service.
 
 ## Production Notes
 

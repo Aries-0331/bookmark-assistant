@@ -58,10 +58,7 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a
-                  className="hover:text-gray-900"
-                  href="mailto:aries0331.dev@gmail.com"
-                >
+                <a className="hover:text-gray-900" href="mailto:aries0331.dev@gmail.com">
                   Contact Support
                 </a>
               </li>
@@ -104,18 +101,10 @@ export function Footer() {
           </div>
         </div>
         <div className="pt-8 border-t border-gray-200 text-center text-sm text-gray-600">
-          <div className="mb-2">
-            Powered by{' '}
-            <a
-              href="https://www.paddle.com"
-              target="_blank"
-              rel="noreferrer"
-              className="underline hover:text-gray-800"
-            >
-              Paddle
-            </a>
-          </div>
           <div>© 2025 Bookmark Assistant. Source code licensed under AGPL-3.0-or-later.</div>
+          <div className="mt-2">
+            The official hosted service and store listing are separate commercial offerings.
+          </div>
         </div>
       </div>
     </footer>

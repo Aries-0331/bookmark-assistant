@@ -28,7 +28,6 @@ vi.mock('../services/userPrisma', () => ({
     find: vi.fn().mockResolvedValue({
       id: 'user-1',
       userId: 'user-1',
-      plan: 'pro',
       notionAccessToken: 'test-token',
       notionDatabaseId: 'test-db-id',
       notionDataSourceId: 'test-ds-id',

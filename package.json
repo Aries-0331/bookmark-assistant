@@ -1,7 +1,7 @@
 {
   "name": "bookmark-assistant",
   "version": "1.0.19",
-  "description": "Transform Chrome bookmarks into organized Notion databases. One-click sync, smart descriptions, auto-sync Pro features.",
+  "description": "Sync Chrome bookmarks and Reading List items to organized Notion databases.",
   "private": true,
   "packageManager": "pnpm@9.12.0",
   "workspaces": [

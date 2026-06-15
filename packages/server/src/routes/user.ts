@@ -33,8 +33,7 @@ router.get('/profile', validateSession, async (req: AuthenticatedRequest, res: R
       lastActivity: userData.lastActivity,
       hasNotionAccess: !!userData.notionAccessToken,
       hasRefreshToken: !!userData.notionRefreshToken,
-      isPro: hasProEntitlements(userData),
-      purchaseType: userData.purchaseType,
+      isPro: hasProEntitlements(),
     };
 
     auditLog('profile_fetch_success', userId, {

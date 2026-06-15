@@ -2,7 +2,6 @@
 import { Button } from '@/components/ui/button';
 import { ImageWithFallback } from '@/components/figma/ImageWithFallback';
 import { ArrowRight, Download } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 const HERO_IMG = '/assets/marquee-promo-tile.png';
 const NOTION_TEMPLATE_URL =
@@ -41,12 +40,7 @@ export function Hero() {
       <section className="pt-20 pb-20 bg-white">
         <div className="max-w-5xl mx-auto px-6 pt-12">
           {/* Title and Description - centered */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-10"
-          >
+          <div className="text-center mb-10">
             <h1 className="text-5xl md:text-6xl font-medium leading-tight text-gray-900 mb-5">
               Sync Chrome bookmarks to{' '}
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
@@ -56,15 +50,10 @@ export function Hero() {
             <p className="text-xl text-gray-600 mx-auto">
               One-click setup, rich metadata, auto-sync. Your knowledge base, always current.
             </p>
-          </motion.div>
+          </div>
 
           {/* CTA Buttons with Product Hunt Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12"
-          >
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
             <Button onClick={openChromeStore} size="lg">
               <Download className="h-5 w-5 mr-2" /> Add to Chrome{' '}
               <ArrowRight className="h-4 w-4 ml-2" />
@@ -75,17 +64,17 @@ export function Hero() {
               </Button>
               <ProductHuntBadge />
             </div>
-          </motion.div>
+          </div>
 
           {/* Main Image - clean, no floating cards */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="rounded-2xl shadow-xl overflow-hidden"
-          >
-            <ImageWithFallback src={HERO_IMG} alt="Notion Dashboard" className="w-full h-auto" />
-          </motion.div>
+          <div className="rounded-2xl shadow-xl overflow-hidden">
+            <ImageWithFallback
+              src={HERO_IMG}
+              alt="Notion Dashboard"
+              className="w-full h-auto"
+              priority
+            />
+          </div>
         </div>
       </section>
     </>

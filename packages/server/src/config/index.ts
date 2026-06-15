@@ -22,7 +22,7 @@ export const config = {
   logDir: process.env.LOG_DIR || '/tmp',
   logMaxSize: Number(process.env.LOG_MAX_SIZE) || 5 * 1024 * 1024,
   logMaxFiles: Number(process.env.LOG_MAX_FILES) || 3,
-  // Product edition. Self-hosted deployments use local entitlement defaults and do not require Paddle.
+  // Product edition. Self-hosted deployments use local entitlement defaults.
   edition: process.env.EDITION || (selfHosted ? 'self-hosted' : 'cloud'),
   selfHosted,
 
@@ -102,11 +102,6 @@ export const config = {
     timeoutMs: Number(process.env.DESCRIPTION_EXTRACTION_TIMEOUT) || 5000,
   },
 
-  pricing: {
-    monthlyFallback: 2.5, // USD per month - fallback only
-    lifetimeFallback: 30, // USD one-time - fallback only
-  },
-
   limits: {
     free: {
       minIntervalHours: Number(process.env.FREE_INTERVAL_HOURS) || 24,
@@ -115,19 +110,6 @@ export const config = {
       minIntervalHours: Number(process.env.PRO_INTERVAL_HOURS) || 6,
     },
   },
-
-  // Paddle Payment Configuration
-  paddle: {
-    apiKey: process.env.PADDLE_API_KEY || '',
-    environment: process.env.PADDLE_ENVIRONMENT || 'sandbox',
-    webhookSecret: process.env.PADDLE_WEBHOOK_SECRET || '',
-    priceIds: {
-      proMonthly: process.env.PADDLE_PRO_MONTHLY_PRICE_ID || '',
-      proLifetime: process.env.PADDLE_PRO_LIFETIME_PRICE_ID || '',
-    },
-  },
-
-  commerceEnabled: !selfHosted && !!process.env.PADDLE_API_KEY,
 } as const;
 
 // Validation function to ensure required environment variables are set
@@ -140,32 +122,12 @@ export function validateConfig(): void {
     'NOTION_CLIENT_SECRET',
   ];
 
-  // Paddle is optional for development but required for production
-  // Note: Only monthly and lifetime plans exist (no yearly)
-  const paddleVars = [
-    'PADDLE_API_KEY',
-    'PADDLE_WEBHOOK_SECRET',
-    'PADDLE_PRO_MONTHLY_PRICE_ID',
-    'PADDLE_PRO_LIFETIME_PRICE_ID',
-  ];
-
   const missing = requiredVars.filter((varName) => !process.env[varName]);
 
   if (missing.length > 0) {
     throw new Error(
       `Missing required environment variables: ${missing.join(', ')}. Please check your .env file and environment configuration.`
     );
-  }
-
-  // Warn if Paddle vars are missing in production cloud mode.
-  // Self-hosted deployments intentionally run without Paddle.
-  if (process.env.NODE_ENV === 'production' && !config.selfHosted) {
-    const missingPaddle = paddleVars.filter((varName) => !process.env[varName]);
-    if (missingPaddle.length > 0) {
-      console.warn(
-        `⚠️  Missing Paddle environment variables: ${missingPaddle.join(', ')}. Payment features will be disabled.`
-      );
-    }
   }
 
   console.log('✅ Configuration validated successfully');

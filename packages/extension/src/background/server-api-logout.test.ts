@@ -11,12 +11,10 @@ describe('ServerAPI - Logout Selective Cleanup', () => {
       user_id: 'user-123',
       user_email: 'test@example.com',
       is_pro: true,
-      purchase_type: 'monthly',
       last_sync: '2025-12-27T10:00:00Z',
       last_sync_summary: 'success',
       oauth_template_database_id: 'template-abc-123', // Should be preserved
       description_cache_url1: { description: 'Test 1', timestamp: Date.now() }, // Should be preserved
-      cached_pricing: { monthly: 2.5, lifetime: 30.0 }, // Should be preserved
       auto_sync_enabled: true,
       sync_in_progress: false,
     };
@@ -72,14 +70,12 @@ describe('ServerAPI - Logout Selective Cleanup', () => {
     expect(mockChromeStorage.user_id).toBeUndefined();
     expect(mockChromeStorage.user_email).toBeUndefined();
     expect(mockChromeStorage.is_pro).toBeUndefined();
-    expect(mockChromeStorage.purchase_type).toBeUndefined();
     expect(mockChromeStorage.last_sync).toBeUndefined();
     expect(mockChromeStorage.auto_sync_enabled).toBeUndefined();
     expect(mockChromeStorage.oauth_template_database_id).toBeUndefined(); // Now removed
 
     // Should be preserved
     expect(mockChromeStorage.description_cache_url1).toBeDefined();
-    expect(mockChromeStorage.cached_pricing).toEqual({ monthly: 2.5, lifetime: 30.0 });
   });
 
   it('should remove all authentication-related keys', async () => {
@@ -90,7 +86,6 @@ describe('ServerAPI - Logout Selective Cleanup', () => {
       'user_id',
       'user_email',
       'is_pro',
-      'purchase_type',
       'last_sync',
       'last_sync_at',
       'last_sync_summary',

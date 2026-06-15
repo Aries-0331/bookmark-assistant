@@ -27,14 +27,14 @@ export const auditLog = (action: string, userId: string, details: any = {}): voi
 };
 
 /**
- * Resolve effective Pro entitlement.
+ * Resolve local managed-feature entitlement.
  *
- * Official cloud deployments use the user's paid plan from the database.
- * Self-hosted deployments default to Pro-level local limits because there is
- * no official billing service in that environment.
+ * The open source server has no payment system. Self-hosted deployments enable
+ * local managed features by default; official hosted billing lives in the
+ * private commercial build.
  */
-export const hasProEntitlements = (user: { plan?: string | null } | null | undefined): boolean => {
-  return config.selfHosted || user?.plan === 'pro';
+export const hasProEntitlements = (): boolean => {
+  return config.selfHosted;
 };
 
 /**

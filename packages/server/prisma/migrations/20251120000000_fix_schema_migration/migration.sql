@@ -15,16 +15,12 @@ ALTER TABLE "User" RENAME COLUMN "duplicated_template_id" TO "duplicatedTemplate
 -- Drop unused columns
 ALTER TABLE "User" DROP COLUMN "connected";
 ALTER TABLE "User" DROP COLUMN "last_disconnected_at";
-ALTER TABLE "User" DROP COLUMN "nextBilledAt";
-ALTER TABLE "User" DROP COLUMN "paddleSubscriptionId";
-ALTER TABLE "User" DROP COLUMN "subscriptionStatus";
 
 -- Drop old PK
 ALTER TABLE "User" DROP CONSTRAINT "User_pkey";
 
 -- Add new columns
 ALTER TABLE "User" ADD COLUMN "id" TEXT;
-ALTER TABLE "User" ADD COLUMN "licenseKey" TEXT;
 
 -- Backfill ID
 UPDATE "User" SET "id" = gen_random_uuid()::text WHERE "id" IS NULL;

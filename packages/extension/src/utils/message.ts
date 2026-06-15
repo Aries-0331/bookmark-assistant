@@ -6,26 +6,7 @@ export type MessageMap = {
   NOTION_OAUTH: { req: {}; res: { success: boolean; error?: string } };
   SYNC_ALL_BOOKMARKS: { req: {}; res: { success: boolean; error?: string } };
   GET_USER_PROFILE: { req: {}; res: { success: boolean; profile?: any; error?: string } };
-  GET_PRICING: {
-    req: {};
-    res: {
-      success: boolean;
-      pricing?: { monthly: number; lifetime: number };
-      limits?: any;
-      error?: string;
-    };
-  };
   LOGOUT: { req: {}; res: { success: boolean; error?: string } };
-  RESTORE_PURCHASE: {
-    req: { email: string };
-    res: { success: boolean; message?: string; error?: string };
-  };
-  GET_PORTAL_LINK: { req: {}; res: { success: boolean; url?: string; error?: string } };
-  CANCEL_SUBSCRIPTION: { req: {}; res: { success: boolean; error?: string } };
-  GET_SUBSCRIPTION_INFO: {
-    req: {};
-    res: { success: boolean; nextBillingDate?: string; status?: string; error?: string };
-  };
   SCHEDULE_AUTO_SYNC: {
     req: { enabled: boolean; intervalHours: number };
     res: { success: boolean; error?: string };
@@ -43,12 +24,7 @@ export const Messages: { [K in MessageType]: K } = {
   NOTION_OAUTH: 'NOTION_OAUTH',
   SYNC_ALL_BOOKMARKS: 'SYNC_ALL_BOOKMARKS',
   GET_USER_PROFILE: 'GET_USER_PROFILE',
-  GET_PRICING: 'GET_PRICING',
   LOGOUT: 'LOGOUT',
-  RESTORE_PURCHASE: 'RESTORE_PURCHASE',
-  GET_PORTAL_LINK: 'GET_PORTAL_LINK',
-  CANCEL_SUBSCRIPTION: 'CANCEL_SUBSCRIPTION',
-  GET_SUBSCRIPTION_INFO: 'GET_SUBSCRIPTION_INFO',
   SCHEDULE_AUTO_SYNC: 'SCHEDULE_AUTO_SYNC',
   SAVE_CURRENT_PAGE: 'SAVE_CURRENT_PAGE',
 };

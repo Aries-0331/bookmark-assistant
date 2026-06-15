@@ -16,9 +16,6 @@ export interface UserData {
   botId?: string;
   duplicatedTemplateId?: string;
   lastActivity: Date;
-  plan?: string;
-  purchaseType?: string; // 'monthly' | 'lifetime'
-  paddleSubscriptionId?: string;
 }
 
 export interface AuthenticatedRequest extends Request {
