@@ -81,8 +81,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     // Optimistic update - update state FIRST so UI always reflects current state
     set({ autoSync: v });
 
-    // Then validate with server if enabling
-    // Users cannot bypass payment by modifying localStorage
+    // Then validate managed-feature access with the server if enabling.
     if (v) {
       try {
         const response = await sendMessage({ type: Messages.GET_USER_PROFILE });
@@ -171,8 +170,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const coerced = Math.max(minIntervalHours, next);
       set({ lastSync: typeof last_sync === 'string' ? last_sync : '' });
 
-      // Load auto-sync state (default to disabled, will be enabled by refreshEntitlements if Pro)
-      // Users cannot bypass payment by modifying localStorage
+      // Load auto-sync state. Managed-feature access is refreshed from the server.
       set({ autoSync: false, intervalHours: coerced });
 
       // Ensure isRefreshingProfile is false on page load (shouldn't be refreshing on initial load)
@@ -281,8 +279,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   saveSyncSettings: async (nextIntervalHours?: number) => {
     const raw = typeof nextIntervalHours === 'number' ? nextIntervalHours : get().intervalHours;
-    // Always use free tier limits - Pro status must be server-verified
-    // Users cannot bypass payment by modifying localStorage
+    // Always use local limits here; managed-feature access is server-verified.
     const minIntervalHours = FREE_INTERVAL_HOURS;
     const rounded = Math.floor(raw * 100) / 100;
     const interval = Math.max(minIntervalHours, rounded);

@@ -92,10 +92,6 @@
     "message": "Sync Settings",
     "description": "Navigation: Sync settings section"
   },
-  "nav_billing": {
-    "message": "Billing & Plan",
-    "description": "Navigation: Billing section"
-  },
   "nav_general": {
     "message": "General",
     "description": "Navigation: General section"
@@ -290,14 +286,6 @@
     "description": "Disconnect note 3"
   },
 
-  "pro_plan_active": {
-    "message": "Pro Plan Active",
-    "description": "Pro plan active status"
-  },
-  "current_plan_label": {
-    "message": "Current Plan",
-    "description": "Current plan label"
-  },
   "linked_email_label": {
     "message": "Linked Email",
     "description": "Linked email label"
@@ -306,83 +294,6 @@
     "message": "No email linked",
     "description": "No email linked"
   },
-  "pro_features_title": {
-    "message": "Your Pro Features",
-    "description": "Pro features title"
-  },
-
-  "refund_policy_message": {
-    "message": "Refund policy",
-    "description": "Refund policy link"
-  },
-  "refund_policy_button": {
-    "message": "Refund Policy & Request",
-    "description": "Refund policy button"
-  },
-
-  "lifetime_member_title": {
-    "message": "You are a Lifetime Pro member",
-    "description": "Lifetime member title"
-  },
-  "lifetime_member_desc": {
-    "message": "Thank you for your support!",
-    "description": "Lifetime member description"
-  },
-
-  "choose_plan_title": {
-    "message": "Choose Your Plan",
-    "description": "Choose plan title"
-  },
-  "choose_plan_desc": {
-    "message": "Unlock the full potential of Bookmark Assistant",
-    "description": "Choose plan description"
-  },
-  "billing_monthly": {
-    "message": "Monthly",
-    "description": "Monthly billing"
-  },
-  "billing_lifetime": {
-    "message": "Lifetime",
-    "description": "Lifetime billing"
-  },
-  "best_value_badge": {
-    "message": "Best Value",
-    "description": "Best value badge"
-  },
-  "per_month": {
-    "message": "/ month",
-    "description": "Per month suffix"
-  },
-  "one_time_payment": {
-    "message": "one-time",
-    "description": "One time payment"
-  },
-  "early_access_badge": {
-    "message": "Early Access",
-    "description": "Early access badge"
-  },
-  "pro_plan_desc": {
-    "message": "Advanced features for power users",
-    "description": "Pro plan description"
-  },
-  "free_plan_desc": {
-    "message": "Basic bookmark syncing",
-    "description": "Free plan description"
-  },
-  "plan_lifetime": {
-    "message": "Pro (Lifetime)",
-    "description": "Lifetime plan name"
-  },
-  "plan_monthly": {
-    "message": "Pro (Monthly)",
-    "description": "Monthly plan name"
-  },
-
-  "pro_unlock_hint": {
-    "message": "Pro unlocks advanced sync options, auto-sync, and priority processing.",
-    "description": "Pro unlock hint"
-  },
-
   "overview_title": {
     "message": "Overview",
     "description": "Overview section title"
@@ -552,17 +463,9 @@
     "message": "Syncing...",
     "description": "Popup syncing status"
   },
-  "popup_settings_billing": {
-    "message": "Settings & Billing",
+  "popup_settings": {
+    "message": "Settings",
     "description": "Popup settings button"
-  },
-  "free_feature_manual_sync": {
-    "message": "Manual sync only",
-    "description": "Free plan feature"
-  },
-  "free_feature_community_support": {
-    "message": "Community support",
-    "description": "Free plan feature"
   },
   "pro_feature_priority_processing": {
     "message": "Priority sync processing",

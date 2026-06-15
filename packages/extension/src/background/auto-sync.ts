@@ -103,8 +103,7 @@ export function setupAutoSyncListener(onSync: () => Promise<void>): void {
       return;
     }
 
-    // Security: Verify Pro status with server before syncing
-    // Users cannot bypass payment by modifying localStorage
+    // Security: verify managed-feature access with the server before syncing.
     try {
       const profile = await serverAPI.getUserProfile();
       if (!profile.isPro) {
@@ -154,8 +153,7 @@ export async function restoreAutoSync(onSyncNeeded: () => Promise<any>): Promise
       ]);
 
     if (auto_sync_enabled && auto_sync_interval_minutes) {
-      // Security: Verify Pro status with server before restoring auto-sync
-      // Users cannot bypass payment by modifying localStorage
+      // Security: verify managed-feature access with the server before restoring auto-sync.
       try {
         const profile = await serverAPI.getUserProfile();
         if (!profile.isPro) {

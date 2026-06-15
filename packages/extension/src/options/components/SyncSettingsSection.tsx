@@ -21,8 +21,7 @@ export function SyncSettingsSection({ onNavigate }: { onNavigate: (to: RouteId) 
   const onToggleAuto = async () => {
     const next = !autoSync;
 
-    // Security: Validate with server before enabling
-    // Users cannot bypass payment by modifying localStorage
+    // Security: validate managed-feature access with the server before enabling.
     if (next && !isPro) {
       show({
         variant: 'error',

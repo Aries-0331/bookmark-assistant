@@ -123,8 +123,8 @@ export default function Popup() {
           <h1 className="min-w-0 flex-1 text-base font-semibold">{t('popup_title')}</h1>
           <button
             onClick={openSettings}
-            aria-label={t('popup_settings_billing')}
-            title={t('popup_settings_billing')}
+            aria-label={t('popup_settings')}
+            title={t('popup_settings')}
             className="!h-8 !w-8 shrink-0 !p-0 !border-0 !bg-transparent flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-900 hover:!bg-gray-100 transition-colors"
           >
             <Settings aria-hidden="true" strokeWidth={2.25} className="!block !h-4 !w-4" />
