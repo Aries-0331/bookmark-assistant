@@ -4,129 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-      html, body, #root { width: 100%; min-height: 100vh; margin: 0; }
+      html,
+      body,
+      #root {
+        width: 100%;
+        min-height: 100vh;
+        margin: 0;
+      }
       /* Override the template's flex centering so the root can span full width */
-      body { display: block; }
+      body {
+        display: block;
+      }
     </style>
-  <title>Options Dev Preview</title>
+    <title>Options Dev Preview</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="../index.css"></script>
     <script type="module" src="./chrome-mock.ts"></script>
     <script type="module" src="../options/index.tsx"></script>
-    <!-- Dev-only plan toggle -->
-    <script type="module">
-      // Persist override across reloads in dev
-      (function () {
-        if (import.meta && import.meta.env && !import.meta.env.DEV) return;
-        const key = 'debug_plan_override';
-        const saved = localStorage.getItem(key);
-        const initial = saved === 'pro' || saved === 'free' ? saved : 'free';
-        window.__DEV_PLAN__ = initial;
-
-        const bar = document.createElement('div');
-        bar.style.position = 'fixed';
-        bar.style.top = '10px';
-        bar.style.right = '10px';
-        bar.style.zIndex = '9999';
-        bar.style.background = 'rgba(255,255,255,0.9)';
-        bar.style.border = '1px solid #e5e7eb';
-        bar.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
-        bar.style.borderRadius = '10px';
-        bar.style.padding = '6px 10px';
-        bar.style.fontFamily = 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
-        bar.style.fontSize = '12px';
-        bar.style.color = '#111827';
-
-        const label = document.createElement('span');
-        label.textContent = 'Plan:';
-        label.style.marginRight = '6px';
-
-        let isPro = initial === 'pro';
-
-        const ctrl = document.createElement('div');
-        ctrl.style.display = 'inline-flex';
-        ctrl.style.alignItems = 'center';
-        ctrl.style.gap = '8px';
-
-        const freeText = document.createElement('span');
-        freeText.textContent = 'Free';
-        freeText.style.fontSize = '12px';
-        freeText.style.color = isPro ? '#6b7280' : '#111827';
-
-        const proText = document.createElement('span');
-        proText.textContent = 'Pro';
-        proText.style.fontSize = '12px';
-        proText.style.color = isPro ? '#111827' : '#6b7280';
-
-        const toggle = document.createElement('button');
-        toggle.setAttribute('type', 'button');
-        toggle.setAttribute('role', 'switch');
-        toggle.setAttribute('aria-label', 'Toggle plan (dev)');
-        toggle.setAttribute('aria-checked', String(isPro));
-        toggle.style.width = '42px';
-        toggle.style.height = '22px';
-        toggle.style.display = 'inline-flex';
-        toggle.style.alignItems = 'center';
-        toggle.style.border = '1px solid #e5e7eb';
-        toggle.style.borderRadius = '9999px';
-        toggle.style.position = 'relative';
-        toggle.style.background = isPro ? 'rgb(245 158 11)' : '#e5e7eb';
-        toggle.style.cursor = 'pointer';
-        toggle.style.padding = '0';
-
-        const knob = document.createElement('span');
-        knob.style.position = 'absolute';
-        knob.style.left = isPro ? '20px' : '2px';
-        knob.style.width = '18px';
-        knob.style.height = '18px';
-        knob.style.borderRadius = '9999px';
-        knob.style.background = '#fff';
-        knob.style.boxShadow = '0 1px 2px rgba(0,0,0,0.1)';
-        knob.style.transition = 'left 150ms ease';
-        toggle.appendChild(knob);
-
-        const applyState = () => {
-          toggle.setAttribute('aria-checked', String(isPro));
-          toggle.style.background = isPro ? 'rgb(245 158 11)' : '#e5e7eb';
-          knob.style.left = isPro ? '20px' : '2px';
-          freeText.style.color = isPro ? '#6b7280' : '#111827';
-          proText.style.color = isPro ? '#111827' : '#6b7280';
-        };
-
-        const updatePlan = () => {
-          const plan = isPro ? 'pro' : 'free';
-          window.__DEV_PLAN__ = plan;
-          localStorage.setItem(key, plan);
-          window.dispatchEvent(new CustomEvent('dev:plan-change', { detail: { plan } }));
-        };
-
-        toggle.addEventListener('click', () => {
-          isPro = !isPro;
-          applyState();
-          updatePlan();
-        });
-        toggle.addEventListener('keydown', (e) => {
-          if (e.key === ' ' || e.key === 'Enter') {
-            e.preventDefault();
-            isPro = !isPro;
-            applyState();
-            updatePlan();
-          }
-        });
-
-        // Initialize
-        applyState();
-
-        ctrl.appendChild(freeText);
-        ctrl.appendChild(toggle);
-        ctrl.appendChild(proText);
-
-        bar.appendChild(label);
-        bar.appendChild(ctrl);
-        document.body.appendChild(bar);
-      })();
-    </script>
   </body>
-  </html>
+</html>

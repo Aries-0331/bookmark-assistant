@@ -63,18 +63,6 @@
     "message": "Open Options",
     "description": "Link to open options page"
   },
-  "free": {
-    "message": "Free",
-    "description": "Free plan label"
-  },
-  "pro": {
-    "message": "Pro",
-    "description": "Pro plan label"
-  },
-  "upgrade": {
-    "message": "Upgrade",
-    "description": "Button to upgrade to Pro"
-  },
   "autoSyncEnabled": {
     "message": "Auto-sync enabled",
     "description": "Status when auto-sync is on"
@@ -125,11 +113,6 @@
     "message": "Connecting...",
     "description": "Connecting in progress"
   },
-  "action_upgrade_pro": {
-    "message": "Upgrade to Pro",
-    "description": "Upgrade to Pro button"
-  },
-
   "status_connected": {
     "message": "Connected",
     "description": "Connection status: connected"
@@ -248,17 +231,17 @@
     "description": "Sync interval minimum"
   },
   "sync_interval_free_note": {
-    "message": "Free plan uses a fixed 24-hour interval.",
-    "description": "Free plan interval note"
+    "message": "Default interval is fixed at 24 hours.",
+    "description": "Default sync interval note"
   },
 
   "pro_feature_title": {
-    "message": "Pro Feature",
-    "description": "Pro feature badge"
+    "message": "Managed feature",
+    "description": "Managed feature badge"
   },
   "pro_feature_desc": {
-    "message": "Auto-sync is a Pro feature. Upgrade to enable automatic bookmark syncing.",
-    "description": "Pro feature description"
+    "message": "Auto-sync must be enabled by the connected server.",
+    "description": "Managed feature description"
   },
 
   "confirm_disconnect_title": {
@@ -301,10 +284,6 @@
   "overview_status": {
     "message": "Status",
     "description": "Overview status label"
-  },
-  "overview_plan": {
-    "message": "Plan",
-    "description": "Overview plan label"
   },
   "overview_bookmarks": {
     "message": "Bookmarks",
@@ -446,10 +425,6 @@
   "popup_bookmarks": {
     "message": "Bookmarks",
     "description": "Popup bookmarks label"
-  },
-  "popup_plan": {
-    "message": "Plan",
-    "description": "Popup plan label"
   },
   "popup_connecting": {
     "message": "Connecting…",

@@ -59,18 +59,6 @@
     "message": "Abrir Opções",
     "description": "Link to open options page"
   },
-  "free": {
-    "message": "Gratuito",
-    "description": "Free plan label"
-  },
-  "pro": {
-    "message": "Pro",
-    "description": "Pro plan label"
-  },
-  "upgrade": {
-    "message": "Atualizar",
-    "description": "Button to upgrade to Pro"
-  },
   "autoSyncEnabled": {
     "message": "Auto-sincronização habilitada",
     "description": "Status when auto-sync is on"

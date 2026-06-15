@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle, Crown, RefreshCw, Settings, Link, Save } from 'lucide-react';
+import { AlertCircle, CheckCircle, RefreshCw, Settings, Link, Save } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '../options/store';
 import { sendMessage, Messages } from '../utils/message';
@@ -30,9 +30,7 @@ function SaveCurrentPageButton() {
 
   if (!isConnected) {
     return (
-      <div className="text-sm text-gray-500 px-4 py-2 text-center">
-        {t('notConnectedMessage')}
-      </div>
+      <div className="text-sm text-gray-500 px-4 py-2 text-center">{t('notConnectedMessage')}</div>
     );
   }
 
@@ -59,15 +57,8 @@ function SaveCurrentPageButton() {
 
 export default function Popup() {
   const { t } = createTranslator();
-  const {
-    isConnected,
-    lastSync,
-    bookmarkCount,
-    isPro,
-    isSyncing,
-    isConnecting,
-    refreshConnection,
-  } = useAppStore();
+  const { isConnected, lastSync, bookmarkCount, isSyncing, isConnecting, refreshConnection } =
+    useAppStore();
 
   const hasInitialized = useRef(false);
 
@@ -156,20 +147,6 @@ export default function Popup() {
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">{t('popup_bookmarks')}</span>
             <span className="text-gray-900 font-medium">{isConnected ? bookmarkCount : '-'}</span>
-          </div>
-
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">{t('popup_plan')}</span>
-            {isPro ? (
-              <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-full">
-                <Crown className="w-3 h-3" />
-                {t('pro')}
-              </span>
-            ) : (
-              <span className="flex items-center gap-1 text-xs px-2 py-0.5 bg-gray-100 text-gray-700 border border-gray-300 rounded-full">
-                {t('free')}
-              </span>
-            )}
           </div>
         </div>
 
