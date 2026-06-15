@@ -88,3 +88,6 @@ coverage/
 # Test artifacts
 test-results/
 playwright-report/
+
+# Local/private documentation
+docs/
