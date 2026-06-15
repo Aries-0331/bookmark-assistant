@@ -7,15 +7,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { UserPrismaRepo } from './userPrisma';
 
 // Mock Prisma Client
-const mockPrisma = {
-  user: {
-    findUnique: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    upsert: vi.fn(),
+const { mockPrisma } = vi.hoisted(() => ({
+  mockPrisma: {
+    user: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      upsert: vi.fn(),
+    },
   },
-};
+}));
 
 vi.mock('@prisma/client', () => ({
   PrismaClient: vi.fn().mockImplementation(function () {
@@ -54,7 +56,6 @@ describe('UserPrismaRepo', () => {
         templateDatabaseId: 'tpl-123',
         databases: ['db1', 'db2'],
         lastActivity: new Date(),
-        plan: 'pro',
       };
 
       await userRepo.upsert(userData);
@@ -151,7 +152,6 @@ describe('UserPrismaRepo', () => {
         templateDatabaseId: 'tpl-123',
         databases: ['db1', 'db2'],
         lastActivity: new Date(),
-        plan: 'pro',
       };
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser as any);
@@ -172,7 +172,6 @@ describe('UserPrismaRepo', () => {
         templateDatabaseId: 'tpl-123',
         databases: ['db1', 'db2'],
         lastActivity: mockUser.lastActivity,
-        plan: 'pro',
       });
       expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: 'user-123' },
@@ -278,12 +277,7 @@ describe('UserPrismaRepo', () => {
     it('should set resolved database by CUID', async () => {
       mockPrisma.user.update.mockResolvedValue({} as any);
 
-      await userRepo.setResolvedDatabase(
-        'user-123',
-        'template-123',
-        'db-123',
-        'ds-123'
-      );
+      await userRepo.setResolvedDatabase('user-123', 'template-123', 'db-123', 'ds-123');
 
       expect(mockPrisma.user.update).toHaveBeenCalledWith({
         where: { id: 'user-123' },
@@ -301,12 +295,7 @@ describe('UserPrismaRepo', () => {
         .mockRejectedValueOnce(new Error('Not found'))
         .mockResolvedValue({} as any);
 
-      await userRepo.setResolvedDatabase(
-        'user-123',
-        'template-123',
-        'db-123',
-        null
-      );
+      await userRepo.setResolvedDatabase('user-123', 'template-123', 'db-123', null);
 
       expect(mockPrisma.user.update).toHaveBeenCalledTimes(2);
     });
@@ -366,19 +355,13 @@ describe('UserPrismaRepo', () => {
 
   describe('error handling', () => {
     it('should handle database errors in find', async () => {
-      mockPrisma.user.findUnique.mockRejectedValue(
-        new Error('Database connection failed')
-      );
+      mockPrisma.user.findUnique.mockRejectedValue(new Error('Database connection failed'));
 
-      await expect(userRepo.find('user-123')).rejects.toThrow(
-        'Database connection failed'
-      );
+      await expect(userRepo.find('user-123')).rejects.toThrow('Database connection failed');
     });
 
     it('should handle database errors in upsert', async () => {
-      mockPrisma.user.upsert.mockRejectedValue(
-        new Error('Upsert failed')
-      );
+      mockPrisma.user.upsert.mockRejectedValue(new Error('Upsert failed'));
 
       const userData = {
         userId: 'user-123',

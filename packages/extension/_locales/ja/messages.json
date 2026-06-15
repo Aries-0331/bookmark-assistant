@@ -59,18 +59,6 @@
     "message": "オプションを開く",
     "description": "Link to open options page"
   },
-  "free": {
-    "message": "無料版",
-    "description": "Free plan label"
-  },
-  "pro": {
-    "message": "プロ版",
-    "description": "Pro plan label"
-  },
-  "upgrade": {
-    "message": "アップグレード",
-    "description": "Button to upgrade to Pro"
-  },
   "autoSyncEnabled": {
     "message": "自動同期が有効",
     "description": "Status when auto-sync is on"
@@ -78,5 +66,9 @@
   "autoSyncDisabled": {
     "message": "自動同期が無効",
     "description": "Status when auto-sync is off"
+  },
+  "pro_feature_priority_processing": {
+    "message": "優先同期処理",
+    "description": "Pro plan feature"
   }
 }

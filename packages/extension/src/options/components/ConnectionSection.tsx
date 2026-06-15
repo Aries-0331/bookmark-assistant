@@ -65,7 +65,6 @@ export function ConnectionSection() {
     useAppStore.setState({
       isConnected: false,
       isPro: false,
-      purchaseType: undefined,
       userId: '',
       userEmail: '',
       lastSync: '',

@@ -8,7 +8,6 @@ import type { Server } from 'http';
 export interface TestServerConfig {
   port?: number;
   mockNotionAPI?: boolean;
-  mockPaddleAPI?: boolean;
 }
 
 export class TestServer {
@@ -73,19 +72,8 @@ export class TestServer {
         user: {
           userId: 'test-user-123',
           email: 'test@example.com',
-          plan: 'pro',
         },
         isPro: true,
-      });
-    });
-
-    // Mock pricing
-    this.app.get('/api/pricing', (req, res) => {
-      res.json({
-        pricing: {
-          monthly: 5,
-          yearlyDiscount: 0.3,
-        },
       });
     });
   }

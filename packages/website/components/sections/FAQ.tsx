@@ -21,7 +21,7 @@ const FAQS = [
   },
   {
     q: 'What happens to my bookmarks if I cancel Pro?',
-    a: 'Your existing Notion data remains. You can continue using the Free plan limits (500 bookmarks per sync, manual sync only). Re-subscribe anytime to restore Pro features.',
+    a: 'Your existing Notion data remains. You can continue syncing unlimited bookmarks manually on the Free plan. Re-subscribe anytime to restore Pro features like background auto-sync and priority processing.',
   },
   {
     q: 'Can I sync existing bookmarks from Chrome?',

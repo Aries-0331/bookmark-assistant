@@ -27,6 +27,17 @@ export const auditLog = (action: string, userId: string, details: any = {}): voi
 };
 
 /**
+ * Resolve local managed-feature entitlement.
+ *
+ * The open source server has no payment system. Self-hosted deployments enable
+ * local managed features by default; official hosted billing lives in the
+ * private commercial build.
+ */
+export const hasProEntitlements = (): boolean => {
+  return config.selfHosted;
+};
+
+/**
  * Retry wrapper for HTTP requests with exponential backoff
  */
 export const retryRequest = async <T>(

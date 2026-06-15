@@ -9,6 +9,8 @@ import path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true });
 
+const selfHosted = process.env.SELF_HOSTED === 'true';
+
 export const config = {
   // Server Configuration
   port: process.env.PORT || 3333,
@@ -20,8 +22,9 @@ export const config = {
   logDir: process.env.LOG_DIR || '/tmp',
   logMaxSize: Number(process.env.LOG_MAX_SIZE) || 5 * 1024 * 1024,
   logMaxFiles: Number(process.env.LOG_MAX_FILES) || 3,
-  // Edition (controls entitlements). Accepts 'pro' to enable Pro features; defaults to 'open-source'
-  isPro: process.env.isPro === 'true',
+  // Product edition. Self-hosted deployments use local entitlement defaults.
+  edition: process.env.EDITION || (selfHosted ? 'self-hosted' : 'cloud'),
+  selfHosted,
 
   // Database Configuration
   databaseUrl: process.env.DATABASE_URL!,
@@ -99,30 +102,12 @@ export const config = {
     timeoutMs: Number(process.env.DESCRIPTION_EXTRACTION_TIMEOUT) || 5000,
   },
 
-  pricing: {
-    monthlyFallback: 2.5, // USD per month - fallback only
-    lifetimeFallback: 30, // USD one-time - fallback only
-  },
-
   limits: {
     free: {
       minIntervalHours: Number(process.env.FREE_INTERVAL_HOURS) || 24,
-      syncBatchLimit: Number(process.env.FREE_SYNC_BATCH_LIMIT) || 500,
     },
     pro: {
       minIntervalHours: Number(process.env.PRO_INTERVAL_HOURS) || 6,
-      syncBatchLimit: Number(process.env.PRO_SYNC_BATCH_LIMIT) || 10000,
-    },
-  },
-
-  // Paddle Payment Configuration
-  paddle: {
-    apiKey: process.env.PADDLE_API_KEY || '',
-    environment: process.env.PADDLE_ENVIRONMENT || 'sandbox',
-    webhookSecret: process.env.PADDLE_WEBHOOK_SECRET || '',
-    priceIds: {
-      proMonthly: process.env.PADDLE_PRO_MONTHLY_PRICE_ID || '',
-      proLifetime: process.env.PADDLE_PRO_LIFETIME_PRICE_ID || '',
     },
   },
 } as const;
@@ -137,31 +122,12 @@ export function validateConfig(): void {
     'NOTION_CLIENT_SECRET',
   ];
 
-  // Paddle is optional for development but required for production
-  // Note: Only monthly and lifetime plans exist (no yearly)
-  const paddleVars = [
-    'PADDLE_API_KEY',
-    'PADDLE_WEBHOOK_SECRET',
-    'PADDLE_PRO_MONTHLY_PRICE_ID',
-    'PADDLE_PRO_LIFETIME_PRICE_ID',
-  ];
-
   const missing = requiredVars.filter((varName) => !process.env[varName]);
 
   if (missing.length > 0) {
     throw new Error(
       `Missing required environment variables: ${missing.join(', ')}. Please check your .env file and environment configuration.`
     );
-  }
-
-  // Warn if Paddle vars are missing in production
-  if (process.env.NODE_ENV === 'production') {
-    const missingPaddle = paddleVars.filter((varName) => !process.env[varName]);
-    if (missingPaddle.length > 0) {
-      console.warn(
-        `⚠️  Missing Paddle environment variables: ${missingPaddle.join(', ')}. Payment features will be disabled.`
-      );
-    }
   }
 
   console.log('✅ Configuration validated successfully');

@@ -59,18 +59,6 @@
     "message": "打开选项",
     "description": "Link to open options page"
   },
-  "free": {
-    "message": "免费版",
-    "description": "Free plan label"
-  },
-  "pro": {
-    "message": "专业版",
-    "description": "Pro plan label"
-  },
-  "upgrade": {
-    "message": "升级",
-    "description": "Button to upgrade to Pro"
-  },
   "autoSyncEnabled": {
     "message": "自动同步已启用",
     "description": "Status when auto-sync is on"
@@ -78,5 +66,9 @@
   "autoSyncDisabled": {
     "message": "自动同步已禁用",
     "description": "Status when auto-sync is off"
+  },
+  "pro_feature_priority_processing": {
+    "message": "优先同步处理",
+    "description": "Pro plan feature"
   }
 }

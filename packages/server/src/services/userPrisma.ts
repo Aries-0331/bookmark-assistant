@@ -22,12 +22,12 @@ let prismaInstance: PrismaClient | null = null;
 export const prisma = ((): PrismaClient => {
   if (!prismaInstance) {
     prismaInstance = new PrismaClient(prismaClientOptions);
-    
+
     // Log connection pool info on startup
     const dbUrl = process.env.DATABASE_URL || '';
     const connectionLimit = dbUrl.match(/connection_limit=(\d+)/)?.[1] || 'default';
     console.log(`[Prisma] Connection pool initialized (limit: ${connectionLimit})`);
-    
+
     // Handle graceful shutdown
     process.on('beforeExit', async () => {
       await prismaInstance?.$disconnect();
@@ -86,7 +86,6 @@ export class UserPrismaRepo {
       templateDatabaseId: u.templateDatabaseId || undefined,
       databases: (u.databases as any) || [],
       lastActivity: u.lastActivity,
-      plan: u.plan,
     };
   }
 

@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle, Crown, Sparkles } from 'lucide-react';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 import { SectionCard } from './SectionCard';
 import { relativeTime } from '../../utils/common';
 import { useAppStore } from '../store';
@@ -30,23 +30,6 @@ export function OverviewSection({ onNavigate }: { onNavigate: (to: RouteId) => v
               </>
             )}
           </span>
-        </div>
-        <div className="flex flex-col items-center gap-2 p-2">
-          <span>{t('overview_plan')}</span>
-          {isPro ? (
-            <span className="flex items-center gap-1 text-sm font-semibold px-2.5 py-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 border-0 shadow-sm rounded-full">
-              <Crown className="w-3 h-3" />
-              {t('pro')}
-            </span>
-          ) : (
-            <span
-              className="flex items-center gap-1 text-sm px-2.5 py-0.5 cursor-pointer bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 rounded-full"
-              onClick={() => onNavigate('billing')}
-            >
-              <Sparkles className="w-3 h-3" />
-              {t('free')}
-            </span>
-          )}
         </div>
         <div className="flex flex-col items-center gap-2 p-2">
           <span>{t('overview_bookmarks')}</span>

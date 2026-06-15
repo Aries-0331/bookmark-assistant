@@ -1,7 +1,7 @@
 {
   "name": "bookmark-assistant",
-  "version": "1.0.18",
-  "description": "Transform Chrome bookmarks into organized Notion databases. One-click sync, smart descriptions, auto-sync Pro features.",
+  "version": "1.0.19",
+  "description": "Sync Chrome bookmarks and Reading List items to organized Notion databases.",
   "private": true,
   "packageManager": "pnpm@9.12.0",
   "workspaces": [
@@ -55,7 +55,7 @@
     "node": ">=18.0.0"
   },
   "author": "Aries",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
     "url": "https://github.com/yourusername/bookmark-assistant"

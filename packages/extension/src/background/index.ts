@@ -318,7 +318,9 @@ async function performBookmarkSync(): Promise<{
 
     // Combine bookmarks and reading list items for unified sync
     const allItems = [...bookmarksWithType, ...readingListItems];
-    console.log(`[Sync] Total items to sync: ${allItems.length} (${formatted.length} bookmarks, ${readingListItems.length} reading list)`);
+    console.log(
+      `[Sync] Total items to sync: ${allItems.length} (${formatted.length} bookmarks, ${readingListItems.length} reading list)`
+    );
 
     // Add reading list items to fingerprint computation
     for (const item of readingListItems) {
@@ -385,7 +387,9 @@ async function performBookmarkSync(): Promise<{
     }
 
     // Log sample of bookmarks to be synced (first 5)
-    console.log(`[Sync] Preparing to sync ${allItems.length} items (${formatted.length} bookmarks, ${readingListItems.length} reading list) to server`);
+    console.log(
+      `[Sync] Preparing to sync ${allItems.length} items (${formatted.length} bookmarks, ${readingListItems.length} reading list) to server`
+    );
     console.log(`[Sync] Sample bookmarks:`);
     formatted.slice(0, 5).forEach((bm, i) => {
       console.log(`[Sync]   ${i + 1}. ${bm.title} -> ${bm.url}`);
@@ -481,9 +485,10 @@ async function saveCurrentPage(): Promise<{ success: boolean; error?: string }> 
       description: '', // Let server generate description
       path: 'Quick Saves', // Default folder for quick saves
       dateAdded: new Date().toISOString(),
-      syncId: globalThis.crypto && 'randomUUID' in globalThis.crypto
-        ? (globalThis.crypto as any).randomUUID()
-        : `quick-save-${Date.now()}`,
+      syncId:
+        globalThis.crypto && 'randomUUID' in globalThis.crypto
+          ? (globalThis.crypto as any).randomUUID()
+          : `quick-save-${Date.now()}`,
     };
 
     // Send to server
@@ -558,9 +563,10 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         description: '',
         path: 'Quick Saves',
         dateAdded: new Date().toISOString(),
-        syncId: globalThis.crypto && 'randomUUID' in globalThis.crypto
-          ? (globalThis.crypto as any).randomUUID()
-          : `quick-save-${Date.now()}`,
+        syncId:
+          globalThis.crypto && 'randomUUID' in globalThis.crypto
+            ? (globalThis.crypto as any).randomUUID()
+            : `quick-save-${Date.now()}`,
       };
       await serverAPI.syncBookmarks([bookmark]);
       console.log('[Context Menu] Page saved successfully');
@@ -627,62 +633,12 @@ addMessageListener({
       return { success: false, error: String(err) } as const;
     }
   },
-  [Messages.GET_PRICING]: async () => {
-    try {
-      const { pricing } = await serverAPI.getPricing();
-      return { success: true, pricing } as const;
-    } catch (err) {
-      console.error('❌ Failed to get pricing:', err);
-      return { success: false, error: String(err) } as const;
-    }
-  },
-  [Messages.GET_PORTAL_LINK]: async () => {
-    try {
-      const res = await serverAPI.getPortalLink();
-      return { success: res.success, url: res.url, error: res.error } as const;
-    } catch (err) {
-      console.error('❌ Failed to get portal link:', err);
-      return { success: false, error: String(err) } as const;
-    }
-  },
-  [Messages.CANCEL_SUBSCRIPTION]: async () => {
-    try {
-      const res = await serverAPI.cancelSubscription();
-      return { success: res.success, error: res.error } as const;
-    } catch (err) {
-      console.error('❌ Failed to cancel subscription:', err);
-      return { success: false, error: String(err) } as const;
-    }
-  },
-  [Messages.GET_SUBSCRIPTION_INFO]: async () => {
-    try {
-      const res = await serverAPI.getSubscriptionInfo();
-      return {
-        success: res.success,
-        nextBillingDate: res.nextBillingDate,
-        status: res.status,
-        error: res.error,
-      } as const;
-    } catch (err) {
-      console.error('❌ Failed to get subscription info:', err);
-      return { success: false, error: String(err) } as const;
-    }
-  },
   [Messages.LOGOUT]: async () => {
     try {
       await serverAPI.logout();
       return { success: true } as const;
     } catch (err) {
       console.error('❌ Logout failed:', err);
-      return { success: false, error: String(err) } as const;
-    }
-  },
-  [Messages.RESTORE_PURCHASE]: async (req: { email: string }) => {
-    try {
-      const res = await serverAPI.restorePurchase(req.email);
-      return { success: res.success, message: res.message } as const;
-    } catch (err) {
-      console.error('❌ Restore purchase failed:', err);
       return { success: false, error: String(err) } as const;
     }
   },

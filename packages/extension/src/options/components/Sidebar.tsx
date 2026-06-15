@@ -1,4 +1,4 @@
-import { LayoutGrid, Info, CircleDollarSign, HelpCircle } from 'lucide-react';
+import { LayoutGrid, Info, HelpCircle } from 'lucide-react';
 import { RouteId } from '../router';
 import { createTranslator } from '../../utils/i18n';
 
@@ -15,7 +15,6 @@ export function Sidebar({
 
   const items: Item[] = [
     { id: 'general', labelKey: 'nav_general', icon: <LayoutGrid className="w-4 h-4" /> },
-    { id: 'billing', labelKey: 'nav_billing', icon: <CircleDollarSign className="w-4 h-4" /> },
     // { id: 'tutorials', label: 'Tutorials', icon: <BookOpen className="w-4 h-4" /> },
     { id: 'faq', labelKey: 'nav_faq', icon: <HelpCircle className="w-4 h-4" /> },
     { id: 'about', labelKey: 'nav_about', icon: <Info className="w-4 h-4" /> },

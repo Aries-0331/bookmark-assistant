@@ -1,232 +1,34 @@
 # Bookmark Assistant
 
-> **Chrome extension for seamless bookmark synchronization with Notion**
+Bookmark Assistant is a Chrome extension that syncs Chrome bookmarks and Reading List items to a Notion database.
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18.2-61dafb)](https://www.primereact.org/)
-[![Tests](<https://img.shields.io/badge/Tests-185%20(82%25%20passing)-green>)](tests/)
-[![Version](https://img.shields.io/badge/Version-1.0.18-orange)](packages/extension/)
+## Features
 
-Bookmark Assistant transforms Chrome bookmarks and Reading List items into an organized Notion database with automatic description extraction, change detection, and background synchronization.
+- Sync Chrome bookmarks to Notion.
+- Sync Chrome Reading List items to Notion.
+- Save the current page from the extension popup.
+- Save links from the browser context menu.
+- Extract page titles and descriptions when available.
+- Use the official hosted service or self-host your own instance.
 
----
+## Open Source Model
 
-## 🏗️ System Architecture
+Bookmark Assistant is open source under AGPL-3.0-or-later.
 
-### **Monorepo Structure**
+You can self-host the extension and server with your own Notion integration, database, and hosting. The official hosted Bookmark Assistant service is a separate commercial service.
 
-```
-bookmark-assistant/
-├── packages/
-│   ├── extension/       # Chrome MV3 extension (React + TypeScript)
-│   ├── server/          # OAuth & API backend (Express + TypeScript)
-│   ├── website/         # Marketing landing page (Next.js)
-│   └── shared/          # Shared utilities
-└── tests/               # Unit & integration tests
-```
+The Bookmark Assistant name, logo, Chrome Web Store listing, domains, and hosted service branding are reserved. See [TRADEMARKS.md](TRADEMARKS.md).
 
-### **Architecture Overview**
+## Getting Started
 
-```mermaid
-graph TB
-    subgraph "Chrome Extension"
-        Options[Options Page<br/>React UI]
-        BG[Background Worker<br/>Service Worker]
-        Options <-->|chrome.storage| BG
-    end
+For self-hosting, see [SELF_HOSTING.md](SELF_HOSTING.md).
 
-    subgraph "Backend Server"
-        OAuth[OAuth Proxy]
-        Auth[Entitlements<br/>JWT + DB]
-        API[Bookmark API]
-    end
+For development and pull requests, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-    subgraph "External Services"
-        Notion[Notion API<br/>OAuth 2.0]
-        DB[(PostgreSQL<br/>Prisma)]
-        Paddle[Paddle Billing]
-    end
+For brand usage, see [TRADEMARKS.md](TRADEMARKS.md).
 
-    Options -->|OAuth Flow| OAuth
-    BG -->|API Calls| API
-    OAuth <--> Notion
-    Auth <--> DB
-    API <--> Notion
-    Options <-->|Payment| Paddle
-    Paddle -->|Webhooks| Auth
+## License
 
-    style Options fill:#e3f2fd
-    style BG fill:#fff9c4
-    style OAuth fill:#c8e6c9
-    style DB fill:#f3e5f5
-```
+Bookmark Assistant is licensed under the GNU Affero General Public License v3.0 or later.
 
----
-
-## 🎯 System Specifications
-
-### **Core Functionality**
-
-- **Bookmark Sync**: Chrome bookmarks and Reading List items → Notion database
-- **Metadata Extraction**: Titles, descriptions, URLs, timestamps
-- **Change Detection**: SHA-256 fingerprinting to avoid redundant syncs
-- **Quick Save**: Save the current tab or a right-clicked link directly to Notion
-- **Auto-Sync**: Background synchronization (Pro feature)
-- **OAuth Security**: Secure authentication with Notion
-
-### **Plan Limitations**
-
-| Plan   | Bookmarks/Sync | Auto-Sync | Sync Interval |
-|--------|---------------|-----------|--------------|
-| Free   | 500           | No        | Manual       |
-| Pro    | Unlimited     | Yes       | 6+ hours     |
-
----
-
-## 🛠️ Technical Design
-
-### **1. State Management Architecture**
-
-**Pattern**: Event-driven state management using `chrome.storage.onChanged`
-
-**Rationale**: MV3 service workers are ephemeral; Chrome storage acts as the source of truth
-
-**Implementation**:
-- Background script: Single source of truth, writes all state to `chrome.storage.local`
-- Options UI: Subscribes via `chrome.storage.onChanged` listeners
-- State keys: `session_token`, `last_sync`, `sync_in_progress`, `is_pro`
-
-### **2. Sync Optimization**
-
-**Fingerprinting**: SHA-256 hash of bookmark and Reading List titles/URLs
-
-**Benefits**:
-- Detects bookmark changes without full comparison
-- Avoids redundant API calls
-- Minimal UI flicker (1.2s max spinner duration)
-
-**Change Detection Flow**:
-1. Generate fingerprint of current bookmarks and Reading List items
-2. Compare with last sync fingerprint
-3. If changed: proceed with sync
-4. If unchanged: show "up to date" message
-
-### **3. Security Architecture**
-
-**OAuth Flow**:
-```
-Chrome Identity API → Notion OAuth → Auth Code
-Extension → Server (auth code) → JWT Token
-JWT → API Requests → Server Validates → Proxies to Notion
-```
-
-**Security Measures**:
-- Client secret: Never exposed to extension (server-side only)
-- JWT tokens: Short-lived with expiration
-- HTTPS: All traffic encrypted
-- Minimal permissions: Read-only bookmarks and Reading List access, local storage, OAuth identity, alarms, and context menus
-
-### **4. Content Extraction Pipeline**
-
-**Extraction Strategy**:
-1. Server-side metadata fetching (90-92% accuracy)
-2. Fallback to URL-based heuristics
-3. Caching for 30-day TTL
-
-**Extracted Fields**:
-- Title: `og:title` → `<title>` → `<h1>`
-- Description: `description` → `og:description`
-- Keywords: `keywords` meta tag
-- Content: `main` → `article` → `body` (max 5000 chars)
-
-### **5. Rate Limiting & Entitlements**
-
-**Free Tier**:
-- 500 bookmarks per sync
-- Manual sync only
-- 24-hour minimum interval
-
-**Pro Tier**:
-- Unlimited bookmarks
-- Auto-sync enabled (6+ hour interval)
-- Priority processing
-
-**Enforcement**: Server validates entitlements before processing sync requests
-
-### **6. Database Schema**
-
-**User Management**:
-- `id` (CUID, primary key)
-- `email` (unique)
-- Notion OAuth tokens and workspace/database IDs
-- Paddle customer/subscription IDs
-- `plan` and `purchaseType`
-
-**Bookmark Storage**:
-- Bookmark records live in the user's Notion database, not in the app database.
-- The server stores a `DescriptionCache` table for extracted URL descriptions.
-- Duplicate detection uses Notion URL and Sync ID queries during each sync.
-
----
-
-## 📁 Documentation Structure
-
-### **Architecture Documentation** (`/docs/`)
-
-- **[State Management](docs/STATE_MANAGEMENT.md)** — Extension state architecture
-- **[Notion Integration](docs/NOTION_INTEGRATION.md)** — Notion API integration
-- **[Auto-Sync](docs/AUTO_SYNC.md)** — Background synchronization design
-- **[Paddle Integration](docs/PADDLE_INTEGRATION.md)** — Payment processing
-- **[Description Cache](docs/DESCRIPTION_CACHE.md)** — Caching strategy
-- **[Internationalization](docs/INTERNATIONALIZATION.md)** — Multi-language architecture
-
-### **Development Guide** (`/CLAUDE.md`)
-
-- Development workflow
-- Testing infrastructure
-- Build process
-- Deployment procedures
-
----
-
-## 🔧 Technology Stack
-
-### **Extension**
-- Chrome Extension API (MV3)
-- React 18 + TypeScript
-- Vite (build tool)
-- Zustand (state management)
-- Tailwind CSS (styling)
-
-### **Server**
-- Node.js 20+
-- Express + TypeScript
-- Prisma ORM
-- PostgreSQL
-- JWT authentication
-- Notion SDK
-- Paddle SDK
-
-### **Website**
-- Next.js 14
-- TypeScript
-- Tailwind CSS
-
----
-
-## 📊 Project Status
-
-| Metric            | Status                    |
-|-------------------|---------------------------|
-| **Development**   | ✅ Production Ready       |
-| **Version**       | 1.0.18                    |
-| **Test Coverage** | 82% (185 tests)          |
-| **Grade**         | A- (Launch Ready)        |
-
----
-
-## 📄 License
-
-**Proprietary Software** — All rights reserved.
-
-This is a commercial project. The source code is not open source and may not be copied, modified, or distributed without explicit permission.
+See [LICENSE](LICENSE).

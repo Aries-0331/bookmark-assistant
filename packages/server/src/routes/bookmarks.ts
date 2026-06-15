@@ -236,21 +236,6 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       });
     }
 
-    // Check plan limits
-    const isPro = userData.plan === 'pro';
-    const syncLimit = isPro ? config.limits.pro.syncBatchLimit : config.limits.free.syncBatchLimit;
-    let bookmarksToSync = bookmarks;
-
-    // For free users, limit to syncLimit and return partial success
-    if (!isPro && bookmarks.length > syncLimit) {
-      console.log(
-        `[Bookmark Sync] ⚠️ Free user attempting to sync ${bookmarks.length} bookmarks, limiting to ${syncLimit}`
-      );
-      bookmarksToSync = bookmarks.slice(0, syncLimit);
-
-      // Continue with limited bookmarks, will report partial sync in response
-    }
-
     const effectiveDataSourceId = userData.notionDataSourceId;
     if (!effectiveDataSourceId) {
       return res.status(400).json({
@@ -333,8 +318,8 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
       });
     }
 
-    // Validate and enrich bookmarks (use limited bookmarks for free users)
-    let enrichedBookmarks = bookmarksToSync.map((bookmark: any, index: number) =>
+    // Validate and enrich bookmarks
+    let enrichedBookmarks = bookmarks.map((bookmark: any, index: number) =>
       validateBookmark(bookmark, index)
     );
 
@@ -550,22 +535,10 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
 
     auditLog('bookmark_sync_success', userId, summary);
 
-    // Check if this was a partial sync due to free tier limits
-    const isPartialSync = !isPro && bookmarks.length > syncLimit;
-
     res.json({
       success: true,
       results,
       summary,
-      ...(isPartialSync && {
-        partialSync: {
-          applied: true,
-          requested: bookmarks.length,
-          processed: syncLimit,
-          skipped: bookmarks.length - syncLimit,
-          message: `Free plan limited to ${syncLimit} bookmarks. ${bookmarks.length - syncLimit} bookmarks were skipped. Upgrade to Pro for unlimited syncing.`,
-        },
-      }),
     });
   } catch (error) {
     const errorMessage = sanitizeError(error);

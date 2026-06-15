@@ -29,7 +29,7 @@ export function SectionCard({
         {advanced && (
           <Crown
             className={`w-4 h-4 cursor-pointer ${isPro ? 'text-amber-500' : 'text-gray-500 hover:text-gray-300'}`}
-            onClick={onNavigate ? () => onNavigate('billing') : undefined}
+            onClick={onNavigate ? () => onNavigate('general') : undefined}
           />
         )}
       </span>

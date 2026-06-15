@@ -1,8 +1,18 @@
-"use client";
-import Image from "next/image";
-import * as React from "react";
+'use client';
+import Image from 'next/image';
+import * as React from 'react';
 
-export function ImageWithFallback({ src, alt, className }: { src: string; alt: string; className?: string }) {
+export function ImageWithFallback({
+  src,
+  alt,
+  className,
+  priority,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  priority?: boolean;
+}) {
   const [error, setError] = React.useState(false);
   if (error) return <img src={src} alt={alt} className={className} />;
   return (
@@ -12,6 +22,7 @@ export function ImageWithFallback({ src, alt, className }: { src: string; alt: s
       width={1200}
       height={800}
       className={className}
+      priority={priority}
       onError={() => setError(true)}
     />
   );

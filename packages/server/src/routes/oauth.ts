@@ -20,20 +20,20 @@ async function retryPrismaOperation<T>(
   operationName = 'Prisma operation'
 ): Promise<T> {
   let attempt = 0;
-  
+
   while (attempt < maxRetries) {
     try {
       return await operation();
     } catch (error: any) {
       attempt++;
-      
+
       // Check if it's a connection pool exhaustion error (P2024 or connection timeout)
       const isPoolExhausted =
         error?.code === 'P2024' || // Prisma pool timeout
         error?.message?.includes('connection pool') ||
         error?.message?.includes('Timed out fetching') ||
         error?.message?.includes('MaxClientsInSessionMode');
-      
+
       if (isPoolExhausted && attempt < maxRetries) {
         // Exponential backoff: 200ms, 400ms, 800ms
         const delayMs = 200 * Math.pow(2, attempt - 1);
@@ -43,12 +43,12 @@ async function retryPrismaOperation<T>(
         await new Promise((resolve) => setTimeout(resolve, delayMs));
         continue;
       }
-      
+
       // If not a pool error or max retries reached, throw
       throw error;
     }
   }
-  
+
   // Should never reach here, but TypeScript needs this
   throw new Error(`${operationName} failed after ${maxRetries} retries`);
 }
@@ -124,10 +124,8 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
         );
 
         if (paidUser) {
-          console.log(
-            `🔗 Found existing paid user by email: ${paidUser.id}. Linking Notion account...`
-          );
-          // MERGE: Link Notion account to existing paid user (with retry)
+          console.log(`🔗 Found existing user by email: ${paidUser.id}. Linking Notion account...`);
+          // MERGE: Link Notion account to existing user (with retry)
           user = await retryPrismaOperation(
             () =>
               prisma.user.update({
@@ -155,7 +153,6 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
                   notionAccessToken: tokenData.access_token,
                   notionRefreshToken: tokenData.refresh_token,
                   notionWorkspaceId: tokenData.workspace_id,
-                  plan: 'free',
                 },
               }),
             3,
@@ -206,7 +203,6 @@ router.post('/exchange', validateExtension, async (req, res: Response) => {
 
     auditLog('oauth_exchange_success', user.id, {
       hasRefreshToken: !!tokenData.refresh_token,
-      plan: user.plan,
     });
 
     // Fetch latest user data (with retry)

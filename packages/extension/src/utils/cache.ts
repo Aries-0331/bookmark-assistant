@@ -20,19 +20,12 @@ export interface ChromeLocalCache {
 
   // Entitlements
   is_pro?: boolean;
-  purchase_type?: 'monthly' | 'lifetime';
 
   // Settings
   auto_sync?: boolean; // Legacy UI state (deprecated, use auto_sync_enabled)
   auto_sync_enabled?: boolean; // Primary auto-sync state
   auto_sync_interval_minutes?: number; // Primary interval (in minutes)
   sync_interval_hours?: number; // UI-friendly interval cache (optional)
-
-  // Pricing cache
-  cached_pricing?: {
-    monthly: number;
-    lifetime: number;
-  };
 }
 
 // Optional: key literals for safer usage
@@ -53,14 +46,11 @@ export const CACHE_KEYS = {
   last_sync_hash: 'last_sync_hash',
 
   is_pro: 'is_pro',
-  purchase_type: 'purchase_type',
 
   auto_sync: 'auto_sync',
   auto_sync_enabled: 'auto_sync_enabled',
   auto_sync_interval_minutes: 'auto_sync_interval_minutes',
   sync_interval_hours: 'sync_interval_hours',
-
-  cached_pricing: 'cached_pricing',
 } as const;
 
 export const WATCHED_CACHE_KEYS = [
@@ -74,10 +64,8 @@ export const WATCHED_CACHE_KEYS = [
   CACHE_KEYS.last_sync_fingerprint,
   CACHE_KEYS.last_sync_hash,
   CACHE_KEYS.is_pro,
-  CACHE_KEYS.purchase_type,
   CACHE_KEYS.user_id,
   CACHE_KEYS.user_email,
-  CACHE_KEYS.cached_pricing,
   CACHE_KEYS.auto_sync_enabled,
   CACHE_KEYS.auto_sync_interval_minutes,
 ] as const;

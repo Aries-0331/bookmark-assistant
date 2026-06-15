@@ -1,6 +1,6 @@
 {
   "name": "@bookmark-assistant/server",
-  "version": "1.0.17",
+  "version": "1.0.19",
   "description": "Secure OAuth server for Bookmark Assistant Chrome extension",
   "main": "dist/index.js",
   "scripts": {
@@ -23,10 +23,9 @@
     "security"
   ],
   "author": "Aries",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@notionhq/client": "^5.3.0",
-    "@paddle/paddle-node-sdk": "^3.4.0",
     "@prisma/client": "^6.17.1",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",

@@ -28,7 +28,6 @@ vi.mock('../services/userPrisma', () => ({
     find: vi.fn().mockResolvedValue({
       id: 'user-1',
       userId: 'user-1',
-      plan: 'pro',
       notionAccessToken: 'test-token',
       notionDatabaseId: 'test-db-id',
       notionDataSourceId: 'test-ds-id',
@@ -61,14 +60,15 @@ vi.mock('../utils', () => ({
   sleep: vi.fn().mockResolvedValue(undefined),
   sanitizeError: vi.fn().mockImplementation((err) => String(err)),
   auditLog: vi.fn(),
+  hasProEntitlements: vi.fn().mockReturnValue(true),
 }));
 
 vi.mock('../config', () => ({
   config: {
     jwtSecret: 'test-jwt-secret',
     limits: {
-      free: { syncBatchLimit: 500, minIntervalHours: 24 },
-      pro: { syncBatchLimit: 10000, minIntervalHours: 6 },
+      free: { minIntervalHours: 24 },
+      pro: { minIntervalHours: 6 },
     },
     batchDefaults: {
       size: 3,
