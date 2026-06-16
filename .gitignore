@@ -33,9 +33,7 @@ out
 .eslintcache
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
+.vscode/
 .idea
 .DS_Store
 *.suo
@@ -74,11 +72,8 @@ coverage
 .nyc_output
 *.lcov
 
-# Debug
-.vscode/launch.json
-
-# Husky (git hooks should be committed)
-# .husky/ is commented out - we want to commit hooks
+# Local git hooks
+.husky/
 
 # Test coverage
 coverage/
