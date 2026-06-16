@@ -24,14 +24,11 @@
     "test:all": "pnpm test:unit && pnpm test:integration",
     "lint": "pnpm -r lint",
     "clean": "pnpm -r clean",
-    "prepare": "husky",
     "start:server": "pnpm -F @bookmark-assistant/server start",
     "start:website": "pnpm -F @bookmark-assistant/website start",
     "check:i18n": "node scripts/check-i18n.js"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.0.0",
-    "@commitlint/config-conventional": "^19.0.0",
     "@eslint/js": "^9.38.0",
     "@types/express": "^4.17.21",
     "@types/node": "^20.10.0",
@@ -42,7 +39,6 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "express": "^4.18.2",
     "globals": "^16.4.0",
-    "husky": "^9.0.0",
     "jsdom": "^28.1.0",
     "prettier": "^3.0.0",
     "terser": "^5.44.1",
@@ -55,9 +51,5 @@
     "node": ">=18.0.0"
   },
   "author": "Aries",
-  "license": "AGPL-3.0-or-later",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/bookmark-assistant"
-  }
+  "license": "AGPL-3.0-or-later"
 }
