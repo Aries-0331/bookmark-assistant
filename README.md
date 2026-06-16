@@ -108,8 +108,6 @@ Load it in Chrome:
 3. Click "Load unpacked".
 4. Select `packages/extension/dist`.
 
-TODO: Confirm whether the recommended local extension path should be `packages/extension/dist` or a dev-specific output directory for contributors.
-
 ## Local Development
 
 Common commands from `package.json`:
@@ -152,8 +150,6 @@ At a high level:
 3. Share the target Notion database with the integration.
 4. Configure the server with the Notion client ID and client secret.
 5. Configure the extension with the server URL and Notion client ID.
-
-TODO: Confirm and document the recommended Notion database template, required properties, and template link.
 
 ## Configuration
 
