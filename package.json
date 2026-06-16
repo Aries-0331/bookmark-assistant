@@ -10,11 +10,9 @@
   "scripts": {
     "dev": "pnpm -F @bookmark-assistant/extension dev",
     "dev:server": "pnpm -F @bookmark-assistant/server dev",
-    "dev:website": "pnpm -F @bookmark-assistant/website dev",
     "build": "pnpm -F @bookmark-assistant/extension build",
     "build:zip": "pnpm -F @bookmark-assistant/extension build:zip",
     "build:server": "pnpm -F @bookmark-assistant/server build",
-    "build:website": "pnpm -F @bookmark-assistant/website build",
     "build:all": "pnpm -r build",
     "test": "vitest run",
     "test:unit": "vitest run",
@@ -25,7 +23,6 @@
     "lint": "pnpm -r lint",
     "clean": "pnpm -r clean",
     "start:server": "pnpm -F @bookmark-assistant/server start",
-    "start:website": "pnpm -F @bookmark-assistant/website start",
     "check:i18n": "node scripts/check-i18n.js"
   },
   "devDependencies": {

@@ -14,7 +14,6 @@
   "files": [
     "tokens.js",
     "tailwind-preset.js",
-    "brand.json",
-    "README.md"
+    "brand.json"
   ]
 }

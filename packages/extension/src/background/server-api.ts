@@ -21,8 +21,7 @@ class ServerAPIClient {
   private sessionToken: string | null = null;
 
   constructor() {
-    this.baseUrl =
-      import.meta.env.VITE_OAUTH_SERVER_URL || 'https://bookmark-assistant-server.vercel.app';
+    this.baseUrl = import.meta.env.VITE_OAUTH_SERVER_URL || 'http://localhost:3333';
     this.loadSessionToken();
   }
 

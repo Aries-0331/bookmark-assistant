@@ -8,13 +8,10 @@ import { createTranslator } from '../utils/i18n';
 export default function Options() {
   const { t } = createTranslator();
   const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'aries0331.dev@gmail.com';
-  const faqUrl = import.meta.env.VITE_FAQ_URL || 'https://bookmark-assistant.vercel.app/#faq';
-  const privacyUrl =
-    import.meta.env.VITE_PRIVACY_URL ||
-    'https://bookmark-assistant.notion.site/Privacy-Policy-2a24fd51dd3e806eb918cb2f37fefda7';
-  const termsUrl =
-    import.meta.env.VITE_TERMS_URL ||
-    'https://www.notion.so/bookmark-assistant/Terms-of-Service-2a24fd51dd3e80258c2df46cab36d400';
+  const repoUrl = 'https://github.com/Aries-0331/bookmark-assistant';
+  const faqUrl = import.meta.env.VITE_FAQ_URL || `${repoUrl}#readme`;
+  const privacyUrl = import.meta.env.VITE_PRIVACY_URL || `${repoUrl}#privacy-and-data-handling`;
+  const termsUrl = import.meta.env.VITE_TERMS_URL || `${repoUrl}#license`;
 
   const handleSupportClick = () => {
     window.open(`mailto:${supportEmail}?subject=Bookmark Assistant Support`, '_blank');

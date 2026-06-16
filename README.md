@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="packages/website/public/brand/logo_128x128.png" alt="Bookmark Assistant logo" width="96" height="96" />
+  <img src="packages/extension/src/assets/logo_128x128.png" alt="Bookmark Assistant logo" width="96" height="96" />
 </p>
 
 <h1 align="center">Bookmark Assistant</h1>
@@ -14,7 +14,6 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: AGPL-3.0-or-later" src="https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg" /></a>
-  <a href="SELF_HOSTING.md"><img alt="Self-hostable" src="https://img.shields.io/badge/self--hostable-yes-111827.svg" /></a>
   <a href="https://chromewebstore.google.com/detail/khffaaemphidjmhokafmiilkcjpgiije?utm_source=item-share-cb"><img alt="Chrome Web Store" src="https://img.shields.io/badge/Chrome%20Web%20Store-available-16a34a.svg" /></a>
 </p>
 
@@ -118,10 +117,8 @@ Common commands from `package.json`:
 ```bash
 pnpm dev                 # Run the extension dev preview
 pnpm dev:server          # Run the server
-pnpm dev:website         # Run the website
 pnpm build               # Build the extension
 pnpm build:server        # Build the server
-pnpm build:website       # Build the website
 pnpm build:all           # Build all packages
 pnpm test                # Run unit tests
 pnpm test:integration    # Run integration tests
@@ -135,7 +132,6 @@ Package-specific commands also exist:
 pnpm -F @bookmark-assistant/extension build
 pnpm -F @bookmark-assistant/server prisma:generate
 pnpm -F @bookmark-assistant/server prisma:migrate
-pnpm -F @bookmark-assistant/website build
 ```
 
 Runtime requirements from the package metadata:
@@ -157,8 +153,6 @@ At a high level:
 4. Configure the server with the Notion client ID and client secret.
 5. Configure the extension with the server URL and Notion client ID.
 
-For current self-hosting instructions, see [SELF_HOSTING.md](SELF_HOSTING.md).
-
 TODO: Confirm and document the recommended Notion database template, required properties, and template link.
 
 ## Configuration
@@ -174,7 +168,6 @@ Important extension variables:
 ```text
 VITE_OAUTH_SERVER_URL
 VITE_NOTION_CLIENT_ID
-VITE_WEBSITE_URL
 VITE_SUPPORT_URL
 VITE_DEBUG_MODE
 VITE_APP_NAME
@@ -194,7 +187,7 @@ PORT
 NODE_ENV
 SELF_HOSTED
 EDITION
-WEBSITE_URL
+ALLOWED_ORIGINS
 JWT_SECRET
 ALLOWED_EXTENSION_ID
 NOTION_CLIENT_ID
@@ -202,8 +195,6 @@ NOTION_CLIENT_SECRET
 NOTION_API_VERSION
 DATABASE_URL
 ```
-
-The website currently does not require environment variables by default.
 
 Do not commit `.env` or `.env.local` files.
 
@@ -247,8 +238,10 @@ pnpm test
 pnpm build
 ```
 
+## Privacy and Data Handling
+
+Self-hosted deployments are controlled by the operator. Do not commit `.env` files, Notion credentials, JWT secrets, or exported user data. Bookmark and page data is sent only to the server URL configured for the extension.
+
 ## License
 
 Bookmark Assistant is licensed under [AGPL-3.0-or-later](LICENSE).
-
-The Bookmark Assistant name, logo, Chrome Web Store listing, domains, and hosted service branding are reserved. See [TRADEMARKS.md](TRADEMARKS.md).

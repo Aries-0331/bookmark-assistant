@@ -15,7 +15,6 @@ pnpm install
 ```bash
 cp packages/server/.env.example packages/server/.env.local
 cp packages/extension/.env.example packages/extension/.env.local
-cp packages/website/.env.example packages/website/.env.local
 ```
 
 3. Fill in local Notion OAuth, database, and extension values.
@@ -25,7 +24,6 @@ cp packages/website/.env.example packages/website/.env.local
 ```bash
 pnpm dev
 pnpm dev:server
-pnpm dev:website
 ```
 
 ## Branches
