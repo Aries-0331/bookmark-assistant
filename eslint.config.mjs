@@ -78,28 +78,4 @@ export default tseslint.config([
       'prettier/prettier': 'warn',
     },
   },
-  // Website (Next.js)
-  {
-    files: ['packages/website/**/*.{ts,tsx}'],
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
-    plugins: { prettier, 'react-hooks': reactHooks },
-    languageOptions: {
-      ecmaVersion: 'latest',
-      globals: { ...globals.browser },
-      parserOptions: {
-        ecmaFeatures: { jsx: true },
-        projectService: false,
-      },
-    },
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': [
-        'warn',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
-      ],
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
-      'prettier/prettier': 'warn',
-    },
-  },
 ]);

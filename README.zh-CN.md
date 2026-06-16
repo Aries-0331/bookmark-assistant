@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="packages/website/public/brand/logo_128x128.png" alt="Bookmark Assistant logo" width="96" height="96" />
+  <img src="packages/extension/src/assets/logo_128x128.png" alt="Bookmark Assistant logo" width="96" height="96" />
 </p>
 
 <h1 align="center">Bookmark Assistant</h1>
@@ -14,7 +14,6 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: AGPL-3.0-or-later" src="https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg" /></a>
-  <a href="SELF_HOSTING.md"><img alt="Self-hostable" src="https://img.shields.io/badge/self--hostable-yes-111827.svg" /></a>
   <a href="https://chromewebstore.google.com/detail/khffaaemphidjmhokafmiilkcjpgiije?utm_source=item-share-cb"><img alt="Chrome Web Store" src="https://img.shields.io/badge/Chrome%20Web%20Store-available-16a34a.svg" /></a>
 </p>
 
@@ -118,10 +117,8 @@ TODO: 确认贡献者本地推荐加载路径应为 `packages/extension/dist`，
 ```bash
 pnpm dev                 # 运行扩展开发预览
 pnpm dev:server          # 运行服务端
-pnpm dev:website         # 运行网站
 pnpm build               # 构建扩展
 pnpm build:server        # 构建服务端
-pnpm build:website       # 构建网站
 pnpm build:all           # 构建所有 package
 pnpm test                # 运行单元测试
 pnpm test:integration    # 运行集成测试
@@ -135,7 +132,6 @@ pnpm check:i18n          # 检查扩展 i18n key 使用情况
 pnpm -F @bookmark-assistant/extension build
 pnpm -F @bookmark-assistant/server prisma:generate
 pnpm -F @bookmark-assistant/server prisma:migrate
-pnpm -F @bookmark-assistant/website build
 ```
 
 根据 package metadata，运行环境要求：
@@ -157,8 +153,6 @@ pnpm -F @bookmark-assistant/website build
 4. 在服务端配置 Notion client ID 和 client secret。
 5. 在扩展中配置服务端 URL 和 Notion client ID。
 
-当前自部署说明见 [SELF_HOSTING.md](SELF_HOSTING.md)。
-
 TODO: 确认并补充推荐的 Notion 数据库模板、必需属性和模板链接。
 
 ## 配置
@@ -174,7 +168,6 @@ cp packages/extension/.env.example packages/extension/.env.local
 ```text
 VITE_OAUTH_SERVER_URL
 VITE_NOTION_CLIENT_ID
-VITE_WEBSITE_URL
 VITE_SUPPORT_URL
 VITE_DEBUG_MODE
 VITE_APP_NAME
@@ -194,7 +187,7 @@ PORT
 NODE_ENV
 SELF_HOSTED
 EDITION
-WEBSITE_URL
+ALLOWED_ORIGINS
 JWT_SECRET
 ALLOWED_EXTENSION_ID
 NOTION_CLIENT_ID
@@ -202,8 +195,6 @@ NOTION_CLIENT_SECRET
 NOTION_API_VERSION
 DATABASE_URL
 ```
-
-website 当前默认不需要环境变量。
 
 不要提交 `.env` 或 `.env.local` 文件。
 
@@ -247,8 +238,10 @@ pnpm test
 pnpm build
 ```
 
+## 隐私与数据处理
+
+自部署实例由部署者自行控制。不要提交 `.env` 文件、Notion 凭据、JWT secret 或导出的用户数据。书签和页面数据只会发送到扩展中配置的服务端 URL。
+
 ## 许可证
 
 Bookmark Assistant 使用 [AGPL-3.0-or-later](LICENSE) 许可证开源。
-
-Bookmark Assistant 的名称、Logo、Chrome Web Store 商店 listing、域名和托管服务品牌标识均为保留资产。详见 [TRADEMARKS.md](TRADEMARKS.md)。
