@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Bookmark Assistant - Notion Bookmark Manager & Web Clipper",
+  "name": "Bookmark Assistant - Notion Bookmark Sync",
   "version": "1.0.19",
   "default_locale": "en",
-  "description": "One-click sync Chrome bookmarks to Notion Database. Auto-fetch favicons, meta tags, and manage your knowledge base visually.",
+  "description": "Sync Chrome bookmarks and Reading List items to Notion. Save pages, fetch link metadata, and keep saved links organized.",
   "permissions": [
     "bookmarks",
     "readingList",

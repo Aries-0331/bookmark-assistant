@@ -1,10 +1,10 @@
 {
   "appName": {
-    "message": "Bookmark Assistant - Administrador de Marcadores de Notion y Web Clipper",
+    "message": "Bookmark Assistant - Sincronización de Marcadores con Notion",
     "description": "The name of the extension"
   },
   "appDesc": {
-    "message": "Sincroniza marcadores de Chrome a Notion Database con un clic. Extrae automáticamente favicons, metadatos y gestiona tu base de conocimientos visualmente.",
+    "message": "Sincroniza marcadores y lista de lectura de Chrome con Notion. Guarda páginas, obtiene metadatos y organiza enlaces guardados.",
     "description": "The description of the extension"
   },
   "extensionTitle": {
