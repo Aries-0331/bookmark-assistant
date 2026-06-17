@@ -1,10 +1,10 @@
 {
   "appName": {
-    "message": "Bookmark Assistant - Notion Bookmark Sync",
+    "message": "Bookmark Assistant - Links to Notion",
     "description": "The name of the extension"
   },
   "appDesc": {
-    "message": "Sync Chrome bookmarks and Reading List items to Notion. Save pages, fetch link metadata, and keep saved links organized.",
+    "message": "Save and sync Chrome bookmarks, Reading List items, and pages to Notion. Keep links organized with metadata and deduping.",
     "description": "The description of the extension"
   },
   "extensionTitle": {
@@ -315,7 +315,7 @@
     "description": "About section title"
   },
   "about_desc": {
-    "message": "Information about Notion Bookmark Sync",
+    "message": "Information about Bookmark Assistant",
     "description": "About section description"
   },
   "about_app_name": {
@@ -327,7 +327,7 @@
     "description": "Version label with placeholder"
   },
   "about_description": {
-    "message": "Sync your Chrome bookmarks to Notion seamlessly",
+    "message": "Save and sync browser links to Notion",
     "description": "App description in about section"
   },
   "license": {

@@ -1,7 +1,7 @@
 {
   "name": "bookmark-assistant",
   "version": "1.0.19",
-  "description": "Sync Chrome bookmarks and Reading List items to organized Notion databases.",
+  "description": "Save and sync Chrome bookmarks, Reading List items, and pages to Notion.",
   "private": true,
   "packageManager": "pnpm@9.12.0",
   "workspaces": [

@@ -1,10 +1,10 @@
 {
   "appName": {
-    "message": "Bookmark Assistant - Notion书签同步",
+    "message": "Bookmark Assistant - 链接同步到Notion",
     "description": "The name of the extension"
   },
   "appDesc": {
-    "message": "将Chrome书签和Reading List同步到Notion。保存页面，获取链接元数据，并整理已保存链接。",
+    "message": "将Chrome书签、Reading List和页面保存并同步到Notion。通过元数据和去重整理链接。",
     "description": "The description of the extension"
   },
   "extensionTitle": {

@@ -5,7 +5,7 @@
 <h1 align="center">Bookmark Assistant</h1>
 
 <p align="center">
-  将 Chrome 书签和 Reading List 同步到 Notion。
+  将浏览器中保存的链接同步到 Notion。
 </p>
 
 <p align="center">
@@ -19,9 +19,9 @@
 
 ---
 
-Bookmark Assistant 是一个浏览器扩展，用于将 Chrome 书签和 Reading List 条目同步到 Notion 数据库。项目包含 Chrome MV3 扩展，以及一个用于 Notion 连接、会话处理和 Notion API 写入的轻量服务端。
+Bookmark Assistant 是一个浏览器扩展，用于把浏览器中保存的链接整理到 Notion 数据库。它可以同步 Chrome 书签和 Reading List 条目，也可以从弹窗保存当前页面，或从浏览器右键菜单保存链接。
 
-免费自托管版本本身应当是可用的：你可以从源码构建扩展，自行运行服务端，连接自己的 Notion 集成，并将链接数据同步到你控制的基础设施中。
+免费自托管版本本身应当是可用的：你可以从源码构建扩展，自行运行服务端，连接自己的 Notion 集成，并将已保存链接数据同步到你控制的基础设施中。
 
 Bookmark Assistant Pro 是面向托管 Notion OAuth 和托管自动化的版本。这个公开仓库不包含支付逻辑、托管服务密钥、商业 OAuth 基础设施或生产 AI 后端内部实现。
 
@@ -38,7 +38,7 @@ Bookmark Assistant Pro 是面向托管 Notion OAuth 和托管自动化的版本�
 
 ## 范围
 
-Bookmark Assistant 聚焦于书签、Reading List 条目、已保存页面和链接元数据。它不是完整 Web Clipper、笔记应用，也不是 Notion、Obsidian 或 LiteContext 的替代品。
+Bookmark Assistant 聚焦于书签、Reading List 条目、已保存页面和链接元数据。它是面向 Notion 的链接采集工具，不是完整 Web Clipper、笔记应用，也不是 Notion、Obsidian 或 LiteContext 的替代品。
 
 ## 安装
 
