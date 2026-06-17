@@ -1,10 +1,10 @@
 {
   "appName": {
-    "message": "Bookmark Assistant - NotionブックマークマネージャーとWebクリッパー",
+    "message": "Bookmark Assistant - Notionブックマーク同期",
     "description": "The name of the extension"
   },
   "appDesc": {
-    "message": "ワンクリックでChromeブックマークをNotionデータベースに同期。ファビコン、メタデータを自動取得し、知識ベースを視覚的に管理。",
+    "message": "ChromeのブックマークとリーディングリストをNotionに同期。ページ保存、リンクメタデータ取得、保存リンクの整理に対応。",
     "description": "The description of the extension"
   },
   "extensionTitle": {

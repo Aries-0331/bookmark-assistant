@@ -1,10 +1,10 @@
 {
   "appName": {
-    "message": "Bookmark Assistant - Notion书签管理器与网页剪裁器",
+    "message": "Bookmark Assistant - Notion书签同步",
     "description": "The name of the extension"
   },
   "appDesc": {
-    "message": "一键将Chrome书签同步到Notion数据库。自动获取网站图标和元数据，可视化管理您的知识库。",
+    "message": "将Chrome书签和Reading List同步到Notion。保存页面，获取链接元数据，并整理已保存链接。",
     "description": "The description of the extension"
   },
   "extensionTitle": {

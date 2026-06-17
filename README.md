@@ -5,7 +5,7 @@
 <h1 align="center">Bookmark Assistant</h1>
 
 <p align="center">
-  A browser extension for collecting, organizing, and syncing bookmarks to Notion.
+  Sync Chrome bookmarks and Reading List items to Notion.
 </p>
 
 <p align="center">
@@ -19,25 +19,13 @@
 
 ---
 
-Bookmark Assistant syncs Chrome bookmarks and Reading List items into a Notion database. It is built as a Chrome MV3 extension with a small server for Notion OAuth, session handling, and Notion API writes.
+Bookmark Assistant is a browser extension that syncs Chrome bookmarks and Reading List items into a Notion database. The project includes a Chrome MV3 extension and a small server used for Notion connection, session handling, and Notion API writes.
 
-The open-source version is intended to be useful on its own: you can self-host the server, build the extension from source, connect your own Notion integration, and sync bookmark data to infrastructure you control.
+The free self-hosted version is intended to be useful on its own: you can build the extension from source, run the server yourself, connect your own Notion integration, and sync link data to infrastructure you control.
 
-The hosted/Pro version is planned for users who want less setup and more managed automation, such as hosted Notion OAuth, AI auto-tagging, AI summaries, smarter sync, and managed service operations.
+Bookmark Assistant Pro is the managed version for users who want hosted Notion OAuth and managed automation. This public repository does not include payment logic, hosted service secrets, commercial OAuth infrastructure, or production AI backend internals.
 
-## Why This Exists
-
-Browser bookmarks are useful but easy to lose in folders. Notion is better for review, search, annotation, and long-term organization. Bookmark Assistant connects the two without forcing you into a proprietary bookmark manager.
-
-This repo is for:
-
-- Users who want a self-hostable bookmark-to-Notion workflow.
-- Developers who want to inspect or extend the extension and server.
-- Teams evaluating whether a managed hosted version is worth using later.
-
-## Features
-
-Implemented in this repository:
+## Current Features
 
 - Sync Chrome bookmarks to Notion.
 - Sync Chrome Reading List items to Notion.
@@ -48,38 +36,9 @@ Implemented in this repository:
 - Store sync state in Chrome storage and update popup/options UI from that state.
 - Self-host the server with PostgreSQL and Prisma.
 
-Not included in the open-source repo:
+## Scope
 
-- Payment logic.
-- Hosted service secrets.
-- Hosted commercial OAuth infrastructure.
-- AI backend for production-grade auto-tagging or summaries.
-
-## Open Source vs Pro / Hosted
-
-The open-source edition is for self-hosting and transparency. The Pro/hosted edition is for convenience and managed features.
-
-| Capability               | Open source | Pro / hosted |
-| ------------------------ | ----------- | ------------ |
-| Read Chrome bookmarks    | Yes         | Yes          |
-| Read Chrome Reading List | Yes         | Yes          |
-| Manual sync to Notion    | Yes         | Yes          |
-| Save current page        | Yes         | Yes          |
-| Context menu save        | Yes         | Yes          |
-| Hosted Notion OAuth      | No          | Yes.         |
-| AI auto-tagging          | No          | Planned      |
-| AI summaries             | No          | Planned      |
-| Smarter managed sync     | No          | Planned      |
-| Support                  | Community   | Priority     |
-
-## How It Works
-
-1. The extension reads bookmarks and Reading List items from Chrome.
-2. The extension formats items with stable sync IDs, URL metadata, type, and read-state information.
-3. The extension sends sync requests to the server.
-4. The server validates the session, checks the configured Notion data source, and builds Notion properties.
-5. The server creates missing Notion pages and skips existing pages by sync ID or URL.
-6. The extension stores sync state locally so the popup and options page can reflect the latest status.
+Bookmark Assistant is focused on bookmarks, Reading List items, saved pages, and link metadata. It is not a full web clipper, a note-taking app, or a replacement for Notion, Obsidian, or LiteContext.
 
 ## Installation
 
@@ -116,20 +75,13 @@ Common commands from `package.json`:
 pnpm dev                 # Run the extension dev preview
 pnpm dev:server          # Run the server
 pnpm build               # Build the extension
+pnpm build:zip           # Build a distributable extension zip
 pnpm build:server        # Build the server
 pnpm build:all           # Build all packages
 pnpm test                # Run unit tests
 pnpm test:integration    # Run integration tests
 pnpm lint                # Lint all packages
 pnpm check:i18n          # Check extension i18n key usage
-```
-
-Package-specific commands also exist:
-
-```bash
-pnpm -F @bookmark-assistant/extension build
-pnpm -F @bookmark-assistant/server prisma:generate
-pnpm -F @bookmark-assistant/server prisma:migrate
 ```
 
 Runtime requirements from the package metadata:
@@ -139,18 +91,6 @@ Runtime requirements from the package metadata:
 - pnpm 9.x.
 - PostgreSQL for the server.
 
-## Notion Setup
-
-Self-hosted deployments need a Notion OAuth integration and a Notion database or data source that the integration can write to.
-
-At a high level:
-
-1. Create a Notion integration.
-2. Configure the OAuth redirect URI for your Chrome extension.
-3. Share the target Notion database with the integration.
-4. Configure the server with the Notion client ID and client secret.
-5. Configure the extension with the server URL and Notion client ID.
-
 ## Configuration
 
 Extension environment template:
@@ -159,70 +99,17 @@ Extension environment template:
 cp packages/extension/.env.example packages/extension/.env.local
 ```
 
-Important extension variables:
-
-```text
-VITE_OAUTH_SERVER_URL
-VITE_NOTION_CLIENT_ID
-VITE_SUPPORT_URL
-VITE_DEBUG_MODE
-VITE_APP_NAME
-VITE_APP_VERSION
-```
-
 Server environment template:
 
 ```bash
 cp packages/server/.env.example packages/server/.env.local
 ```
 
-Important server variables:
-
-```text
-PORT
-NODE_ENV
-SELF_HOSTED
-EDITION
-ALLOWED_ORIGINS
-JWT_SECRET
-ALLOWED_EXTENSION_ID
-NOTION_CLIENT_ID
-NOTION_CLIENT_SECRET
-NOTION_API_VERSION
-DATABASE_URL
-```
-
 Do not commit `.env` or `.env.local` files.
-
-## Roadmap
-
-Open-source direction:
-
-- Clearer self-hosting setup.
-- Better Notion template documentation.
-- More reliable local development docs.
-- Screenshots and demo media.
-- More focused tests around extension-to-server flows.
-
-Hosted/Pro direction:
-
-- Hosted Notion OAuth.
-- AI auto-tagging.
-- AI summaries.
-- Smarter sync behavior.
-- Managed service operations and support.
-
-## Limitations
-
-- The open-source version requires self-hosting a server and PostgreSQL database.
-- You must configure your own Notion OAuth integration for self-hosting.
-- AI auto-tagging and AI summaries are not production features in this open-source repo.
-- Browser extension behavior depends on Chrome extension APIs and MV3 service worker lifecycle constraints.
-- Notion schema differences can require property mapping adjustments.
 
 ## Contributing
 
-Contributions are welcome if they fit the open-source scope of the project.
+Contributions are welcome if they fit the public repository scope.
 
 Start with [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -236,7 +123,7 @@ pnpm build
 
 ## Privacy and Data Handling
 
-Self-hosted deployments are controlled by the operator. Do not commit `.env` files, Notion credentials, JWT secrets, or exported user data. Bookmark and page data is sent only to the server URL configured for the extension.
+Self-hosted deployments are controlled by the operator. Do not commit `.env` files, Notion credentials, JWT secrets, or exported user data. Bookmark, Reading List, and saved page data is sent only to the server URL configured for the extension.
 
 ## License
 
