@@ -7,6 +7,7 @@ export default defineConfig({
     setupFiles: ['./vitest.setup.ts'],
     include: [
       'packages/extension/src/**/*.{test,spec}.{js,ts,jsx,tsx}',
+      'packages/extension-core/src/**/*.{test,spec}.{js,ts,jsx,tsx}',
       'packages/server/src/**/*.{test,spec}.{js,ts,jsx,tsx}',
       'tests/unit/**/*.{test,spec}.{js,ts,jsx,tsx}',
     ],

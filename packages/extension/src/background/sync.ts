@@ -1,55 +1,14 @@
 import type { LinkItem } from '@bookmark-assistant/contracts';
+import {
+  buildBookmarkPath,
+  flattenBookmarks,
+  formatBookmarkForSync,
+  type BookmarkTreeNodeLike,
+} from '@bookmark-assistant/extension-core';
 import { serverAPI } from './server-api';
 
-export interface BookmarkItem {
-  id: string;
-  title: string;
-  url?: string;
-  parentId?: string;
-  children?: BookmarkItem[];
-  dateAdded?: number;
-  dateGroupModified?: number;
-  path?: string;
-}
-
-export function buildBookmarkPath(
-  bookmarkTree: chrome.bookmarks.BookmarkTreeNode[],
-  targetId: string
-): string {
-  // Find the full path to a bookmark by its ID
-  function findBookmarkPath(
-    nodes: chrome.bookmarks.BookmarkTreeNode[],
-    targetId: string,
-    currentPath: string[] = []
-  ): string[] | null {
-    for (const node of nodes) {
-      // If this is the target bookmark, return the current path (excluding the bookmark itself)
-      if (node.id === targetId) {
-        return currentPath;
-      }
-
-      // If this node has children, search recursively
-      if (node.children) {
-        const nodePath = node.title ? [...currentPath, node.title] : currentPath;
-        const result = findBookmarkPath(node.children, targetId, nodePath);
-        if (result !== null) {
-          return result;
-        }
-      }
-    }
-    return null;
-  }
-
-  const path = findBookmarkPath(bookmarkTree, targetId);
-  if (!path) {
-    return 'Bookmarks';
-  }
-
-  // Filter out empty titles and the root "Bookmarks" container
-  const filteredPath = path.filter((part) => part && part.trim() !== '');
-
-  return filteredPath.length > 0 ? filteredPath.join(' / ') : 'Bookmarks';
-}
+export { buildBookmarkPath, flattenBookmarks };
+export type BookmarkItem = BookmarkTreeNodeLike;
 
 function addPathsToBookmarks(
   bookmarks: BookmarkItem[],
@@ -80,18 +39,15 @@ export async function syncAllBookmarksToNotion() {
     // Delegate the bulk sync entirely to the server
     const formatted: LinkItem[] = bookmarks
       .filter((b) => !!b.url)
-      .map((b) => ({
-        title: b.title || 'Untitled',
-        url: b.url || '',
-        description: '',
-        path: buildBookmarkPath(bookmarkTree, b.id),
-        dateAdded: b.dateAdded ? new Date(b.dateAdded).toISOString() : new Date().toISOString(),
-        // Let server generate syncId, but include a UUID if available
-        syncId:
-          globalThis.crypto && 'randomUUID' in globalThis.crypto
-            ? (globalThis.crypto as any).randomUUID()
-            : `${b.id}-${Date.now()}`,
-      }));
+      .map((b) =>
+        formatBookmarkForSync(b, buildBookmarkPath(bookmarkTree, b.id), {
+          description: '',
+          createSyncId: (bookmark) =>
+            globalThis.crypto && 'randomUUID' in globalThis.crypto
+              ? (globalThis.crypto as any).randomUUID()
+              : `${bookmark.id}-${Date.now()}`,
+        })
+      );
     const result = await serverAPI.syncBookmarks(formatted);
 
     // Store sync results metadata only
@@ -107,34 +63,4 @@ export async function syncAllBookmarksToNotion() {
 
     throw error;
   }
-}
-
-export function flattenBookmarks(
-  bookmarkNodes: chrome.bookmarks.BookmarkTreeNode[]
-): BookmarkItem[] {
-  const flattened: BookmarkItem[] = [];
-
-  function traverse(nodes: chrome.bookmarks.BookmarkTreeNode[], parentPath = '') {
-    for (const node of nodes) {
-      const currentPath = parentPath ? `${parentPath} > ${node.title}` : node.title;
-
-      if (node.url) {
-        // This is a bookmark (leaf node)
-        flattened.push({
-          id: node.id,
-          title: node.title,
-          url: node.url,
-          parentId: node.parentId,
-          dateAdded: node.dateAdded,
-          dateGroupModified: node.dateGroupModified,
-        });
-      } else if (node.children) {
-        // This is a folder, traverse its children
-        traverse(node.children, currentPath);
-      }
-    }
-  }
-
-  traverse(bookmarkNodes);
-  return flattened;
 }

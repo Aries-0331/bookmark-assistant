@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@bookmark-assistant/contracts": "workspace:*",
+    "@bookmark-assistant/extension-core": "workspace:*",
     "@bookmark-assistant/shared": "workspace:*",
     "@notionhq/client": "^5.0.0",
     "@radix-ui/react-slot": "^1.2.4",
