@@ -1,3 +1,4 @@
+import type { LinkItem } from '@bookmark-assistant/contracts';
 import { serverAPI } from './server-api';
 
 export interface BookmarkItem {
@@ -77,7 +78,7 @@ export async function syncAllBookmarksToNotion() {
     // User cannot bypass limits by modifying local storage
 
     // Delegate the bulk sync entirely to the server
-    const formatted = bookmarks
+    const formatted: LinkItem[] = bookmarks
       .filter((b) => !!b.url)
       .map((b) => ({
         title: b.title || 'Untitled',
@@ -91,7 +92,7 @@ export async function syncAllBookmarksToNotion() {
             ? (globalThis.crypto as any).randomUUID()
             : `${b.id}-${Date.now()}`,
       }));
-    const result = await serverAPI.syncBookmarks(formatted as any);
+    const result = await serverAPI.syncBookmarks(formatted);
 
     // Store sync results metadata only
     await chrome.storage.local.set({

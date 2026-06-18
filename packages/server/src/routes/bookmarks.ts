@@ -1,7 +1,12 @@
 // 📚 Bookmark Management Routes
 
 import { Router, Response } from 'express';
-import { AuthenticatedRequest, BookmarkSyncRequest, BookmarkItem } from '../types';
+import type {
+  BookmarkSyncRequest,
+  BookmarkSyncResult,
+  LinkItem as BookmarkItem,
+} from '@bookmark-assistant/contracts';
+import { AuthenticatedRequest } from '../types';
 import { validateSession } from '../middleware/auth';
 import { notionService } from '../services/notion';
 import { userPrisma } from '../services/userPrisma';
@@ -62,18 +67,6 @@ function diffBookmarks(accepted: BookmarkItem[], urls: string[], syncIds: string
   };
 }
 
-// Result type definitions
-type SyncResult =
-  | { success: true; bookmark: string; action: 'created'; syncId?: string }
-  | {
-      success: true;
-      bookmark: string;
-      action: 'skipped';
-      reason: 'duplicate_exists';
-      syncId?: string;
-    }
-  | { success: false; bookmark: string; error: string; syncId?: string };
-
 /**
  * Sync a single batch of bookmarks to Notion
  * Returns the results of the sync operation for this batch
@@ -83,7 +76,7 @@ async function syncBatchToNotion(
   verifiedDatabaseId: string,
   verifiedDataSourceId: string,
   userData: { notionAccessToken: string }
-): Promise<SyncResult[]> {
+): Promise<BookmarkSyncResult[]> {
   const batchPromises = batch.map(async (bookmark: BookmarkItem) => {
     try {
       const properties = await notionService.buildPropertiesFromDataSource(
@@ -123,7 +116,9 @@ async function syncBatchToNotion(
     }
   });
 
-  let batchResults = (await Promise.all(batchPromises)) as (SyncResult & { retryCount?: number })[];
+  let batchResults = (await Promise.all(batchPromises)) as (BookmarkSyncResult & {
+    retryCount?: number;
+  })[];
 
   // Single retry pass for failed items (max 1 retry per item)
   const retryableFailures = batchResults.filter((r) => {
@@ -137,7 +132,9 @@ async function syncBatchToNotion(
   });
 
   if (retryableFailures.length > 0) {
-    console.log(`[Bookmark Sync] 🔄 Retrying ${retryableFailures.length} failed bookmarks (1 attempt each)...`);
+    console.log(
+      `[Bookmark Sync] 🔄 Retrying ${retryableFailures.length} failed bookmarks (1 attempt each)...`
+    );
 
     // Retry with delay
     await sleep(1500);
@@ -174,7 +171,10 @@ async function syncBatchToNotion(
           retryCount: 1,
         };
       } catch (retryError) {
-        console.warn(`[Bookmark Sync] ❌ Retry failed for "${failed.bookmark}"`, retryError instanceof Error ? retryError.message : String(retryError));
+        console.warn(
+          `[Bookmark Sync] ❌ Retry failed for "${failed.bookmark}"`,
+          retryError instanceof Error ? retryError.message : String(retryError)
+        );
         return { ...failed, retryCount: 1 }; // Mark as retried
       }
     });
@@ -248,7 +248,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     // Check if notionDatabaseId exists
     if (!userData.notionDatabaseId) {
       console.error('[Bookmark Sync] ❌ No notionDatabaseId found in user data');
-      
+
       // Attempt recovery if we have duplicatedTemplateId
       if (userData.duplicatedTemplateId) {
         console.log('[Bookmark Sync] 🔄 Attempting database recovery from duplicatedTemplateId...');
@@ -257,18 +257,18 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
             userData.duplicatedTemplateId,
             userData.notionAccessToken
           );
-          
+
           // Update user record with recovered database
           await userPrisma.update(userData.id!, {
             notionDatabaseId: resolved.databaseId,
             notionDataSourceId: resolved.dataSourceId,
             templateDatabaseId: resolved.databaseId, // Keep in sync
           });
-          
+
           // Update local userData for this request
           userData.notionDatabaseId = resolved.databaseId;
           userData.notionDataSourceId = resolved.dataSourceId;
-          
+
           console.log('[Bookmark Sync] ✅ Database recovered successfully');
           console.log('[Bookmark Sync]   Recovered DB:', resolved.databaseId);
           console.log('[Bookmark Sync]   Data Source:', resolved.dataSourceId);
@@ -276,7 +276,8 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
           console.error('[Bookmark Sync] ❌ Database recovery failed:', recoveryError);
           return res.status(400).json({
             error: 'Database Not Configured',
-            message: 'No database ID found and recovery failed. Please reconnect your Notion integration.',
+            message:
+              'No database ID found and recovery failed. Please reconnect your Notion integration.',
             suggestion: 'Go to Settings → Disconnect → Reconnect to reconfigure database',
             recoveryAttempted: true,
             recoveryError: recoveryError instanceof Error ? recoveryError.message : 'Unknown error',
@@ -337,34 +338,36 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
     );
 
     // Initialize results array for tracking sync outcomes
-    const results: SyncResult[] = [];
+    const results: BookmarkSyncResult[] = [];
 
     // Generate descriptions for bookmarks without them (if enabled)
     const generateDescriptions = options.generateDescriptions !== false; // Default: true
     if (generateDescriptions) {
       console.log('[Bookmark Sync] Generating descriptions for bookmarks without them...');
-      
+
       // Filter bookmarks that need description extraction
       const bookmarksNeedingDescriptions = enrichedBookmarks.filter(
         (bookmark) => !bookmark.description?.trim() && bookmark.url
       );
-      
+
       if (bookmarksNeedingDescriptions.length > 0) {
         console.log(
           `[Bookmark Sync] Extracting descriptions for ${bookmarksNeedingDescriptions.length} bookmarks in batches...`
         );
-        
+
         // Process descriptions in batches to prevent connection pool exhaustion
         const batchSize = config.descriptionExtraction.batchSize;
         const batchDelay = config.descriptionExtraction.batchDelayMs;
         const descriptionBatches = createBatches(bookmarksNeedingDescriptions, batchSize);
-        
+
         // Create a map to track updated bookmarks by their identifier
         const updatedBookmarksMap = new Map<string, BookmarkItem>();
 
         // Helper function to get a unique key for a bookmark
         const getBookmarkKey = (bookmark: BookmarkItem): string => {
-          return bookmark.url || bookmark.syncId || `bookmark-${Math.random().toString(36).substr(2, 9)}`;
+          return (
+            bookmark.url || bookmark.syncId || `bookmark-${Math.random().toString(36).substr(2, 9)}`
+          );
         };
 
         // Helper function to normalize bookmark to ensure all properties are present
@@ -377,9 +380,11 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
             tags: bookmark.tags,
             dateAdded: bookmark.dateAdded,
             syncId: bookmark.syncId,
+            type: bookmark.type,
+            readState: bookmark.readState,
           };
         };
-        
+
         // Process each batch sequentially
         for (let i = 0; i < descriptionBatches.length; i++) {
           const batch = descriptionBatches[i];
@@ -409,7 +414,10 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
                 );
               }
             } catch (error) {
-              console.debug(`[Bookmark Sync] Error generating description for ${bookmark.url}:`, error);
+              console.debug(
+                `[Bookmark Sync] Error generating description for ${bookmark.url}:`,
+                error
+              );
             }
             return normalizeBookmark(bookmark);
           });
@@ -437,7 +445,9 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
               if (bookmark.syncId) syncIds.push(bookmark.syncId);
             }
           } else {
-            console.debug(`[Bookmark Sync] Batch ${i + 1}: all bookmarks already exist in Notion, skipping sync`);
+            console.debug(
+              `[Bookmark Sync] Batch ${i + 1}: all bookmarks already exist in Notion, skipping sync`
+            );
           }
 
           // Add delay between batches to prevent overwhelming the connection pool
@@ -445,13 +455,13 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
             await sleep(batchDelay);
           }
         }
-        
+
         // Update enrichedBookmarks with extracted descriptions
         enrichedBookmarks = enrichedBookmarks.map((bm) => {
           const updated = updatedBookmarksMap.get(getBookmarkKey(bm));
           return updated ? normalizeBookmark(updated) : normalizeBookmark(bm);
         });
-        
+
         console.log('[Bookmark Sync] Description generation completed');
 
         // After description extraction, sync bookmarks that were NOT in bookmarksNeedingDescriptions
@@ -461,7 +471,8 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
           // OR it was updated in the batch loop
           const hadDescription = bm.description?.trim();
           // Check if this bookmark was already synced (in urls/syncIds from batch loop)
-          const alreadySynced = (bm.url && urls.includes(bm.url)) || (bm.syncId && syncIds.includes(bm.syncId));
+          const alreadySynced =
+            (bm.url && urls.includes(bm.url)) || (bm.syncId && syncIds.includes(bm.syncId));
           // We want to sync bookmarks that have descriptions but haven't been synced yet
           return hadDescription && !alreadySynced;
         });

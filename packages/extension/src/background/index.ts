@@ -1,4 +1,5 @@
 import './polyfill';
+import type { LinkItem } from '@bookmark-assistant/contracts';
 import { launchNotionOAuth, exchangeCodeForToken, debugOAuthSetup } from './oauth';
 import { validateConfig, debugConfig } from './config';
 import { serverAPI, APIError } from './server-api';
@@ -247,7 +248,7 @@ async function performBookmarkSync(): Promise<{
   };
 
   // Declare variables outside try block so they're accessible in catch
-  let formatted: any[] = [];
+  let formatted: LinkItem[] = [];
   let currentHash: string | undefined;
 
   try {
@@ -299,7 +300,7 @@ async function performBookmarkSync(): Promise<{
     console.log(`[Sync] Cache size: ${pageDescriptionCache.size} URLs with descriptions`);
 
     // Collect reading list items
-    let readingListItems: any[] = [];
+    let readingListItems: LinkItem[] = [];
     try {
       const { getReadingListItems } = await import('../utils/reading-list');
       readingListItems = await getReadingListItems();
@@ -311,9 +312,9 @@ async function performBookmarkSync(): Promise<{
     }
 
     // Add type='bookmark' to regular bookmarks and combine
-    const bookmarksWithType = formatted.map((bm: any) => ({
+    const bookmarksWithType: LinkItem[] = formatted.map((bm) => ({
       ...bm,
-      type: 'bookmark',
+      type: 'bookmark' as const,
     }));
 
     // Combine bookmarks and reading list items for unified sync
@@ -479,7 +480,7 @@ async function saveCurrentPage(): Promise<{ success: boolean; error?: string }> 
     }
 
     // Format bookmark for server
-    const bookmark = {
+    const bookmark: LinkItem = {
       title: tab.title || 'Untitled',
       url: tab.url,
       description: '', // Let server generate description
@@ -557,7 +558,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
     console.log('[DEBUG] Saving:', title, url);
     try {
-      const bookmark = {
+      const bookmark: LinkItem = {
         title,
         url,
         description: '',

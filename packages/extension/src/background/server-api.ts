@@ -1,20 +1,9 @@
 // Server API Client for Bookmark Notion Sync Extension
 // Handles all communication with the backend server
-export interface ServerResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-}
+import type { ApiResponse, BookmarkSyncResponse, LinkItem } from '@bookmark-assistant/contracts';
 
-export interface BookmarkData {
-  title: string;
-  url: string;
-  description?: string;
-  path?: string;
-  dateAdded?: string;
-  syncId?: string;
-}
+export type ServerResponse<T = any> = ApiResponse<T>;
+export type BookmarkData = LinkItem;
 
 class ServerAPIClient {
   private baseUrl: string;
@@ -160,26 +149,12 @@ class ServerAPIClient {
     }
   }
 
-  async syncBookmarks(bookmarks: BookmarkData[]): Promise<{
-    summary: {
-      total: number;
-      success: number;
-      failed: number;
-    };
-    results: any[];
-    partialSync?: {
-      applied: boolean;
-      requested: number;
-      processed: number;
-      skipped: number;
-      message: string;
-    };
-  }> {
+  async syncBookmarks(bookmarks: BookmarkData[]): Promise<BookmarkSyncResponse> {
     // Set a longer timeout (180s) for bookmark sync
     // Processing 50+ bookmarks with description extraction can take time
     // If the request takes longer, it will timeout and reset sync_in_progress
     const estimatedTimeout = 180000;
-    return await this.makeRequest<any>('/api/bookmarks/sync', {
+    return await this.makeRequest<BookmarkSyncResponse>('/api/bookmarks/sync', {
       method: 'POST',
       body: JSON.stringify({ bookmarks }),
       timeoutMs: estimatedTimeout,
