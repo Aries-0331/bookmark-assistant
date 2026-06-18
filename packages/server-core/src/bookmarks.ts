@@ -1,0 +1,104 @@
+import type { LinkItem } from '@bookmark-assistant/contracts';
+
+export interface DiffBookmarksStats {
+  requestTotal: number;
+  existingIndexSize: number;
+  matchedBySyncId: number;
+  matchedByUrl: number;
+}
+
+export interface DiffBookmarksOutcome {
+  toCreate: LinkItem[];
+  skippedExisting: number;
+  stats: DiffBookmarksStats;
+}
+
+export interface ValidateBookmarkOptions {
+  now?: () => Date;
+  createSyncId?: () => string;
+}
+
+export function diffBookmarks(
+  accepted: LinkItem[],
+  existingUrls: readonly string[],
+  existingSyncIds: readonly string[]
+): DiffBookmarksOutcome {
+  let duplicateCount = 0;
+  let matchedBySyncId = 0;
+  let matchedByUrl = 0;
+
+  const toCreate: LinkItem[] = [];
+  for (const item of accepted) {
+    let isDuplicate = false;
+
+    if (item.syncId && existingSyncIds.includes(item.syncId)) {
+      isDuplicate = true;
+      matchedBySyncId++;
+    } else if (item.url && existingUrls.includes(item.url)) {
+      isDuplicate = true;
+      matchedByUrl++;
+    }
+
+    if (isDuplicate) {
+      duplicateCount++;
+    } else {
+      toCreate.push(item);
+    }
+  }
+
+  return {
+    toCreate,
+    skippedExisting: accepted.length - toCreate.length,
+    stats: {
+      requestTotal: accepted.length,
+      existingIndexSize: duplicateCount,
+      matchedBySyncId,
+      matchedByUrl,
+    },
+  };
+}
+
+export function validateBookmarkInput(
+  bookmark: unknown,
+  options: ValidateBookmarkOptions = {}
+): LinkItem {
+  const input = isRecord(bookmark) ? bookmark : {};
+  const now = options.now ?? (() => new Date());
+  const createSyncId = options.createSyncId ?? (() => `bookmark-${Date.now()}`);
+  const type = input.type === 'bookmark' || input.type === 'reading_list' ? input.type : undefined;
+  const readState =
+    input.readState === 'READ' || input.readState === 'UNREAD' ? input.readState : undefined;
+
+  const validated: LinkItem = {
+    title: stringOr(input.title, stringOr(input.name, 'Untitled Bookmark')),
+    url: stringOr(input.url, ''),
+    path: optionalString(input.path),
+    description: stringOr(input.description, ''),
+    tags: Array.isArray(input.tags)
+      ? input.tags.filter((tag): tag is string => typeof tag === 'string')
+      : [],
+    dateAdded: stringOr(input.dateAdded, stringOr(input.dateCreated, now().toISOString())),
+    syncId: stringOr(input.syncId, createSyncId()),
+  };
+
+  if (type) {
+    validated.type = type;
+  }
+  if (readState) {
+    validated.readState = readState;
+  }
+
+  return validated;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function stringOr(value: unknown, fallback: string): string {
+  return typeof value === 'string' && value.length > 0 ? value : fallback;
+}
+
+function optionalString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}

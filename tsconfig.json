@@ -8,6 +8,9 @@
       "path": "packages/extension-core"
     },
     {
+      "path": "packages/server-core"
+    },
+    {
       "path": "packages/extension"
     },
     {

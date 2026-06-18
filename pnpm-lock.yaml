@@ -169,6 +169,9 @@ importers:
       '@bookmark-assistant/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@bookmark-assistant/server-core':
+        specifier: workspace:*
+        version: link:../server-core
       '@notionhq/client':
         specifier: ^5.3.0
         version: 5.3.0
@@ -230,6 +233,19 @@ importers:
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
+
+  packages/server-core:
+    dependencies:
+      '@bookmark-assistant/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+    devDependencies:
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      vitest:
+        specifier: ^4.0.15
+        version: 4.0.15(@edge-runtime/vm@3.2.0)(@types/node@20.19.22)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.44.1)
 
   packages/shared: {}
 

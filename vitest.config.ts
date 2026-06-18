@@ -9,6 +9,7 @@ export default defineConfig({
       'packages/extension/src/**/*.{test,spec}.{js,ts,jsx,tsx}',
       'packages/extension-core/src/**/*.{test,spec}.{js,ts,jsx,tsx}',
       'packages/server/src/**/*.{test,spec}.{js,ts,jsx,tsx}',
+      'packages/server-core/src/**/*.{test,spec}.{js,ts,jsx,tsx}',
       'tests/unit/**/*.{test,spec}.{js,ts,jsx,tsx}',
     ],
     exclude: [

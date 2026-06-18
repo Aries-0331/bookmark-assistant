@@ -25,6 +25,7 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@bookmark-assistant/contracts": "workspace:*",
+    "@bookmark-assistant/server-core": "workspace:*",
     "@notionhq/client": "^5.3.0",
     "@prisma/client": "^6.17.1",
     "bcrypt": "^5.1.1",

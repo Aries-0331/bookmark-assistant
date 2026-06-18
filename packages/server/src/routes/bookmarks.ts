@@ -6,6 +6,7 @@ import type {
   BookmarkSyncResult,
   LinkItem as BookmarkItem,
 } from '@bookmark-assistant/contracts';
+import { diffBookmarks } from '@bookmark-assistant/server-core';
 import { AuthenticatedRequest } from '../types';
 import { validateSession } from '../middleware/auth';
 import { notionService } from '../services/notion';
@@ -15,57 +16,6 @@ import { auditLog, sanitizeError, validateBookmark, createBatches, sleep } from 
 import { descriptionExtractor } from '../services/description-extractor';
 
 const router: import('express').Router = Router();
-
-type DiffOutcome = {
-  toCreate: BookmarkItem[];
-  skippedExisting: number;
-  stats: {
-    requestTotal: number;
-    existingIndexSize: number;
-    matchedBySyncId: number;
-    matchedByUrl: number;
-  };
-};
-
-function diffBookmarks(accepted: BookmarkItem[], urls: string[], syncIds: string[]): DiffOutcome {
-  let count = 0;
-  let matchedBySyncId = 0;
-  let matchedByUrl = 0;
-
-  const toCreate: BookmarkItem[] = [];
-  for (const b of accepted) {
-    let isDuplicate = false;
-
-    // Prefer syncId matching (most reliable)
-    if (b.syncId && syncIds.includes(b.syncId)) {
-      isDuplicate = true;
-      matchedBySyncId++;
-    }
-    // Fallback to URL matching
-    else if (b.url && urls.includes(b.url)) {
-      isDuplicate = true;
-      matchedByUrl++;
-    }
-
-    if (isDuplicate) {
-      count++;
-    } else {
-      toCreate.push(b);
-    }
-  }
-
-  const skippedExisting = accepted.length - toCreate.length;
-  return {
-    toCreate,
-    skippedExisting,
-    stats: {
-      requestTotal: accepted.length,
-      existingIndexSize: count,
-      matchedBySyncId,
-      matchedByUrl,
-    },
-  };
-}
 
 /**
  * Sync a single batch of bookmarks to Notion

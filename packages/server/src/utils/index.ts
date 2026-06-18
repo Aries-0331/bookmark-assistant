@@ -1,6 +1,7 @@
 // 🛠️ Utility Functions for Server Operations
 
 import type { LinkItem as BookmarkItem } from '@bookmark-assistant/contracts';
+import { validateBookmarkInput } from '@bookmark-assistant/server-core';
 import { randomUUID } from 'crypto';
 import { config } from '../config';
 import { logger } from './logger';
@@ -76,31 +77,9 @@ export const sleep = (ms: number): Promise<void> => {
  * Validate and sanitize bookmark data
  */
 export const validateBookmark = (bookmark: any, _index: number): BookmarkItem => {
-  const type =
-    bookmark.type === 'bookmark' || bookmark.type === 'reading_list' ? bookmark.type : undefined;
-  const readState =
-    bookmark.readState === 'READ' || bookmark.readState === 'UNREAD'
-      ? bookmark.readState
-      : undefined;
-
-  const validated: BookmarkItem = {
-    title: bookmark.title || bookmark.name || 'Untitled Bookmark',
-    url: bookmark.url || '',
-    path: bookmark.path,
-    description: bookmark.description || '',
-    tags: Array.isArray(bookmark.tags) ? bookmark.tags : [],
-    dateAdded: bookmark.dateAdded || bookmark.dateCreated || new Date().toISOString(),
-    syncId: bookmark.syncId || randomUUID(),
-  };
-
-  if (type) {
-    validated.type = type;
-  }
-  if (readState) {
-    validated.readState = readState;
-  }
-
-  return validated;
+  return validateBookmarkInput(bookmark, {
+    createSyncId: randomUUID,
+  });
 };
 
 /**
