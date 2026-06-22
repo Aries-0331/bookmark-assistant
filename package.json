@@ -22,6 +22,8 @@
     "test:all": "pnpm test:unit && pnpm test:integration",
     "lint": "pnpm -r lint",
     "clean": "pnpm -r clean",
+    "publish:core": "node scripts/publish-core-packages.js",
+    "publish:core:dry-run": "node scripts/publish-core-packages.js --dry-run",
     "start:server": "pnpm -F @bookmark-assistant/server start",
     "check:i18n": "node scripts/check-i18n.js"
   },
