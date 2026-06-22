@@ -154,7 +154,7 @@ importers:
   packages/extension-core:
     dependencies:
       '@bookmark-assistant/contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../contracts
     devDependencies:
       typescript:
@@ -237,7 +237,7 @@ importers:
   packages/server-core:
     dependencies:
       '@bookmark-assistant/contracts':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../contracts
     devDependencies:
       typescript:

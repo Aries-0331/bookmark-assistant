@@ -27,7 +27,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@bookmark-assistant/contracts": "workspace:*"
+    "@bookmark-assistant/contracts": "workspace:^"
   },
   "devDependencies": {
     "typescript": "^5.9.2",
