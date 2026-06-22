@@ -40,6 +40,12 @@ Bookmark Assistant Pro 是面向托管 Notion OAuth 和托管自动化的版本�
 
 Bookmark Assistant 聚焦于书签、Reading List 条目、已保存页面和链接元数据。它是面向 Notion 的链接采集工具，不是完整 Web Clipper、笔记应用，也不是 Notion、Obsidian 或 LiteContext 的替代品。
 
+## Core Packages
+
+这个公开仓库负责维护 Free/Core packages：`@bookmark-assistant/contracts`、`@bookmark-assistant/extension-core` 和 `@bookmark-assistant/server-core`。Bookmark Assistant Pro 应消费已发布的 core packages，而不是长期维护复制出来的 extension 或 server 代码。临时 vendor checkout 可以用于验证，但不是长期架构。
+
+Public core packages 可以包含共享契约、链接格式化、本地采集 helper、sync diff、数据验证，以及 LiteContext 兼容的数据结构。支付逻辑、托管 OAuth 内部实现、entitlement 实现、生产 AI 后端细节、私有部署配置和 secrets 等 Pro-only 内容不应进入这个仓库。
+
 ## 安装
 
 本仓库使用 pnpm workspaces。

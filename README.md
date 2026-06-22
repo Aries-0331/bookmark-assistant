@@ -40,6 +40,12 @@ Bookmark Assistant Pro is the managed version for users who want hosted Notion O
 
 Bookmark Assistant is focused on bookmarks, Reading List items, saved pages, and link metadata. It is a link collector for Notion, not a full web clipper, a note-taking app, or a replacement for Notion, Obsidian, or LiteContext.
 
+## Core Packages
+
+This public repository owns the Free/Core packages: `@bookmark-assistant/contracts`, `@bookmark-assistant/extension-core`, and `@bookmark-assistant/server-core`. Bookmark Assistant Pro should consume released core packages instead of maintaining copied extension or server code. Temporary vendor checkouts are useful for validation, but they are not the long-term architecture.
+
+Public core packages may include shared contracts, link formatting, local capture helpers, sync diffing, validation, and LiteContext-compatible data shapes. Pro-only internals such as payment logic, managed OAuth internals, entitlement implementation, production AI backend details, private deployment configuration, and secrets do not belong in this repository.
+
 ## Installation
 
 This repository uses pnpm workspaces.
