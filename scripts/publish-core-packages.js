@@ -30,6 +30,7 @@ function parseArgs(argv) {
   const options = {
     dryRun: false,
     yes: false,
+    force: false,
     skipGitCheck: false,
     skipVerify: false,
     otp: '',
@@ -39,6 +40,7 @@ function parseArgs(argv) {
     if (arg === '--') continue;
     else if (arg === '--dry-run') options.dryRun = true;
     else if (arg === '--yes') options.yes = true;
+    else if (arg === '--force') options.force = true;
     else if (arg === '--skip-git-check') options.skipGitCheck = true;
     else if (arg === '--skip-verify') options.skipVerify = true;
     else if (arg.startsWith('--otp=')) options.otp = arg.slice('--otp='.length);
@@ -65,6 +67,7 @@ Usage:
 Options:
   --dry-run          Run build, runtime checks, pack dry-run, and publish dry-run.
   --yes              Required for a real publish.
+  --force            Try publishing even when the same version already exists.
   --otp=123456       Optional npm one-time password for interactive 2FA accounts.
   --skip-git-check   Do not require a clean git worktree.
   --skip-verify      Skip build/runtime/pack verification before publish.
@@ -98,6 +101,23 @@ function run(command, args, options = {}) {
   if (result.status !== 0) {
     fail(`${command} ${args.join(' ')} exited with status ${result.status}`);
   }
+}
+
+function runCapture(command, args, options = {}) {
+  const cwd = options.cwd || repoRoot;
+  const env = options.env || process.env;
+  const result = spawnSync(command, args, {
+    cwd,
+    env,
+    encoding: 'utf8',
+    shell: false,
+  });
+
+  if (result.error) {
+    fail(`${command} ${args.join(' ')} failed: ${result.error.message}`);
+  }
+
+  return result;
 }
 
 function readPackageJson(packageDir) {
@@ -255,6 +275,19 @@ function publishPackages(options, env) {
   }
 
   for (const item of packages) {
+    const packageJson = readPackageJson(item.dir);
+
+    if (!options.dryRun && !options.force) {
+      const publishedVersion = getPublishedVersion(item.name, packageJson.version, env);
+
+      if (publishedVersion === packageJson.version) {
+        console.log(`${item.name}@${packageJson.version} is already published; skipping.`);
+        continue;
+      }
+
+      console.log(`${item.name}@${packageJson.version} is not published yet; publishing.`);
+    }
+
     run('pnpm', publishArgs, {
       cwd: path.join(repoRoot, item.dir),
       env,
@@ -262,15 +295,38 @@ function publishPackages(options, env) {
   }
 }
 
+function getPublishedVersion(packageName, version, env) {
+  const result = runCapture(
+    'npm',
+    ['view', `${packageName}@${version}`, 'version', `--registry=${registry}`],
+    { env }
+  );
+
+  if (result.status === 0) {
+    return result.stdout.trim();
+  }
+
+  const output = `${result.stdout}\n${result.stderr}`;
+
+  if (output.includes('E404') || output.includes('Not found')) {
+    return null;
+  }
+
+  fail(`Unable to check published version for ${packageName}@${version}:\n${output.trim()}`);
+}
+
 function verifyPublishedVersions(env) {
   for (const item of packages) {
     const packageJson = readPackageJson(item.dir);
-    run(
-      'npm',
-      ['view', item.name, 'version', `--registry=${registry}`],
-      { env }
-    );
-    console.log(`${item.name} expected version: ${packageJson.version}`);
+    const publishedVersion = getPublishedVersion(item.name, packageJson.version, env);
+
+    if (publishedVersion !== packageJson.version) {
+      fail(
+        `${item.name} expected version ${packageJson.version}, but registry returned ${publishedVersion || 'not published'}`
+      );
+    }
+
+    console.log(`${item.name}@${packageJson.version} is available on npm.`);
   }
 }
 
