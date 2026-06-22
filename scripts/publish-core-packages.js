@@ -7,6 +7,7 @@ const { spawnSync } = require('node:child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
 const registry = 'https://registry.npmjs.org/';
+const publicVisibilityRetryDelaysMs = [0, 5_000, 15_000, 30_000, 60_000];
 const packages = [
   {
     name: '@bookmark-assistant/contracts',
@@ -173,8 +174,11 @@ function assertCleanGitWorktree() {
 
 function prepareNpmEnv() {
   const env = { ...process.env };
+  const publicEnv = { ...process.env };
   let tempNpmrcPath = null;
   let tempCachePath = null;
+  let tempPublicNpmrcPath = null;
+  let tempPublicCachePath = null;
 
   if (!env.NPM_CONFIG_CACHE && !env.npm_config_cache) {
     tempCachePath = path.join(
@@ -185,13 +189,35 @@ function prepareNpmEnv() {
     env.NPM_CONFIG_CACHE = tempCachePath;
   }
 
+  tempPublicNpmrcPath = path.join(
+    os.tmpdir(),
+    `bookmark-assistant-public-registry-${process.pid}-${Date.now()}.npmrc`
+  );
+  tempPublicCachePath = path.join(
+    os.tmpdir(),
+    `bookmark-assistant-public-cache-${process.pid}-${Date.now()}`
+  );
+
+  fs.mkdirSync(tempPublicCachePath, { recursive: true });
+  fs.writeFileSync(tempPublicNpmrcPath, `registry=${registry}\n`, { mode: 0o600 });
+  delete publicEnv.NPM_TOKEN;
+  delete publicEnv.npm_config__authToken;
+  delete publicEnv.NPM_CONFIG__AUTH_TOKEN;
+  publicEnv.NPM_CONFIG_USERCONFIG = tempPublicNpmrcPath;
+  publicEnv.npm_config_userconfig = tempPublicNpmrcPath;
+  publicEnv.NPM_CONFIG_CACHE = tempPublicCachePath;
+  publicEnv.npm_config_cache = tempPublicCachePath;
+
   if (env.NPM_CONFIG_USERCONFIG) {
     return {
       env,
+      publicEnv,
       cleanup: () => {
         if (tempCachePath) {
           fs.rmSync(tempCachePath, { recursive: true, force: true });
         }
+        fs.rmSync(tempPublicNpmrcPath, { force: true });
+        fs.rmSync(tempPublicCachePath, { recursive: true, force: true });
       },
     };
   }
@@ -199,10 +225,13 @@ function prepareNpmEnv() {
   if (!env.NPM_TOKEN) {
     return {
       env,
+      publicEnv,
       cleanup: () => {
         if (tempCachePath) {
           fs.rmSync(tempCachePath, { recursive: true, force: true });
         }
+        fs.rmSync(tempPublicNpmrcPath, { force: true });
+        fs.rmSync(tempPublicCachePath, { recursive: true, force: true });
       },
     };
   }
@@ -224,6 +253,7 @@ function prepareNpmEnv() {
 
   return {
     env,
+    publicEnv,
     cleanup: () => {
       if (tempNpmrcPath) {
         fs.rmSync(tempNpmrcPath, { force: true });
@@ -231,6 +261,8 @@ function prepareNpmEnv() {
       if (tempCachePath) {
         fs.rmSync(tempCachePath, { recursive: true, force: true });
       }
+      fs.rmSync(tempPublicNpmrcPath, { force: true });
+      fs.rmSync(tempPublicCachePath, { recursive: true, force: true });
     },
   };
 }
@@ -299,7 +331,7 @@ function getPublishedVersion(packageName, version, env) {
   const result = runCapture(
     'npm',
     ['view', `${packageName}@${version}`, 'version', `--registry=${registry}`],
-    { env }
+    { cwd: os.tmpdir(), env }
   );
 
   if (result.status === 0) {
@@ -315,18 +347,60 @@ function getPublishedVersion(packageName, version, env) {
   fail(`Unable to check published version for ${packageName}@${version}:\n${output.trim()}`);
 }
 
-function verifyPublishedVersions(env) {
+function sleep(ms) {
+  if (ms > 0) {
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+  }
+}
+
+function waitForPublicVersion(packageName, version, publicEnv) {
+  let lastResult = null;
+
+  for (const delay of publicVisibilityRetryDelaysMs) {
+    sleep(delay);
+    lastResult = getPublishedVersion(packageName, version, publicEnv);
+
+    if (lastResult === version) {
+      return lastResult;
+    }
+
+    console.log(
+      `${packageName}@${version} is not public-visible yet; retrying registry check...`
+    );
+  }
+
+  return lastResult;
+}
+
+function verifyPublishedVersions(env, publicEnv) {
   for (const item of packages) {
     const packageJson = readPackageJson(item.dir);
-    const publishedVersion = getPublishedVersion(item.name, packageJson.version, env);
+    const authenticatedVersion = getPublishedVersion(item.name, packageJson.version, env);
 
-    if (publishedVersion !== packageJson.version) {
+    if (authenticatedVersion !== packageJson.version) {
       fail(
-        `${item.name} expected version ${packageJson.version}, but registry returned ${publishedVersion || 'not published'}`
+        `${item.name} expected version ${packageJson.version}, but authenticated registry check returned ${authenticatedVersion || 'not published'}`
       );
     }
 
-    console.log(`${item.name}@${packageJson.version} is available on npm.`);
+    let publicVersion = waitForPublicVersion(item.name, packageJson.version, publicEnv);
+
+    if (publicVersion !== packageJson.version) {
+      console.log(
+        `${item.name}@${packageJson.version} is authenticated-visible but not public-visible; setting npm access to public.`
+      );
+
+      run('npm', ['access', 'public', item.name, `--registry=${registry}`], { env });
+      publicVersion = waitForPublicVersion(item.name, packageJson.version, publicEnv);
+    }
+
+    if (publicVersion !== packageJson.version) {
+      fail(
+        `${item.name}@${packageJson.version} is published for authenticated npm access, but it is not public-visible. This usually means npm access is still restricted or registry propagation is delayed. Try: npm access public ${item.name}`
+      );
+    }
+
+    console.log(`${item.name}@${packageJson.version} is published and public-visible on npm.`);
   }
 }
 
@@ -337,7 +411,7 @@ function main() {
     fail('Real publishing requires --yes. Run --dry-run first if you only want verification.');
   }
 
-  const { env, cleanup } = prepareNpmEnv();
+  const { env, publicEnv, cleanup } = prepareNpmEnv();
 
   try {
     assertPackageMetadata();
@@ -353,7 +427,7 @@ function main() {
     publishPackages(options, env);
 
     if (!options.dryRun) {
-      verifyPublishedVersions(env);
+      verifyPublishedVersions(env, publicEnv);
     }
   } finally {
     cleanup();
