@@ -1,8 +1,8 @@
 // 🔗 Notion API Service Layer
 
 import { Client, APIResponseError } from '@notionhq/client';
+import type { LinkItem as BookmarkItem, NotionLinkField } from '@bookmark-assistant/contracts';
 import { config } from '../config';
-import { BookmarkItem } from '../types';
 import { isValidUrl } from '../utils';
 
 /**
@@ -10,7 +10,7 @@ import { isValidUrl } from '../utils';
  * Defines how bookmark fields map to Notion property types
  */
 interface PropertyMatcher {
-  bookmarkField: keyof BookmarkItem | 'description';
+  bookmarkField: NotionLinkField;
   type: string;
   patterns: RegExp[];
   required: boolean;
@@ -820,7 +820,7 @@ export class NotionService {
 
           const response = await notion.blocks.children.list({
             block_id: id,
-            page_size: 100
+            page_size: 100,
           });
 
           clearTimeout(timeout);
@@ -843,7 +843,10 @@ export class NotionService {
         }
         if (childrenResults.length > 0) {
           const blockTypes = [...new Set(childrenResults.map((b: any) => b?.type).filter(Boolean))];
-          console.log(`[Notion] Found ${childrenResults.length} blocks (${(children as any)?.has_more ? 'more coming' : 'complete'}):`, blockTypes);
+          console.log(
+            `[Notion] Found ${childrenResults.length} blocks (${(children as any)?.has_more ? 'more coming' : 'complete'}):`,
+            blockTypes
+          );
         }
 
         for (const block of childrenResults) {
@@ -895,7 +898,6 @@ export class NotionService {
             await new Promise((resolve) => setTimeout(resolve, 350));
           }
         }
-
       } catch (e: any) {
         // Log error details for debugging
         const errorCode = (e as any)?.code || 'unknown';

@@ -3,14 +3,9 @@
  * Provides utilities for interacting with Chrome's Reading List API (Chrome 120+)
  */
 
-export interface ReadingListItem {
-  title: string;
-  url: string;
-  dateAdded: string;
-  readState: string;
-  syncId: string;
-  type: 'reading_list';
-}
+import type { ReadingListSyncItem, ReadState } from '@bookmark-assistant/contracts';
+
+export type ReadingListItem = ReadingListSyncItem;
 
 interface ChromeReadingListItem {
   title: string | { content: string };
@@ -64,14 +59,18 @@ export async function getReadingListItems(): Promise<ReadingListItem[]> {
       return [];
     }
 
-    return items.map((item: ChromeReadingListItem) => ({
-      title: typeof item.title === 'string' ? item.title : item.title.content,
-      url: typeof item.url === 'string' ? item.url : item.url.url,
-      dateAdded: new Date(item.creationTime ?? item.dateAdded ?? Date.now()).toISOString(),
-      readState: item.readState?.state ?? (item.hasBeenRead ? 'READ' : 'UNREAD'),
-      syncId: generateUUID(),
-      type: 'reading_list' as const,
-    }));
+    return items.map((item: ChromeReadingListItem) => {
+      const readState: ReadState = item.readState?.state ?? (item.hasBeenRead ? 'READ' : 'UNREAD');
+
+      return {
+        title: typeof item.title === 'string' ? item.title : item.title.content,
+        url: typeof item.url === 'string' ? item.url : item.url.url,
+        dateAdded: new Date(item.creationTime ?? item.dateAdded ?? Date.now()).toISOString(),
+        readState,
+        syncId: generateUUID(),
+        type: 'reading_list' as const,
+      };
+    });
   } catch (error) {
     console.warn('[Reading List] Failed to get reading list items:', error);
     return [];

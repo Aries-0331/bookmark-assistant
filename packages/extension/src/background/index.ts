@@ -1,4 +1,12 @@
 import './polyfill';
+import type { LinkItem } from '@bookmark-assistant/contracts';
+import {
+  formatBookmarkForSync,
+  formatSavedLinkForSync,
+  toSyncFingerprintItems,
+  withBookmarkType,
+  type BookmarkTreeNodeLike,
+} from '@bookmark-assistant/extension-core';
 import { launchNotionOAuth, exchangeCodeForToken, debugOAuthSetup } from './oauth';
 import { validateConfig, debugConfig } from './config';
 import { serverAPI, APIError } from './server-api';
@@ -247,7 +255,7 @@ async function performBookmarkSync(): Promise<{
   };
 
   // Declare variables outside try block so they're accessible in catch
-  let formatted: any[] = [];
+  let formatted: LinkItem[] = [];
   let currentHash: string | undefined;
 
   try {
@@ -260,7 +268,7 @@ async function performBookmarkSync(): Promise<{
 
     formatted = []; // Use existing declaration
     const minimalForHash: Array<{ url: string; title: string; path: string }> = [];
-    const flatten = (nodes: any[], currentPath = 'Bookmarks') => {
+    const flatten = (nodes: BookmarkTreeNodeLike[], currentPath = 'Bookmarks') => {
       for (const node of nodes) {
         if (node.url) {
           const title = node.title || 'Untitled';
@@ -273,19 +281,15 @@ async function performBookmarkSync(): Promise<{
           console.log(
             `[Sync] Description for ${url}: "${description}" (${description ? 'found' : 'not found'})`
           );
-          formatted.push({
-            title,
-            url,
-            description,
-            path: currentPath,
-            dateAdded: node.dateAdded
-              ? new Date(node.dateAdded).toISOString()
-              : new Date().toISOString(),
-            syncId:
-              globalThis.crypto && 'randomUUID' in globalThis.crypto
-                ? (globalThis.crypto as any).randomUUID()
-                : `${node.id}-${Date.now()}`,
-          });
+          formatted.push(
+            formatBookmarkForSync(node, currentPath, {
+              description,
+              createSyncId: (bookmark) =>
+                globalThis.crypto && 'randomUUID' in globalThis.crypto
+                  ? (globalThis.crypto as any).randomUUID()
+                  : `${bookmark.id}-${Date.now()}`,
+            })
+          );
           minimalForHash.push({ url, title, path: currentPath });
         } else if (node.children) {
           const nextPath = node.title ? `${currentPath} / ${node.title}` : currentPath;
@@ -294,12 +298,12 @@ async function performBookmarkSync(): Promise<{
       }
     };
     console.log('[Sync] Starting to flatten bookmarks...');
-    flatten(flat as any);
+    flatten(flat as BookmarkTreeNodeLike[]);
     console.log(`[Sync] Flattened ${formatted.length} bookmarks`);
     console.log(`[Sync] Cache size: ${pageDescriptionCache.size} URLs with descriptions`);
 
     // Collect reading list items
-    let readingListItems: any[] = [];
+    let readingListItems: LinkItem[] = [];
     try {
       const { getReadingListItems } = await import('../utils/reading-list');
       readingListItems = await getReadingListItems();
@@ -310,26 +314,14 @@ async function performBookmarkSync(): Promise<{
       console.warn('[Sync] Failed to get reading list items:', err);
     }
 
-    // Add type='bookmark' to regular bookmarks and combine
-    const bookmarksWithType = formatted.map((bm: any) => ({
-      ...bm,
-      type: 'bookmark',
-    }));
-
     // Combine bookmarks and reading list items for unified sync
+    const bookmarksWithType = withBookmarkType(formatted);
     const allItems = [...bookmarksWithType, ...readingListItems];
     console.log(
       `[Sync] Total items to sync: ${allItems.length} (${formatted.length} bookmarks, ${readingListItems.length} reading list)`
     );
 
-    // Add reading list items to fingerprint computation
-    for (const item of readingListItems) {
-      minimalForHash.push({
-        url: item.url,
-        title: item.title,
-        path: 'Reading List', // Reading list has no folder hierarchy
-      });
-    }
+    minimalForHash.push(...toSyncFingerprintItems(readingListItems, 'Reading List'));
 
     // Compute a stable fingerprint of current bookmarks to avoid redundant syncs
     const computeFingerprint = async () => {
@@ -479,17 +471,18 @@ async function saveCurrentPage(): Promise<{ success: boolean; error?: string }> 
     }
 
     // Format bookmark for server
-    const bookmark = {
-      title: tab.title || 'Untitled',
-      url: tab.url,
-      description: '', // Let server generate description
-      path: 'Quick Saves', // Default folder for quick saves
-      dateAdded: new Date().toISOString(),
-      syncId:
-        globalThis.crypto && 'randomUUID' in globalThis.crypto
-          ? (globalThis.crypto as any).randomUUID()
-          : `quick-save-${Date.now()}`,
-    };
+    const bookmark = formatSavedLinkForSync(
+      {
+        title: tab.title || 'Untitled',
+        url: tab.url,
+      },
+      {
+        createSyncId: () =>
+          globalThis.crypto && 'randomUUID' in globalThis.crypto
+            ? (globalThis.crypto as any).randomUUID()
+            : `quick-save-${Date.now()}`,
+      }
+    );
 
     // Send to server
     await serverAPI.syncBookmarks([bookmark]);
@@ -557,17 +550,18 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
     console.log('[DEBUG] Saving:', title, url);
     try {
-      const bookmark = {
-        title,
-        url,
-        description: '',
-        path: 'Quick Saves',
-        dateAdded: new Date().toISOString(),
-        syncId:
-          globalThis.crypto && 'randomUUID' in globalThis.crypto
-            ? (globalThis.crypto as any).randomUUID()
-            : `quick-save-${Date.now()}`,
-      };
+      const bookmark = formatSavedLinkForSync(
+        {
+          title,
+          url,
+        },
+        {
+          createSyncId: () =>
+            globalThis.crypto && 'randomUUID' in globalThis.crypto
+              ? (globalThis.crypto as any).randomUUID()
+              : `quick-save-${Date.now()}`,
+        }
+      );
       await serverAPI.syncBookmarks([bookmark]);
       console.log('[Context Menu] Page saved successfully');
     } catch (error) {

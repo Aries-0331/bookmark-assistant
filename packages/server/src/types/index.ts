@@ -1,6 +1,16 @@
 // 📝 Type Definitions for Bookmark Notion Sync Server
 
 import { Request } from 'express';
+import type {
+  ApiResponse as ContractApiResponse,
+  BookmarkSyncOptions as ContractBookmarkSyncOptions,
+  BookmarkSyncRequest as ContractBookmarkSyncRequest,
+  BookmarkSyncResponse as ContractBookmarkSyncResponse,
+  BookmarkSyncResult as ContractBookmarkSyncResult,
+  BookmarkSyncSummary as ContractBookmarkSyncSummary,
+  LinkItem,
+  NotionPageProperties as ContractNotionPageProperties,
+} from '@bookmark-assistant/contracts';
 
 export interface UserData {
   id?: string; // Internal ID (CUID)
@@ -24,17 +34,7 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-export interface BookmarkItem {
-  title: string;
-  url: string;
-  path?: string;
-  description?: string;
-  tags?: string[];
-  dateAdded?: string;
-  syncId?: string;
-  type?: 'bookmark' | 'reading_list';
-  readState?: 'UNREAD' | 'READ';
-}
+export type BookmarkItem = LinkItem;
 
 export interface OAuthExchangeRequest {
   code: string;
@@ -43,20 +43,12 @@ export interface OAuthExchangeRequest {
   redirectUri?: string;
 }
 
-export interface BookmarkSyncOptions {
-  batchSize?: number;
-  duplicateHandling?: 'update' | 'skip' | 'create_new';
-  generateDescriptions?: boolean; // Default: true - Generate descriptions for bookmarks without them
-}
+export type BookmarkSyncOptions = ContractBookmarkSyncOptions;
 
-export interface BookmarkSyncRequest {
-  // New in Notion API 2025-09-03: prefer dataSourceId
-  dataSourceId?: string;
-  // Back-compat: allow databaseId and we will resolve its primary data source
-  databaseId?: string;
-  bookmarks: BookmarkItem[];
-  options?: BookmarkSyncOptions;
-}
+export type BookmarkSyncRequest = ContractBookmarkSyncRequest;
+export type BookmarkSyncResult = ContractBookmarkSyncResult;
+export type BookmarkSyncSummary = ContractBookmarkSyncSummary;
+export type BookmarkSyncResponse = ContractBookmarkSyncResponse;
 
 export interface DatabaseQueryRequest {
   // Prefer dataSourceId with 2025-09-03
@@ -67,12 +59,7 @@ export interface DatabaseQueryRequest {
   sorts?: any[];
 }
 
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-}
+export type ApiResponse<T = any> = ContractApiResponse<T>;
 
 export interface AuditLogEntry {
   timestamp: string;
@@ -81,26 +68,7 @@ export interface AuditLogEntry {
   details?: Record<string, any>;
 }
 
-export interface NotionPageProperties {
-  Title: {
-    title: { text: { content: string } }[];
-  };
-  URL: {
-    url: string;
-  };
-  Folder: {
-    rich_text: { text: { content: string } }[];
-  };
-  Tags: {
-    multi_select: { name: string }[];
-  };
-  'Date Added': {
-    date: { start: string };
-  };
-  'Sync ID': {
-    rich_text: { text: { content: string } }[];
-  };
-}
+export type NotionPageProperties = ContractNotionPageProperties;
 
 // Extend Express Request interface globally
 declare global {

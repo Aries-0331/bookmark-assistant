@@ -5,7 +5,7 @@
 <h1 align="center">Bookmark Assistant</h1>
 
 <p align="center">
-  Sync Chrome bookmarks and Reading List items to Notion.
+  Save and sync browser links to Notion.
 </p>
 
 <p align="center">
@@ -19,9 +19,9 @@
 
 ---
 
-Bookmark Assistant is a browser extension that syncs Chrome bookmarks and Reading List items into a Notion database. The project includes a Chrome MV3 extension and a small server used for Notion connection, session handling, and Notion API writes.
+Bookmark Assistant is a browser extension for turning browser-saved links into an organized Notion database. It syncs Chrome bookmarks and Reading List items, and it can save the current page or links from the browser context menu.
 
-The free self-hosted version is intended to be useful on its own: you can build the extension from source, run the server yourself, connect your own Notion integration, and sync link data to infrastructure you control.
+The free self-hosted version is intended to be useful on its own: you can build the extension from source, run the server yourself, connect your own Notion integration, and sync saved link data to infrastructure you control.
 
 Bookmark Assistant Pro is the managed version for users who want hosted Notion OAuth and managed automation. This public repository does not include payment logic, hosted service secrets, commercial OAuth infrastructure, or production AI backend internals.
 
@@ -38,7 +38,13 @@ Bookmark Assistant Pro is the managed version for users who want hosted Notion O
 
 ## Scope
 
-Bookmark Assistant is focused on bookmarks, Reading List items, saved pages, and link metadata. It is not a full web clipper, a note-taking app, or a replacement for Notion, Obsidian, or LiteContext.
+Bookmark Assistant is focused on bookmarks, Reading List items, saved pages, and link metadata. It is a link collector for Notion, not a full web clipper, a note-taking app, or a replacement for Notion, Obsidian, or LiteContext.
+
+## Core Packages
+
+This public repository owns the Free/Core packages: `@bookmark-assistant/contracts`, `@bookmark-assistant/extension-core`, and `@bookmark-assistant/server-core`. Bookmark Assistant Pro should consume released core packages instead of maintaining copied extension or server code. Temporary vendor checkouts are useful for validation, but they are not the long-term architecture.
+
+Public core packages may include shared contracts, link formatting, local capture helpers, sync diffing, validation, and LiteContext-compatible data shapes. Pro-only internals such as payment logic, managed OAuth internals, entitlement implementation, production AI backend details, private deployment configuration, and secrets do not belong in this repository.
 
 ## Installation
 

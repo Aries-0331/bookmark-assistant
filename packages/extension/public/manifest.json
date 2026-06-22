@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Bookmark Assistant - Notion Bookmark Sync",
+  "name": "Bookmark Assistant - Links to Notion",
   "version": "1.0.19",
   "default_locale": "en",
-  "description": "Sync Chrome bookmarks and Reading List items to Notion. Save pages, fetch link metadata, and keep saved links organized.",
+  "description": "Save and sync Chrome bookmarks, Reading List items, and pages to Notion. Keep links organized with metadata and deduping.",
   "permissions": [
     "bookmarks",
     "readingList",

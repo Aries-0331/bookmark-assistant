@@ -1,13 +1,18 @@
 {
   "name": "@bookmark-assistant/extension",
   "version": "1.0.19",
-  "description": "Sync Chrome bookmarks and Reading List items to organized Notion databases.",
+  "description": "Save and sync Chrome bookmarks, Reading List items, and pages to Notion.",
   "type": "module",
   "scripts": {
+    "predev": "pnpm -F @bookmark-assistant/extension-core build",
     "dev": "vite --open /src/dev/index.html",
+    "prebuild": "pnpm -F @bookmark-assistant/extension-core build",
     "build": "tsc -b && vite build --mode development",
+    "prebuild:dev": "pnpm -F @bookmark-assistant/extension-core build",
     "build:dev": "tsc -b && vite build --mode development",
+    "prebuild:prod": "pnpm -F @bookmark-assistant/extension-core build",
     "build:prod": "tsc -b && vite build --mode production",
+    "prebuild:zip": "pnpm -F @bookmark-assistant/extension-core build",
     "build:zip": "npm run clean && node scripts/build-zip.js",
     "clean": "rm -rf dist",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
@@ -15,6 +20,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@bookmark-assistant/contracts": "workspace:*",
+    "@bookmark-assistant/extension-core": "workspace:*",
     "@bookmark-assistant/shared": "workspace:*",
     "@notionhq/client": "^5.0.0",
     "@radix-ui/react-slot": "^1.2.4",

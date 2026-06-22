@@ -1,10 +1,10 @@
 {
   "appName": {
-    "message": "Bookmark Assistant - Sincronização de Marcadores com Notion",
+    "message": "Bookmark Assistant - Links para Notion",
     "description": "The name of the extension"
   },
   "appDesc": {
-    "message": "Sincronize favoritos e lista de leitura do Chrome com o Notion. Salve páginas, obtenha metadados e organize links salvos.",
+    "message": "Salve e sincronize favoritos, lista de leitura e páginas do Chrome com o Notion. Organize links com metadados.",
     "description": "The description of the extension"
   },
   "extensionTitle": {

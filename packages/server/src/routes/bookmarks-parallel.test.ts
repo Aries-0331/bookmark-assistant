@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
+import { diffBookmarks } from '@bookmark-assistant/server-core';
 
 // Mock dependencies before importing bookmarks
 vi.mock('../services/notion', () => ({
@@ -200,27 +201,28 @@ describe('Bookmark Sync Batch Parallelization', () => {
   });
 
   describe('diffBookmarks function behavior', () => {
-    it('should correctly identify duplicates by syncId', async () => {
-      // Test the diffBookmarks logic by importing and testing directly
-      const fs = await import('fs');
-      const path = await import('path');
-      const bookmarksPath = path.resolve(__dirname, './bookmarks.ts');
-      const content = fs.readFileSync(bookmarksPath, 'utf-8');
+    it('should correctly identify duplicates by syncId', () => {
+      const diff = diffBookmarks(
+        [{ title: 'Existing sync ID', url: 'https://new.example.com', syncId: 'existing-id' }],
+        [],
+        ['existing-id']
+      );
 
-      // Verify diffBookmarks function exists and uses syncId matching
-      expect(content).toContain('matchedBySyncId');
-      expect(content).toContain('syncIds.includes(b.syncId)');
+      expect(diff.toCreate).toEqual([]);
+      expect(diff.skippedExisting).toBe(1);
+      expect(diff.stats.matchedBySyncId).toBe(1);
     });
 
-    it('should correctly identify duplicates by URL', async () => {
-      const fs = await import('fs');
-      const path = await import('path');
-      const bookmarksPath = path.resolve(__dirname, './bookmarks.ts');
-      const content = fs.readFileSync(bookmarksPath, 'utf-8');
+    it('should correctly identify duplicates by URL', () => {
+      const diff = diffBookmarks(
+        [{ title: 'Existing URL', url: 'https://existing.example.com', syncId: 'new-id' }],
+        ['https://existing.example.com'],
+        []
+      );
 
-      // Verify URL matching fallback exists
-      expect(content).toContain('matchedByUrl');
-      expect(content).toContain('urls.includes(b.url)');
+      expect(diff.toCreate).toEqual([]);
+      expect(diff.skippedExisting).toBe(1);
+      expect(diff.stats.matchedByUrl).toBe(1);
     });
 
     it('should track stats for both syncId and URL matches', async () => {
