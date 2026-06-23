@@ -24,4 +24,4 @@ export type {
   NotionPropertyType,
   ReadState,
   ReadingListSyncItem,
-} from './types';
+} from './types.js';
