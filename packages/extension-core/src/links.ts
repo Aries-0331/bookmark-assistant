@@ -1,4 +1,4 @@
-import type { LinkItem } from '@bookmark-assistant/contracts';
+import type { BrowserSavedLinkItem, LinkItem } from '@bookmark-assistant/contracts';
 
 export interface BookmarkTreeNodeLike {
   id: string;
@@ -34,7 +34,11 @@ export interface FormatSavedLinkInput {
 export interface FormatSavedLinkOptions {
   now?: () => Date;
   createSyncId?: () => string;
+  defaultPath?: string;
+  source?: BrowserSavedLinkItem['source'];
 }
+
+export type FormatCurrentPageOptions = Omit<FormatSavedLinkOptions, 'source'>;
 
 export function buildBookmarkPath(bookmarkTree: BookmarkTreeNodeLike[], targetId: string): string {
   function findBookmarkPath(
@@ -126,18 +130,34 @@ export function withBookmarkType(items: LinkItem[]): LinkItem[] {
 export function formatSavedLinkForSync(
   input: FormatSavedLinkInput,
   options: FormatSavedLinkOptions = {}
-): LinkItem {
+): BrowserSavedLinkItem {
   const now = options.now ?? (() => new Date());
   const syncId = options.createSyncId?.() ?? createDefaultSyncId('quick-save');
-
-  return {
+  const item: BrowserSavedLinkItem = {
     title: input.title || 'Untitled',
     url: input.url,
     description: input.description ?? '',
-    path: input.path ?? 'Quick Saves',
+    path: input.path ?? options.defaultPath ?? 'Quick Saves',
     dateAdded: now().toISOString(),
     syncId,
   };
+
+  if (options.source) {
+    item.source = options.source;
+  }
+
+  return item;
+}
+
+export function formatCurrentPageForSync(
+  input: FormatSavedLinkInput,
+  options: FormatCurrentPageOptions = {}
+): BrowserSavedLinkItem {
+  return formatSavedLinkForSync(input, {
+    ...options,
+    defaultPath: options.defaultPath ?? 'Saved Pages',
+    source: 'current_page',
+  });
 }
 
 export function toSyncFingerprintItems(

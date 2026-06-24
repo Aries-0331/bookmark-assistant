@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import * as publicApi from './index';
 import {
   buildBookmarkPath,
   flattenBookmarks,
   formatBookmarkForSync,
+  formatCurrentPageForSync,
   formatSavedLinkForSync,
   toSyncFingerprintItems,
   withBookmarkType,
@@ -32,6 +34,18 @@ const bookmarkTree: BookmarkTreeNodeLike[] = [
 ];
 
 describe('extension link helpers', () => {
+  it('exposes the stable public runtime API', () => {
+    expect(Object.keys(publicApi).sort()).toEqual([
+      'buildBookmarkPath',
+      'flattenBookmarks',
+      'formatBookmarkForSync',
+      'formatCurrentPageForSync',
+      'formatSavedLinkForSync',
+      'toSyncFingerprintItems',
+      'withBookmarkType',
+    ]);
+  });
+
   it('builds bookmark paths from tree nodes', () => {
     expect(buildBookmarkPath(bookmarkTree, 'bookmark-1')).toBe('Bookmarks Bar / Articles');
     expect(buildBookmarkPath(bookmarkTree, 'missing')).toBe('Bookmarks');
@@ -90,6 +104,53 @@ describe('extension link helpers', () => {
       path: 'Quick Saves',
       dateAdded: '2026-01-01T00:00:00.000Z',
       syncId: 'quick-save-1',
+    });
+  });
+
+  it('formats current pages as saved links with an explicit source', () => {
+    const item = formatCurrentPageForSync(
+      {
+        title: 'Current page',
+        url: 'https://example.com/current',
+      },
+      {
+        now: () => new Date('2026-01-01T00:00:00.000Z'),
+        createSyncId: () => 'current-page-1',
+      }
+    );
+
+    expect(item).toEqual({
+      title: 'Current page',
+      url: 'https://example.com/current',
+      description: '',
+      path: 'Saved Pages',
+      dateAdded: '2026-01-01T00:00:00.000Z',
+      syncId: 'current-page-1',
+      source: 'current_page',
+    });
+  });
+
+  it('allows saved link source and default path to be supplied by consumers', () => {
+    const item = formatSavedLinkForSync(
+      {
+        url: 'https://example.com/context',
+      },
+      {
+        now: () => new Date('2026-01-01T00:00:00.000Z'),
+        createSyncId: () => 'context-menu-1',
+        defaultPath: 'Context Menu',
+        source: 'context_menu',
+      }
+    );
+
+    expect(item).toEqual({
+      title: 'Untitled',
+      url: 'https://example.com/context',
+      description: '',
+      path: 'Context Menu',
+      dateAdded: '2026-01-01T00:00:00.000Z',
+      syncId: 'context-menu-1',
+      source: 'context_menu',
     });
   });
 

@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { diffBookmarks, validateBookmarkInput } from './index';
+import * as publicApi from './index';
+import { diffBookmarks, validateBookmarkInput, validateLinkItemInput } from './index';
 
 describe('server bookmark core', () => {
+  it('exposes the stable public runtime API', () => {
+    expect(Object.keys(publicApi).sort()).toEqual([
+      'diffBookmarks',
+      'validateBookmarkInput',
+      'validateLinkItemInput',
+    ]);
+  });
+
   it('diffs bookmarks by sync ID before URL', () => {
     const itemBySyncId = {
       title: 'By sync ID',
@@ -87,6 +96,31 @@ describe('server bookmark core', () => {
       tags: [],
       dateAdded: '2026-01-01T00:00:00.000Z',
       syncId: 'generated-id',
+    });
+  });
+
+  it('validates generic link item input through the public alias', () => {
+    const item = validateLinkItemInput(
+      {
+        title: 'Saved Link',
+        url: 'https://example.com/link',
+        source: 'current_page',
+      },
+      {
+        now: () => new Date('2026-01-01T00:00:00.000Z'),
+        createSyncId: () => 'link-1',
+      }
+    );
+
+    expect(item).toEqual({
+      title: 'Saved Link',
+      url: 'https://example.com/link',
+      path: undefined,
+      description: '',
+      tags: [],
+      dateAdded: '2026-01-01T00:00:00.000Z',
+      syncId: 'link-1',
+      source: 'current_page',
     });
   });
 });

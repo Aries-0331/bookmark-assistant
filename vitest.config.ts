@@ -20,6 +20,7 @@ export default defineConfig({
     environment: 'node',
     setupFiles: ['./vitest.setup.ts'],
     include: [
+      'packages/contracts/src/**/*.{test,spec}.{js,ts,jsx,tsx}',
       'packages/extension/src/**/*.{test,spec}.{js,ts,jsx,tsx}',
       'packages/extension-core/src/**/*.{test,spec}.{js,ts,jsx,tsx}',
       'packages/server/src/**/*.{test,spec}.{js,ts,jsx,tsx}',

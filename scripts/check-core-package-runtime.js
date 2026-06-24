@@ -100,7 +100,7 @@ function main() {
       [
         '--input-type=module',
         '-e',
-        "import('@bookmark-assistant/extension-core').then((m) => console.log(typeof m.formatBookmarkForSync))",
+        "import('@bookmark-assistant/extension-core').then((m) => console.log([typeof m.formatBookmarkForSync, typeof m.formatCurrentPageForSync].join(',')))",
       ],
       { cwd: projectDir }
     );
@@ -109,7 +109,7 @@ function main() {
       'node',
       [
         '-e',
-        "const core = require('@bookmark-assistant/server-core'); console.log(typeof core.diffBookmarks)",
+        "const core = require('@bookmark-assistant/server-core'); console.log([typeof core.diffBookmarks, typeof core.validateLinkItemInput].join(','))",
       ],
       { cwd: projectDir }
     );
@@ -118,12 +118,16 @@ function main() {
       fail(`Expected contracts runtime exports count to be 0, got ${contractsResult}`);
     }
 
-    if (extensionCoreResult !== 'function') {
-      fail(`Expected extension-core formatBookmarkForSync to be a function, got ${extensionCoreResult}`);
+    if (extensionCoreResult !== 'function,function') {
+      fail(
+        `Expected extension-core formatBookmarkForSync and formatCurrentPageForSync to be functions, got ${extensionCoreResult}`
+      );
     }
 
-    if (serverCoreResult !== 'function') {
-      fail(`Expected server-core diffBookmarks to be a function, got ${serverCoreResult}`);
+    if (serverCoreResult !== 'function,function') {
+      fail(
+        `Expected server-core diffBookmarks and validateLinkItemInput to be functions, got ${serverCoreResult}`
+      );
     }
 
     console.log('Core package runtime check passed.');

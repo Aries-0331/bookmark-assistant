@@ -1,5 +1,6 @@
 export type {
   BookmarkTreeNodeLike,
+  FormatCurrentPageOptions,
   FormatBookmarkOptions,
   FormatSavedLinkInput,
   FormatSavedLinkOptions,
@@ -10,6 +11,7 @@ export {
   buildBookmarkPath,
   flattenBookmarks,
   formatBookmarkForSync,
+  formatCurrentPageForSync,
   formatSavedLinkForSync,
   toSyncFingerprintItems,
   withBookmarkType,
