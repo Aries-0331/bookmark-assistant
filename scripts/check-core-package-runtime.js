@@ -1,0 +1,135 @@
+#!/usr/bin/env node
+
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+
+const repoRoot = path.resolve(__dirname, '..');
+const packages = [
+  {
+    name: '@bookmark-assistant/contracts',
+    dir: 'packages/contracts',
+    tarballPrefix: 'bookmark-assistant-contracts',
+  },
+  {
+    name: '@bookmark-assistant/extension-core',
+    dir: 'packages/extension-core',
+    tarballPrefix: 'bookmark-assistant-extension-core',
+  },
+  {
+    name: '@bookmark-assistant/server-core',
+    dir: 'packages/server-core',
+    tarballPrefix: 'bookmark-assistant-server-core',
+  },
+];
+
+function fail(message) {
+  console.error(`\nError: ${message}`);
+  process.exit(1);
+}
+
+function run(command, args, options = {}) {
+  const result = spawnSync(command, args, {
+    cwd: options.cwd || repoRoot,
+    env: options.env || process.env,
+    encoding: 'utf8',
+    shell: false,
+    stdio: options.stdio || 'pipe',
+  });
+
+  if (result.error) {
+    fail(`${command} ${args.join(' ')} failed: ${result.error.message}`);
+  }
+
+  if (result.status !== 0) {
+    const output = [result.stdout, result.stderr].filter(Boolean).join('\n');
+    fail(`${command} ${args.join(' ')} exited with status ${result.status}\n${output}`);
+  }
+
+  return result.stdout ? result.stdout.trim() : '';
+}
+
+function readPackageJson(packageDir) {
+  return JSON.parse(
+    fs.readFileSync(path.join(repoRoot, packageDir, 'package.json'), 'utf8')
+  );
+}
+
+function main() {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bookmark-assistant-core-runtime-'));
+  const projectDir = path.join(tempDir, 'project');
+  const npmCacheDir = path.join(tempDir, 'npm-cache');
+  const env = { ...process.env, NPM_CONFIG_CACHE: npmCacheDir };
+
+  try {
+    fs.mkdirSync(projectDir);
+    fs.mkdirSync(npmCacheDir);
+    fs.writeFileSync(
+      path.join(projectDir, 'package.json'),
+      JSON.stringify({ private: true, type: 'module' }, null, 2)
+    );
+
+    const tarballs = packages.map((item) => {
+      run('pnpm', ['--dir', item.dir, 'pack', '--pack-destination', tempDir], {
+        stdio: 'inherit',
+      });
+
+      const packageJson = readPackageJson(item.dir);
+      return path.join(tempDir, `${item.tarballPrefix}-${packageJson.version}.tgz`);
+    });
+
+    run('npm', ['install', ...tarballs, '--ignore-scripts'], {
+      cwd: projectDir,
+      env,
+      stdio: 'inherit',
+    });
+
+    const contractsResult = run(
+      'node',
+      [
+        '--input-type=module',
+        '-e',
+        "import('@bookmark-assistant/contracts').then((m) => console.log(Object.keys(m).length))",
+      ],
+      { cwd: projectDir }
+    );
+
+    const extensionCoreResult = run(
+      'node',
+      [
+        '--input-type=module',
+        '-e',
+        "import('@bookmark-assistant/extension-core').then((m) => console.log(typeof m.formatBookmarkForSync))",
+      ],
+      { cwd: projectDir }
+    );
+
+    const serverCoreResult = run(
+      'node',
+      [
+        '-e',
+        "const core = require('@bookmark-assistant/server-core'); console.log(typeof core.diffBookmarks)",
+      ],
+      { cwd: projectDir }
+    );
+
+    if (contractsResult !== '0') {
+      fail(`Expected contracts runtime exports count to be 0, got ${contractsResult}`);
+    }
+
+    if (extensionCoreResult !== 'function') {
+      fail(`Expected extension-core formatBookmarkForSync to be a function, got ${extensionCoreResult}`);
+    }
+
+    if (serverCoreResult !== 'function') {
+      fail(`Expected server-core diffBookmarks to be a function, got ${serverCoreResult}`);
+    }
+
+    console.log('Core package runtime check passed.');
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
+main();

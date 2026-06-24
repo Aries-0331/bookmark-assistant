@@ -4,7 +4,7 @@ export type {
   FormatSavedLinkInput,
   FormatSavedLinkOptions,
   SyncFingerprintItem,
-} from './links';
+} from './links.js';
 
 export {
   buildBookmarkPath,
@@ -13,4 +13,4 @@ export {
   formatSavedLinkForSync,
   toSyncFingerprintItems,
   withBookmarkType,
-} from './links';
+} from './links.js';
