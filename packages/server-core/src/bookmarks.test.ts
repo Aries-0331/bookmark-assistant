@@ -44,6 +44,44 @@ describe('server bookmark core', () => {
     });
   });
 
+  it('handles empty diff inputs without creating false positives', () => {
+    expect(diffBookmarks([], ['https://existing.example.com'], ['sync-1'])).toEqual({
+      toCreate: [],
+      skippedExisting: 0,
+      stats: {
+        requestTotal: 0,
+        existingIndexSize: 0,
+        matchedBySyncId: 0,
+        matchedByUrl: 0,
+      },
+    });
+  });
+
+  it('does not double-count URL duplicates when sync ID already matched', () => {
+    const diff = diffBookmarks(
+      [
+        {
+          title: 'Both duplicate keys',
+          url: 'https://existing.example.com',
+          syncId: 'existing-sync-id',
+        },
+      ],
+      ['https://existing.example.com'],
+      ['existing-sync-id']
+    );
+
+    expect(diff).toEqual({
+      toCreate: [],
+      skippedExisting: 1,
+      stats: {
+        requestTotal: 1,
+        existingIndexSize: 1,
+        matchedBySyncId: 1,
+        matchedByUrl: 0,
+      },
+    });
+  });
+
   it('preserves shared link fields for reading list items', () => {
     const item = validateBookmarkInput(
       {
@@ -56,6 +94,7 @@ describe('server bookmark core', () => {
         syncId: 'reading-list-1',
         type: 'reading_list',
         readState: 'UNREAD',
+        source: 'reading_list',
       },
       {
         createSyncId: () => 'fallback-id',
@@ -72,6 +111,7 @@ describe('server bookmark core', () => {
       syncId: 'reading-list-1',
       type: 'reading_list',
       readState: 'UNREAD',
+      source: 'reading_list',
     });
   });
 
@@ -81,6 +121,7 @@ describe('server bookmark core', () => {
         name: 'Fallback title',
         type: 'web_clipper',
         readState: 'ARCHIVED',
+        source: 'full_page_clip',
       },
       {
         now: () => new Date('2026-01-01T00:00:00.000Z'),

@@ -160,6 +160,7 @@ describe('extension link helpers', () => {
         title: 'Example',
         url: 'https://example.com',
         path: 'Bookmarks',
+        syncId: 'bookmark-1',
       },
     ]);
 
@@ -169,6 +170,54 @@ describe('extension link helpers', () => {
         title: 'Example',
         url: 'https://example.com',
         path: 'Bookmarks',
+        source: undefined,
+        type: 'bookmark',
+        readState: undefined,
+        syncId: 'bookmark-1',
+      },
+    ]);
+  });
+
+  it('creates fingerprint inputs for reading list and current page links', () => {
+    expect(
+      toSyncFingerprintItems(
+        [
+          {
+            title: 'Reading item',
+            url: 'https://example.com/read',
+            type: 'reading_list',
+            readState: 'UNREAD',
+            source: 'reading_list',
+            syncId: 'reading-1',
+          },
+          {
+            title: 'Current page',
+            url: 'https://example.com/current',
+            path: 'Quick Saves',
+            source: 'current_page',
+            syncId: 'current-1',
+          },
+        ],
+        'Fallback'
+      )
+    ).toEqual([
+      {
+        title: 'Reading item',
+        url: 'https://example.com/read',
+        path: 'Fallback',
+        source: 'reading_list',
+        type: 'reading_list',
+        readState: 'UNREAD',
+        syncId: 'reading-1',
+      },
+      {
+        title: 'Current page',
+        url: 'https://example.com/current',
+        path: 'Quick Saves',
+        source: 'current_page',
+        type: undefined,
+        readState: undefined,
+        syncId: 'current-1',
       },
     ]);
   });
