@@ -79,11 +79,27 @@ function main() {
       return path.join(tempDir, `${item.tarballPrefix}-${packageJson.version}.tgz`);
     });
 
-    run('npm', ['install', ...tarballs, '--ignore-scripts'], {
+    run('npm', ['install', ...tarballs, '--ignore-scripts', '--force'], {
       cwd: projectDir,
       env,
       stdio: 'inherit',
     });
+
+    for (const item of packages) {
+      const expectedVersion = readPackageJson(item.dir).version;
+      const installedPackageJson = JSON.parse(
+        fs.readFileSync(
+          path.join(projectDir, 'node_modules', item.name, 'package.json'),
+          'utf8'
+        )
+      );
+
+      if (installedPackageJson.version !== expectedVersion) {
+        fail(
+          `${item.name} installed version ${installedPackageJson.version}, expected ${expectedVersion}`
+        );
+      }
+    }
 
     const contractsResult = run(
       'node',
@@ -100,7 +116,7 @@ function main() {
       [
         '--input-type=module',
         '-e',
-        "import('@bookmark-assistant/extension-core').then((m) => console.log([typeof m.formatBookmarkForSync, typeof m.formatCurrentPageForSync].join(',')))",
+        "import('@bookmark-assistant/extension-core').then((m) => { const item = m.toSyncFingerprintItems([{ title: 'Current', url: 'https://example.com', source: 'current_page', syncId: 'sync-1' }], 'Fallback')[0]; console.log([typeof m.formatBookmarkForSync, typeof m.formatCurrentPageForSync, item.source, item.syncId].join(',')); })",
       ],
       { cwd: projectDir }
     );
@@ -118,9 +134,9 @@ function main() {
       fail(`Expected contracts runtime exports count to be 0, got ${contractsResult}`);
     }
 
-    if (extensionCoreResult !== 'function,function') {
+    if (extensionCoreResult !== 'function,function,current_page,sync-1') {
       fail(
-        `Expected extension-core formatBookmarkForSync and formatCurrentPageForSync to be functions, got ${extensionCoreResult}`
+        `Expected extension-core runtime helpers and fingerprint metadata to be available, got ${extensionCoreResult}`
       );
     }
 

@@ -15,6 +15,10 @@ export interface SyncFingerprintItem {
   url: string;
   title: string;
   path: string;
+  source?: LinkItem['source'];
+  type?: LinkItem['type'];
+  readState?: LinkItem['readState'];
+  syncId?: string;
 }
 
 export interface FormatBookmarkOptions {
@@ -168,6 +172,10 @@ export function toSyncFingerprintItems(
     url: item.url,
     title: item.title,
     path: item.path || defaultPath,
+    source: item.source,
+    type: item.type,
+    readState: item.readState,
+    syncId: item.syncId,
   }));
 }
 
