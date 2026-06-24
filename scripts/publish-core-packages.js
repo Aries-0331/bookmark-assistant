@@ -293,6 +293,8 @@ function verifyPackages(env) {
   } finally {
     fs.rmSync(packDir, { recursive: true, force: true });
   }
+
+  run('pnpm', ['check:core-runtime'], { env });
 }
 
 function publishPackages(options, env) {

@@ -1,4 +1,4 @@
-import type { LinkItem } from '@bookmark-assistant/contracts';
+import type { LinkCaptureSource, LinkItem } from '@bookmark-assistant/contracts';
 
 export interface DiffBookmarksStats {
   requestTotal: number;
@@ -62,12 +62,20 @@ export function validateBookmarkInput(
   bookmark: unknown,
   options: ValidateBookmarkOptions = {}
 ): LinkItem {
-  const input = isRecord(bookmark) ? bookmark : {};
+  return validateLinkItemInput(bookmark, options);
+}
+
+export function validateLinkItemInput(
+  item: unknown,
+  options: ValidateBookmarkOptions = {}
+): LinkItem {
+  const input = isRecord(item) ? item : {};
   const now = options.now ?? (() => new Date());
   const createSyncId = options.createSyncId ?? (() => `bookmark-${Date.now()}`);
   const type = input.type === 'bookmark' || input.type === 'reading_list' ? input.type : undefined;
   const readState =
     input.readState === 'READ' || input.readState === 'UNREAD' ? input.readState : undefined;
+  const source = toLinkCaptureSource(input.source);
 
   const validated: LinkItem = {
     title: stringOr(input.title, stringOr(input.name, 'Untitled Bookmark')),
@@ -87,6 +95,9 @@ export function validateBookmarkInput(
   if (readState) {
     validated.readState = readState;
   }
+  if (source) {
+    validated.source = source;
+  }
 
   return validated;
 }
@@ -101,4 +112,17 @@ function stringOr(value: unknown, fallback: string): string {
 
 function optionalString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
+}
+
+function toLinkCaptureSource(value: unknown): LinkCaptureSource | undefined {
+  switch (value) {
+    case 'chrome_bookmark':
+    case 'reading_list':
+    case 'current_page':
+    case 'context_menu':
+    case 'import':
+      return value;
+    default:
+      return undefined;
+  }
 }
