@@ -52,6 +52,8 @@ export const validateSession = (req: AuthenticatedRequest, res: Response, next: 
 
     if (error instanceof jwt.TokenExpiredError) {
       errorMessage = 'Session token expired';
+    } else if (error instanceof jwt.JsonWebTokenError && error.message === 'invalid signature') {
+      errorMessage = 'Invalid session token';
     } else if (error instanceof jwt.JsonWebTokenError) {
       errorMessage = 'Malformed session token';
     }

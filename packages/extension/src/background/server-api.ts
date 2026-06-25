@@ -195,7 +195,8 @@ class ServerAPIClient {
       'user_email',
       'oauth_template_database_id', // Remove - no longer needed, causes stale cache
       'is_pro',
-      'entitlements_cached_at', // Clear entitlements cache on logout
+      'profile_cached_at',
+      'profile_refresh_in_progress',
       'last_sync',
       'last_sync_at',
       'last_sync_summary',

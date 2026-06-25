@@ -113,6 +113,16 @@ cp packages/server/.env.example packages/server/.env.local
 
 Do not commit `.env` or `.env.local` files.
 
+Minimal self-hosting setup:
+
+1. Create a Notion integration and copy its client ID and client secret.
+2. Create a PostgreSQL database for the server.
+3. Set `DATABASE_URL`, `JWT_SECRET`, `ALLOWED_EXTENSION_ID`, `NOTION_CLIENT_ID`, and `NOTION_CLIENT_SECRET` in `packages/server/.env.local`.
+4. Set `VITE_OAUTH_SERVER_URL` and `VITE_NOTION_CLIENT_ID` in `packages/extension/.env.local`.
+5. Run `pnpm dev:server`, then build or run the extension and load `packages/extension/dist` in Chrome.
+
+The self-hosted server is the sync destination for the extension. It stores the Notion access token needed to sync bookmarks, Reading List items, and saved pages to your Notion workspace.
+
 ## Contributing
 
 Contributions are welcome if they fit the public repository scope.

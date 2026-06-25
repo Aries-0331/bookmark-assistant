@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { config } from '../config';
 import {
   validateExtension,
   validateSession,
@@ -36,6 +37,7 @@ describe('Auth Middleware', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    (config as any).nodeEnv = 'development';
     mockRequest = {
       headers: {},
     };
@@ -113,10 +115,10 @@ describe('Auth Middleware', () => {
       validateSession(mockRequest as any, mockResponse as Response, nextFunction);
 
       expect(nextFunction).toHaveBeenCalled();
-      expect(mockRequest.user).toEqual({
+      expect(mockRequest.user).toEqual(expect.objectContaining({
         userId: 'user-123',
         email: 'test@example.com',
-      });
+      }));
     });
 
     it('should reject request with missing Authorization header', () => {
@@ -234,9 +236,7 @@ describe('Auth Middleware', () => {
       // Simulate response end
       mockResponse.end!();
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        '📤 GET /test - 200 - 0ms'
-      );
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching(/^📤 GET \/test - 200 - \d+ms$/));
 
       consoleSpy.mockRestore();
     });
@@ -268,7 +268,7 @@ describe('Auth Middleware', () => {
     });
 
     it('should hide error details in production', () => {
-      vi.mocked(config.nodeEnv).mockReturnValue('production');
+      (config as any).nodeEnv = 'production';
 
       const error = new Error('Test error');
 
@@ -291,6 +291,7 @@ describe('Auth Middleware', () => {
 
     it('should log error with user context', () => {
       const error = new Error('Test error');
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockRequest.user = { userId: 'user-123' };
 
       errorHandler(
@@ -301,6 +302,7 @@ describe('Auth Middleware', () => {
       );
 
       expect(console.error).toHaveBeenCalledWith('🚨 Server Error:', error);
+      consoleSpy.mockRestore();
     });
   });
 

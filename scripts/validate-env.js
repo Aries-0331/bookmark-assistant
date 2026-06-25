@@ -55,15 +55,13 @@ const validationRules = {
     'VITE_NOTION_CLIENT_ID'
   ],
   optional: [
-    'VITE_OPENAI_API_KEY',
-    'VITE_OPENAI_MODEL',
-    'VITE_OPENAI_MAX_TOKENS',
+    'VITE_OAUTH_SERVER_URL',
     // Redirect URI is derived at runtime via chrome.identity.getRedirectURL
     'VITE_NOTION_REDIRECT_URI'
   ],
   defaults: {
-    'VITE_APP_NAME': 'Bookmark Notion Sync',
-    'VITE_APP_VERSION': '0.1.0',
+    'VITE_APP_NAME': 'Bookmark Assistant',
+    'VITE_APP_VERSION': '1.0.19',
     'VITE_DEBUG_MODE': mode === 'development' ? 'true' : 'false',
     'VITE_MAX_CONTENT_LENGTH': '5000',
     'VITE_EXTRACTION_TIMEOUT': '10000',
@@ -95,7 +93,7 @@ console.log('\n⚠️  Optional Variables:');
 validationRules.optional.forEach(key => {
   const value = envVars[key];
   if (!value || value.includes('your_') || value.includes('_here')) {
-    console.log(`   ⚠️  ${key}: Not configured (AI features disabled)`);
+    console.log(`   ⚠️  ${key}: Not configured`);
     hasWarnings = true;
   } else {
     console.log(`   ✅ ${key}: Configured`);
@@ -118,11 +116,6 @@ if (mode === 'production') {
     hasWarnings = true;
   } else {
     console.log('   ✅ Debug mode disabled');
-  }
-
-  if (!envVars['VITE_OPENAI_API_KEY'] || envVars['VITE_OPENAI_API_KEY'].includes('your_')) {
-    console.log('   ⚠️  AI features will be disabled in production build');
-    hasWarnings = true;
   }
 }
 
