@@ -49,7 +49,7 @@ function logWarning(message) {
 }
 
 function logError(message) {
-  console.log(`${COLORS.red}✗ ${error}${COLORS.reset}`);
+  console.log(`${COLORS.red}✗ ${message}${COLORS.reset}`);
 }
 
 async function cleanup() {
@@ -106,6 +106,10 @@ async function createPublishZip() {
   const zipPath = path.join(projectRoot, zipName);
 
   logStep('Archive', `Creating ${zipName}...`);
+
+  if (fs.existsSync(zipPath)) {
+    fs.rmSync(zipPath, { force: true });
+  }
 
   // Create build directory and copy necessary files
   fs.mkdirSync(buildDir, { recursive: true });

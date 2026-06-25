@@ -18,8 +18,10 @@ export interface ChromeLocalCache {
   last_sync_fingerprint?: string;
   last_sync_hash?: string;
 
-  // Entitlements
+  // Hosted profile state
   is_pro?: boolean;
+  profile_cached_at?: number;
+  profile_refresh_in_progress?: boolean;
 
   // Settings
   auto_sync?: boolean; // Legacy UI state (deprecated, use auto_sync_enabled)
@@ -46,6 +48,8 @@ export const CACHE_KEYS = {
   last_sync_hash: 'last_sync_hash',
 
   is_pro: 'is_pro',
+  profile_cached_at: 'profile_cached_at',
+  profile_refresh_in_progress: 'profile_refresh_in_progress',
 
   auto_sync: 'auto_sync',
   auto_sync_enabled: 'auto_sync_enabled',
@@ -64,6 +68,8 @@ export const WATCHED_CACHE_KEYS = [
   CACHE_KEYS.last_sync_fingerprint,
   CACHE_KEYS.last_sync_hash,
   CACHE_KEYS.is_pro,
+  CACHE_KEYS.profile_cached_at,
+  CACHE_KEYS.profile_refresh_in_progress,
   CACHE_KEYS.user_id,
   CACHE_KEYS.user_email,
   CACHE_KEYS.auto_sync_enabled,

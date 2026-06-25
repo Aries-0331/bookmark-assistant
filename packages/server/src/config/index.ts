@@ -22,7 +22,7 @@ export const config = {
   logDir: process.env.LOG_DIR || '/tmp',
   logMaxSize: Number(process.env.LOG_MAX_SIZE) || 5 * 1024 * 1024,
   logMaxFiles: Number(process.env.LOG_MAX_FILES) || 3,
-  // Product edition. Self-hosted deployments use local entitlement defaults.
+  // Product edition. Self-hosted deployments use local managed-feature defaults.
   edition: process.env.EDITION || (selfHosted ? 'self-hosted' : 'cloud'),
   selfHosted,
 

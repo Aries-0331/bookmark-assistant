@@ -28,13 +28,13 @@ export const auditLog = (action: string, userId: string, details: any = {}): voi
 };
 
 /**
- * Resolve local managed-feature entitlement.
+ * Resolve local managed-feature access.
  *
  * The open source server has no payment system. Self-hosted deployments enable
- * local managed features by default; official hosted billing lives in the
- * private commercial build.
+ * local managed features by default; official hosted enforcement lives outside
+ * this public repository.
  */
-export const hasProEntitlements = (): boolean => {
+export const hasManagedFeatureAccess = (): boolean => {
   return config.selfHosted;
 };
 

@@ -44,7 +44,7 @@ export type AppState = {
   // Lifecycle
   initFromStorage: () => Promise<void>;
   saveSyncSettings: (nextIntervalHours?: number) => Promise<void>;
-  refreshEntitlements: (forceRefresh?: boolean) => Promise<void>;
+  refreshProfile: (forceRefresh?: boolean) => Promise<void>;
   refreshConnection: () => Promise<void>;
 
   getEffectiveLimits: () => { minIntervalHours: number };
@@ -123,7 +123,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         session_token,
         sync_in_progress,
         is_connecting,
-        is_refreshing_entitlements,
+        profile_refresh_in_progress,
       } = await chrome.storage.local.get([
         'last_sync',
         'sync_interval_hours',
@@ -132,7 +132,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         'session_token',
         'sync_in_progress',
         'is_connecting',
-        'is_refreshing_entitlements',
+        'profile_refresh_in_progress',
       ]);
 
       // Load connection state
@@ -146,9 +146,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ isSyncing: true });
       }
       // Clear any stale refreshing state from previous page loads/crashes
-      if (is_refreshing_entitlements) {
-        console.log('[Init] Clearing stale is_refreshing_entitlements state');
-        await chrome.storage.local.set({ is_refreshing_entitlements: false });
+      if (profile_refresh_in_progress) {
+        console.log('[Init] Clearing stale profile refresh state');
+        await chrome.storage.local.set({
+          profile_refresh_in_progress: false,
+        });
         // Also clear the Zustand store state to ensure UI updates
         set({ isRefreshingProfile: false });
       }
@@ -180,53 +182,52 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  refreshEntitlements: async (forceRefresh = false) => {
+  refreshProfile: async (forceRefresh = false) => {
     // Check BEFORE setting state - this prevents the bug where we check after setting to true
     // which always returns true (causing the function to never complete)
-    const { is_refreshing_entitlements } = await chrome.storage.local.get([
-      'is_refreshing_entitlements',
+    const { profile_refresh_in_progress } = await chrome.storage.local.get([
+      'profile_refresh_in_progress',
     ]);
-    if (is_refreshing_entitlements && !forceRefresh) {
-      console.log('[Entitlements] Already refreshing, skipping');
+    if (profile_refresh_in_progress && !forceRefresh) {
+      console.log('[Profile] Already refreshing, skipping');
       return;
     }
 
     // Set storage FIRST to prevent race conditions with concurrent calls
-    await chrome.storage.local.set({ is_refreshing_entitlements: true });
+    await chrome.storage.local.set({ profile_refresh_in_progress: true });
     set({ isRefreshingProfile: true });
 
     // Add timeout fallback - auto-reset after 30 seconds for network issues
     const TIMEOUT_MS = 30000;
     const timeoutId = setTimeout(() => {
-      console.warn('[Entitlements] Refresh timeout - resetting state');
-      chrome.storage.local.set({ is_refreshing_entitlements: false });
+      console.warn('[Profile] Refresh timeout - resetting state');
+      chrome.storage.local.set({ profile_refresh_in_progress: false });
       set({ isRefreshingProfile: false });
     }, TIMEOUT_MS);
 
     try {
       // Check cache first unless force refresh
       if (!forceRefresh) {
-        const { is_pro, entitlements_cached_at } = await chrome.storage.local.get([
+        const { is_pro, profile_cached_at } = await chrome.storage.local.get([
           'is_pro',
-          'entitlements_cached_at',
+          'profile_cached_at',
         ]);
 
         // Use cache if less than 30 minutes old
         const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
         const now = Date.now();
-        const cachedAt = typeof entitlements_cached_at === 'number' ? entitlements_cached_at : 0;
+        const cachedAt = typeof profile_cached_at === 'number' ? profile_cached_at : 0;
         const isCacheValid = now - cachedAt < CACHE_TTL_MS;
 
         if (isCacheValid && typeof is_pro === 'boolean') {
-          console.log('[Entitlements] Using cached Pro status:', is_pro);
+          console.log('[Profile] Using cached managed-feature status:', is_pro);
           // Combine into single set() for performance
           set({ isPro: is_pro, isRefreshingProfile: false });
           return;
         }
       }
 
-      // Fetch fresh entitlements from server
-      console.log('[Entitlements] Fetching fresh entitlements from server');
+      console.log('[Profile] Fetching fresh profile from server');
       const response = await sendMessage({ type: Messages.GET_USER_PROFILE });
 
       if (response.success && response.profile) {
@@ -236,7 +237,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         // Cache with timestamp for performance
         await chrome.storage.local.set({
           is_pro: isPro,
-          entitlements_cached_at: Date.now(),
+          profile_cached_at: Date.now(),
         });
       }
     } catch (error: any) {
@@ -252,7 +253,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       clearTimeout(timeoutId);
       set({ isRefreshingProfile: false });
       // Clear storage state for cross-component sync
-      await chrome.storage.local.set({ is_refreshing_entitlements: false });
+      await chrome.storage.local.set({ profile_refresh_in_progress: false });
     }
   },
   refreshConnection: async () => {
@@ -272,7 +273,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       set({ hasTriedInitialLoad: false });
 
-      await get().refreshEntitlements();
+      await get().refreshProfile();
     } catch (error) {
       console.error('Failed to refresh connection state:', error);
     }
@@ -336,7 +337,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
 
         if (!wasConnected && isNowConnected) {
-          useAppStore.getState().refreshEntitlements();
+          useAppStore.getState().refreshProfile();
         }
       }
       if (changes['is_connecting']) {
@@ -369,9 +370,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (changes['sync_in_progress']) {
         useAppStore.setState({ isSyncing: !!changes['sync_in_progress'].newValue });
       }
-      if (changes['is_refreshing_entitlements']) {
+      if (changes['profile_refresh_in_progress']) {
         useAppStore.setState({
-          isRefreshingProfile: !!changes['is_refreshing_entitlements'].newValue,
+          isRefreshingProfile: !!changes['profile_refresh_in_progress'].newValue,
         });
       }
       if (changes['user_id']) {
@@ -421,15 +422,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
-  // Visibility change handler - refresh entitlements when page becomes visible
-  // This handles the case where user upgrades to Pro on the web while options page is open
+  // Visibility change handler: refresh hosted profile state when the page becomes visible.
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (!document.hidden) {
-        // Page became visible - refresh entitlements if connected
+        // Page became visible - refresh hosted profile state if connected.
         const { session_token } = await chrome.storage.local.get(['session_token']);
         if (session_token) {
-          await useAppStore.getState().refreshEntitlements();
+          await useAppStore.getState().refreshProfile();
         }
       }
     };
@@ -444,11 +444,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     (async () => {
       await useAppStore.getState().initFromStorage();
-      // Refresh entitlements on mount if connected
-      // This ensures isPro status is up-to-date when options page opens
+      // Refresh hosted profile state on mount if connected.
       const { session_token } = await chrome.storage.local.get(['session_token']);
       if (session_token) {
-        await useAppStore.getState().refreshEntitlements();
+        await useAppStore.getState().refreshProfile();
       }
     })();
   }, []);

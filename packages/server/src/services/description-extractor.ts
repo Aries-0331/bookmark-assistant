@@ -381,7 +381,7 @@ export class DescriptionExtractor {
     }
 
     // Reject if it's obviously a title (too short, has brand separators)
-    if (trimmed.length < 15) {
+    if (trimmed.length <= 30) {
       const brandPatterns = /[-|:|]|\b(home|login|signup|register|contact|about|faq|help)\b/i;
       if (brandPatterns.test(trimmed)) {
         return false;

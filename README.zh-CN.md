@@ -113,6 +113,16 @@ cp packages/server/.env.example packages/server/.env.local
 
 不要提交 `.env` 或 `.env.local` 文件。
 
+最小自托管设置：
+
+1. 创建一个 Notion integration，并复制 client ID 和 client secret。
+2. 为 server 创建一个 PostgreSQL 数据库。
+3. 在 `packages/server/.env.local` 中设置 `DATABASE_URL`、`JWT_SECRET`、`ALLOWED_EXTENSION_ID`、`NOTION_CLIENT_ID` 和 `NOTION_CLIENT_SECRET`。
+4. 在 `packages/extension/.env.local` 中设置 `VITE_OAUTH_SERVER_URL` 和 `VITE_NOTION_CLIENT_ID`。
+5. 运行 `pnpm dev:server`，然后构建或运行 extension，并在 Chrome 中加载 `packages/extension/dist`。
+
+自托管 server 是 extension 的同步目标。它保存同步到你的 Notion workspace 所需的 Notion access token，用于同步 bookmarks、Reading List items 和 saved pages。
+
 ## 贡献
 
 欢迎提交符合公开仓库范围的贡献。

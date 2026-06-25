@@ -5,11 +5,15 @@ import { config } from '../config';
 // Configure Prisma with connection pool settings
 // These settings help prevent "MaxClientsInSessionMode" errors
 const prismaClientOptions = {
-  datasources: {
-    db: {
-      url: config.databaseUrl,
-    },
-  },
+  ...(config.databaseUrl
+    ? {
+        datasources: {
+          db: {
+            url: config.databaseUrl,
+          },
+        },
+      }
+    : {}),
   // Connection pool configuration via DATABASE_URL parameters
   // If not in URL, Prisma defaults are used (connection_limit: number of CPUs * 2 + 1)
   // For production, ensure DATABASE_URL includes: ?connection_limit=20&pool_timeout=10
