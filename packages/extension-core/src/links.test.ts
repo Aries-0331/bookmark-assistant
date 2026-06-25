@@ -41,6 +41,7 @@ describe('extension link helpers', () => {
       'formatBookmarkForSync',
       'formatCurrentPageForSync',
       'formatSavedLinkForSync',
+      'normalizeUrl',
       'toSyncFingerprintItems',
       'withBookmarkType',
     ]);

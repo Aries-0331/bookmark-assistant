@@ -16,3 +16,5 @@ export {
   toSyncFingerprintItems,
   withBookmarkType,
 } from './links.js';
+
+export { normalizeUrl } from './urls.js';

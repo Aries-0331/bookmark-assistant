@@ -3,6 +3,7 @@ import type { LinkItem } from '@bookmark-assistant/contracts';
 import {
   formatBookmarkForSync,
   formatSavedLinkForSync,
+  normalizeUrl,
   toSyncFingerprintItems,
   withBookmarkType,
   type BookmarkTreeNodeLike,
@@ -12,7 +13,6 @@ import { validateConfig, debugConfig } from './config';
 import { serverAPI, APIError } from './server-api';
 import { addMessageListener, Messages } from '../utils/message';
 import { scheduleAutoSync, setupAutoSyncListener, restoreAutoSync } from './auto-sync';
-import { normalizeUrl } from '../utils/url-normalizer';
 import { reportError } from '../utils/error-reporter';
 import { cleanupStorage } from '../utils/storage-cleanup';
 
