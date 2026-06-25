@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { normalizeUrl } from '../utils/url-normalizer';
+import { normalizeUrl } from '@bookmark-assistant/extension-core';
 
 // Mock chrome.runtime
 const mockChromeRuntime = {

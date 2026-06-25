@@ -5,7 +5,7 @@
  * 3. Fallback to empty string
  */
 
-import { normalizeUrl } from '../utils/url-normalizer';
+import { normalizeUrl } from '@bookmark-assistant/extension-core';
 
 function extractPageDescription(): string {
   console.log(`[DescriptionExtractor] Extracting description for: ${window.location.href}`);

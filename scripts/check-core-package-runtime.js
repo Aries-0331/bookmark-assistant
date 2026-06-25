@@ -116,7 +116,7 @@ function main() {
       [
         '--input-type=module',
         '-e',
-        "import('@bookmark-assistant/extension-core').then((m) => { const item = m.toSyncFingerprintItems([{ title: 'Current', url: 'https://example.com', source: 'current_page', syncId: 'sync-1' }], 'Fallback')[0]; console.log([typeof m.formatBookmarkForSync, typeof m.formatCurrentPageForSync, item.source, item.syncId].join(',')); })",
+        "import('@bookmark-assistant/extension-core').then((m) => { const item = m.toSyncFingerprintItems([{ title: 'Current', url: 'https://example.com', source: 'current_page', syncId: 'sync-1' }], 'Fallback')[0]; console.log([typeof m.formatBookmarkForSync, typeof m.formatCurrentPageForSync, typeof m.normalizeUrl, item.source, item.syncId, m.normalizeUrl('https://example.com/page/?b=2&a=1#top')].join(',')); })",
       ],
       { cwd: projectDir }
     );
@@ -134,9 +134,12 @@ function main() {
       fail(`Expected contracts runtime exports count to be 0, got ${contractsResult}`);
     }
 
-    if (extensionCoreResult !== 'function,function,current_page,sync-1') {
+    if (
+      extensionCoreResult !==
+      'function,function,function,current_page,sync-1,https://example.com/page?a=1&b=2'
+    ) {
       fail(
-        `Expected extension-core runtime helpers and fingerprint metadata to be available, got ${extensionCoreResult}`
+        `Expected extension-core runtime helpers, fingerprint metadata, and URL normalization to be available, got ${extensionCoreResult}`
       );
     }
 
