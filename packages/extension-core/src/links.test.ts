@@ -37,10 +37,13 @@ describe('extension link helpers', () => {
   it('exposes the stable public runtime API', () => {
     expect(Object.keys(publicApi).sort()).toEqual([
       'buildBookmarkPath',
+      'createFallbackPageContent',
+      'extractPageContentFromDocument',
       'flattenBookmarks',
       'formatBookmarkForSync',
       'formatCurrentPageForSync',
       'formatSavedLinkForSync',
+      'isValidHttpUrl',
       'normalizeUrl',
       'toSyncFingerprintItems',
       'withBookmarkType',

@@ -4,4 +4,4 @@ Pure extension-side helpers for converting browser link data into Bookmark Assis
 
 This package does not read Chrome APIs directly, call the server, or contain deployment-specific configuration.
 
-Included helpers cover bookmark flattening and formatting, saved/current-page link formatting, sync fingerprint inputs, and URL normalization for stable cache keys.
+Included helpers cover bookmark flattening and formatting, saved/current-page link formatting, sync fingerprint inputs, URL normalization for stable cache keys, and pure page-content extraction helpers.
