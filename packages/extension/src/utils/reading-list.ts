@@ -3,36 +3,20 @@
  * Provides utilities for interacting with Chrome's Reading List API (Chrome 120+)
  */
 
-import type { ReadingListSyncItem, ReadState } from '@bookmark-assistant/contracts';
+import {
+  formatReadingListItemsForSync,
+  type ChromeReadingListItemLike,
+} from '@bookmark-assistant/extension-core';
+import type { ReadingListSyncItem } from '@bookmark-assistant/contracts';
 
 export type ReadingListItem = ReadingListSyncItem;
-
-interface ChromeReadingListItem {
-  title: string | { content: string };
-  url: string | { url: string };
-  creationTime?: number;
-  dateAdded?: number;
-  hasBeenRead?: boolean;
-  readState?: { state: 'UNREAD' | 'READ' };
-}
 
 // Chrome API type augmentation for readingList (Chrome 120+)
 interface ChromeWithReadingList {
   readingList?: {
-    query?(queryInfo?: Record<string, unknown>): Promise<ChromeReadingListItem[]>;
-    getContents?(): Promise<ChromeReadingListItem[]>;
+    query?(queryInfo?: Record<string, unknown>): Promise<ChromeReadingListItemLike[]>;
+    getContents?(): Promise<ChromeReadingListItemLike[]>;
   };
-}
-
-/**
- * Generate a UUID v4, with fallback for environments without crypto.randomUUID
- */
-function generateUUID(): string {
-  if (globalThis.crypto && 'randomUUID' in globalThis.crypto) {
-    return (globalThis.crypto as any).randomUUID();
-  }
-  // Fallback: timestamp-based ID
-  return `reading-list-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 }
 
 /**
@@ -59,18 +43,7 @@ export async function getReadingListItems(): Promise<ReadingListItem[]> {
       return [];
     }
 
-    return items.map((item: ChromeReadingListItem) => {
-      const readState: ReadState = item.readState?.state ?? (item.hasBeenRead ? 'READ' : 'UNREAD');
-
-      return {
-        title: typeof item.title === 'string' ? item.title : item.title.content,
-        url: typeof item.url === 'string' ? item.url : item.url.url,
-        dateAdded: new Date(item.creationTime ?? item.dateAdded ?? Date.now()).toISOString(),
-        readState,
-        syncId: generateUUID(),
-        type: 'reading_list' as const,
-      };
-    });
+    return formatReadingListItemsForSync(items);
   } catch (error) {
     console.warn('[Reading List] Failed to get reading list items:', error);
     return [];

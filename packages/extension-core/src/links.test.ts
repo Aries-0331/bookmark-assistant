@@ -42,6 +42,8 @@ describe('extension link helpers', () => {
       'flattenBookmarks',
       'formatBookmarkForSync',
       'formatCurrentPageForSync',
+      'formatReadingListItemForSync',
+      'formatReadingListItemsForSync',
       'formatSavedLinkForSync',
       'isValidHttpUrl',
       'normalizeUrl',

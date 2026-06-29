@@ -7,6 +7,7 @@ export type {
   SyncFingerprintItem,
 } from './links.js';
 export type { PageContent } from './content.js';
+export type { ChromeReadingListItemLike, FormatReadingListItemOptions } from './reading-list.js';
 
 export {
   buildBookmarkPath,
@@ -25,3 +26,5 @@ export {
   extractPageContentFromDocument,
   isValidHttpUrl,
 } from './content.js';
+
+export { formatReadingListItemForSync, formatReadingListItemsForSync } from './reading-list.js';
