@@ -1,5 +1,6 @@
 export type {
   BookmarkTreeNodeLike,
+  CreateSyncFingerprintOptions,
   FormatCurrentPageOptions,
   FormatBookmarkOptions,
   FormatSavedLinkInput,
@@ -11,6 +12,7 @@ export type { ChromeReadingListItemLike, FormatReadingListItemOptions } from './
 
 export {
   buildBookmarkPath,
+  createSyncFingerprint,
   flattenBookmarks,
   formatBookmarkForSync,
   formatCurrentPageForSync,

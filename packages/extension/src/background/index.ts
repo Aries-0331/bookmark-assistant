@@ -1,6 +1,7 @@
 import './polyfill';
 import type { LinkItem } from '@bookmark-assistant/contracts';
 import {
+  createSyncFingerprint,
   formatBookmarkForSync,
   formatSavedLinkForSync,
   normalizeUrl,
@@ -324,30 +325,7 @@ async function performBookmarkSync(): Promise<{
     minimalForHash.push(...toSyncFingerprintItems(readingListItems, 'Reading List'));
 
     // Compute a stable fingerprint of current bookmarks to avoid redundant syncs
-    const computeFingerprint = async () => {
-      const sorted = minimalForHash
-        .map((i) => `${i.path}|${i.url}|${i.title}`)
-        .sort()
-        .join('\n');
-      try {
-        // Prefer Web Crypto for a stable hash
-        if (globalThis.crypto?.subtle) {
-          const enc = new TextEncoder();
-          const digest = await globalThis.crypto.subtle.digest('SHA-256', enc.encode(sorted));
-          const arr = Array.from(new Uint8Array(digest));
-          return arr.map((b) => b.toString(16).padStart(2, '0')).join('');
-        }
-      } catch {}
-      // Fallback: simple non-crypto hash
-      let h = 2166136261;
-      for (let i = 0; i < sorted.length; i++) {
-        h ^= sorted.charCodeAt(i);
-        h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
-      }
-      return (h >>> 0).toString(16);
-    };
-
-    const fp = await computeFingerprint();
+    const fp = await createSyncFingerprint(minimalForHash);
     const { last_sync_fingerprint: prevFp, last_sync_count: prevCount } =
       await chrome.storage.local.get(['last_sync_fingerprint', 'last_sync_count']);
     const currentCount = formatted.length;

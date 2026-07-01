@@ -38,6 +38,7 @@ describe('extension link helpers', () => {
     expect(Object.keys(publicApi).sort()).toEqual([
       'buildBookmarkPath',
       'createFallbackPageContent',
+      'createSyncFingerprint',
       'extractPageContentFromDocument',
       'flattenBookmarks',
       'formatBookmarkForSync',
