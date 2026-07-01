@@ -21,6 +21,16 @@ export interface SyncFingerprintItem {
   syncId?: string;
 }
 
+interface SyncFingerprintCrypto {
+  subtle?: {
+    digest(algorithm: string, data: BufferSource): Promise<ArrayBuffer>;
+  };
+}
+
+export interface CreateSyncFingerprintOptions {
+  crypto?: SyncFingerprintCrypto | null;
+}
+
 export interface FormatBookmarkOptions {
   description?: string;
   now?: () => Date;
@@ -179,10 +189,48 @@ export function toSyncFingerprintItems(
   }));
 }
 
+export async function createSyncFingerprint(
+  items: SyncFingerprintItem[],
+  options: CreateSyncFingerprintOptions = {}
+): Promise<string> {
+  const fingerprintPayload = items
+    .map((item) => `${item.path}|${item.url}|${item.title}`)
+    .sort()
+    .join('\n');
+
+  const cryptoProvider =
+    Object.prototype.hasOwnProperty.call(options, 'crypto') ? options.crypto : globalThis.crypto;
+
+  try {
+    if (cryptoProvider?.subtle) {
+      const encoded = new TextEncoder().encode(fingerprintPayload);
+      const digest = await cryptoProvider.subtle.digest('SHA-256', encoded);
+      return Array.from(new Uint8Array(digest))
+        .map((byte) => byte.toString(16).padStart(2, '0'))
+        .join('');
+    }
+  } catch {
+    // Fall back to the non-crypto hash below when Web Crypto is unavailable or fails.
+  }
+
+  return createFallbackSyncFingerprint(fingerprintPayload);
+}
+
 function createDefaultSyncId(prefix: string): string {
   if (globalThis.crypto && 'randomUUID' in globalThis.crypto) {
     return (globalThis.crypto as Crypto & { randomUUID: () => string }).randomUUID();
   }
 
   return `${prefix}-${Date.now()}`;
+}
+
+function createFallbackSyncFingerprint(input: string): string {
+  let hash = 2166136261;
+
+  for (let index = 0; index < input.length; index++) {
+    hash ^= input.charCodeAt(index);
+    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+  }
+
+  return (hash >>> 0).toString(16);
 }
