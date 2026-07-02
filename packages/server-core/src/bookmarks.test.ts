@@ -1,11 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import * as publicApi from './index';
-import { diffBookmarks, validateBookmarkInput, validateLinkItemInput } from './index';
+import {
+  diffBookmarks,
+  isFetchableHttpUrl,
+  isValidUrl,
+  normalizeUrlForSync,
+  validateBookmarkInput,
+  validateLinkItemInput,
+} from './index';
 
 describe('server bookmark core', () => {
   it('exposes the stable public runtime API', () => {
     expect(Object.keys(publicApi).sort()).toEqual([
       'diffBookmarks',
+      'isFetchableHttpUrl',
+      'isValidUrl',
+      'normalizeUrlForSync',
       'validateBookmarkInput',
       'validateLinkItemInput',
     ]);
@@ -163,5 +173,35 @@ describe('server bookmark core', () => {
       syncId: 'link-1',
       source: 'current_page',
     });
+  });
+});
+
+describe('server URL core', () => {
+  it('normalizes URLs for stable sync keys', () => {
+    expect(normalizeUrlForSync('https://example.com/path/?b=2&a=1#fragment')).toBe(
+      'https://example.com/path?a=1&b=2'
+    );
+  });
+
+  it('preserves root trailing slash while removing non-root trailing slash', () => {
+    expect(normalizeUrlForSync('https://example.com/')).toBe('https://example.com/');
+    expect(normalizeUrlForSync('https://example.com/page/')).toBe('https://example.com/page');
+  });
+
+  it('preserves invalid URL input for callers to validate separately', () => {
+    expect(normalizeUrlForSync('not-a-valid-url')).toBe('not-a-valid-url');
+  });
+
+  it('validates URL syntax without restricting protocol', () => {
+    expect(isValidUrl('https://example.com/page')).toBe(true);
+    expect(isValidUrl('file:///local/file.html')).toBe(true);
+    expect(isValidUrl('not-a-valid-url')).toBe(false);
+  });
+
+  it('recognizes only HTTP and HTTPS URLs as fetchable', () => {
+    expect(isFetchableHttpUrl('https://example.com/page')).toBe(true);
+    expect(isFetchableHttpUrl('http://example.com/page')).toBe(true);
+    expect(isFetchableHttpUrl('file:///local/file.html')).toBe(false);
+    expect(isFetchableHttpUrl('not-a-valid-url')).toBe(false);
   });
 });

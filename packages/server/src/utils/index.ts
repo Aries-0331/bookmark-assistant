@@ -1,7 +1,10 @@
 // 🛠️ Utility Functions for Server Operations
 
 import type { LinkItem as BookmarkItem } from '@bookmark-assistant/contracts';
-import { validateBookmarkInput } from '@bookmark-assistant/server-core';
+import {
+  isValidUrl as isValidCoreUrl,
+  validateBookmarkInput,
+} from '@bookmark-assistant/server-core';
 import { randomUUID } from 'crypto';
 import { config } from '../config';
 import { logger } from './logger';
@@ -124,12 +127,7 @@ export const createBatches = <T>(array: T[], batchSize: number): T[][] => {
  * Validate URL format
  */
 export const isValidUrl = (url: string): boolean => {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
+  return isValidCoreUrl(url);
 };
 
 /**

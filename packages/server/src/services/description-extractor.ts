@@ -3,7 +3,11 @@
  * Fetches URLs and extracts descriptions from meta tags
  */
 
-import { URL } from 'url';
+import {
+  isFetchableHttpUrl,
+  isValidUrl,
+  normalizeUrlForSync,
+} from '@bookmark-assistant/server-core';
 import { descriptionCache } from './description-cache';
 
 export interface ExtractionResult {
@@ -26,12 +30,14 @@ export class DescriptionExtractor {
   async extractFromUrl(url: string): Promise<ExtractionResult> {
     try {
       // Normalize URL for consistent caching
-      const normalizedUrl = this.normalizeUrl(url);
+      const normalizedUrl = normalizeUrlForSync(url);
 
       // Check cache first
       const cached = await descriptionCache.get(normalizedUrl);
       if (cached) {
-        console.debug(`[DescriptionExtractor] Cache hit for ${normalizedUrl} (hits: ${cached.hits})`);
+        console.debug(
+          `[DescriptionExtractor] Cache hit for ${normalizedUrl} (hits: ${cached.hits})`
+        );
         return {
           description: cached.description,
           source: cached.source,
@@ -44,7 +50,7 @@ export class DescriptionExtractor {
       console.debug(`[DescriptionExtractor] Cache miss for ${normalizedUrl}, fetching...`);
 
       // Validate URL
-      if (!this.isValidUrl(normalizedUrl)) {
+      if (!isValidUrl(normalizedUrl)) {
         return {
           description: '',
           source: 'empty',
@@ -56,7 +62,7 @@ export class DescriptionExtractor {
       }
 
       // Skip non-HTTP URLs
-      if (!this.isFetchableUrl(normalizedUrl)) {
+      if (!isFetchableHttpUrl(normalizedUrl)) {
         return {
           description: '',
           source: 'empty',
@@ -233,30 +239,6 @@ export class DescriptionExtractor {
   }
 
   /**
-   * Validate URL
-   */
-  private isValidUrl(url: string): boolean {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Check if URL is fetchable (HTTP/HTTPS only)
-   */
-  private isFetchableUrl(url: string): boolean {
-    try {
-      const urlObj = new URL(url);
-      return ['http:', 'https:'].includes(urlObj.protocol);
-    } catch {
-      return false;
-    }
-  }
-
-  /**
    * Extract content from structured elements (main, article, section)
    */
   private extractContentFromStructuredElements(
@@ -419,30 +401,7 @@ export class DescriptionExtractor {
    * Normalize URL for caching (same logic as client)
    */
   normalizeUrl(url: string): string {
-    try {
-      const urlObj = new URL(url);
-
-      // Remove trailing slash from pathname (except root)
-      if (urlObj.pathname.length > 1 && urlObj.pathname.endsWith('/')) {
-        urlObj.pathname = urlObj.pathname.slice(0, -1);
-      }
-
-      // Remove fragments
-      urlObj.hash = '';
-
-      // Sort query parameters
-      if (urlObj.search && urlObj.search !== '?') {
-        const params = new URLSearchParams(urlObj.search);
-        const sortedParams = Array.from(params.entries()).sort(([a], [b]) => a.localeCompare(b));
-        urlObj.search = new URLSearchParams(sortedParams).toString();
-      } else {
-        urlObj.search = '';
-      }
-
-      return urlObj.toString();
-    } catch {
-      return url;
-    }
+    return normalizeUrlForSync(url);
   }
 }
 
