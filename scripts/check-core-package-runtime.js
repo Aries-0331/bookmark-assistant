@@ -125,7 +125,7 @@ function main() {
       'node',
       [
         '-e',
-        "const core = require('@bookmark-assistant/server-core'); console.log([typeof core.diffBookmarks, typeof core.validateLinkItemInput].join(','))",
+        "const core = require('@bookmark-assistant/server-core'); console.log([typeof core.diffBookmarks, typeof core.validateLinkItemInput, typeof core.normalizeUrlForSync, core.normalizeUrlForSync('https://example.com/page/?b=2&a=1#top'), core.isValidUrl('file:///tmp/page.html'), core.isFetchableHttpUrl('file:///tmp/page.html')].join(','))",
       ],
       { cwd: projectDir }
     );
@@ -143,9 +143,12 @@ function main() {
       );
     }
 
-    if (serverCoreResult !== 'function,function') {
+    if (
+      serverCoreResult !==
+      'function,function,function,https://example.com/page?a=1&b=2,true,false'
+    ) {
       fail(
-        `Expected server-core diffBookmarks and validateLinkItemInput to be functions, got ${serverCoreResult}`
+        `Expected server-core diff, validation, and URL helpers to be available, got ${serverCoreResult}`
       );
     }
 
