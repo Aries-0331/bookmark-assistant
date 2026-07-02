@@ -125,7 +125,7 @@ function main() {
       'node',
       [
         '-e',
-        "const core = require('@bookmark-assistant/server-core'); const desc = core.extractDescriptionFromHtml('<html><head><meta name=\"description\" content=\"Runtime package description\" /></head></html>'); console.log([typeof core.diffBookmarks, typeof core.validateLinkItemInput, typeof core.normalizeUrlForSync, core.normalizeUrlForSync('https://example.com/page/?b=2&a=1#top'), core.isValidUrl('file:///tmp/page.html'), core.isFetchableHttpUrl('file:///tmp/page.html'), typeof core.extractDescriptionFromHtml, desc.text, desc.source, core.sanitizeDescription('<p>Text &amp; content</p>')].join(','))",
+        "const core = require('@bookmark-assistant/server-core'); const desc = core.extractDescriptionFromHtml('<html><head><meta name=\"description\" content=\"Runtime package description\" /></head></html>'); const normalized = core.normalizeBookmarkForSyncPlanning({ title: 'Reading', url: 'https://example.com/read', source: 'reading_list', type: 'reading_list', readState: 'READ', tags: ['runtime'] }); console.log([typeof core.diffBookmarks, typeof core.validateLinkItemInput, typeof core.normalizeBookmarkForSyncPlanning, normalized.source, normalized.type, normalized.readState, normalized.tags.join('|'), typeof core.normalizeUrlForSync, core.normalizeUrlForSync('https://example.com/page/?b=2&a=1#top'), core.isValidUrl('file:///tmp/page.html'), core.isFetchableHttpUrl('file:///tmp/page.html'), typeof core.extractDescriptionFromHtml, desc.text, desc.source, core.sanitizeDescription('<p>Text &amp; content</p>')].join(','))",
       ],
       { cwd: projectDir }
     );
@@ -145,10 +145,10 @@ function main() {
 
     if (
       serverCoreResult !==
-      'function,function,function,https://example.com/page?a=1&b=2,true,false,function,Runtime package description,meta_description,Text content'
+      'function,function,function,reading_list,reading_list,READ,runtime,function,https://example.com/page?a=1&b=2,true,false,function,Runtime package description,meta_description,Text content'
     ) {
       fail(
-        `Expected server-core diff, validation, URL, and description helpers to be available, got ${serverCoreResult}`
+        `Expected server-core diff, validation, normalization, URL, and description helpers to be available, got ${serverCoreResult}`
       );
     }
 

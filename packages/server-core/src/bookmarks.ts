@@ -18,6 +18,40 @@ export interface ValidateBookmarkOptions {
   createSyncId?: () => string;
 }
 
+export function normalizeBookmarkForSyncPlanning(bookmark: LinkItem): LinkItem {
+  const normalized: LinkItem = {
+    title: bookmark.title,
+    url: bookmark.url,
+  };
+
+  if (bookmark.path !== undefined) {
+    normalized.path = bookmark.path;
+  }
+  if (bookmark.description !== undefined) {
+    normalized.description = bookmark.description;
+  }
+  if (bookmark.tags !== undefined) {
+    normalized.tags = [...bookmark.tags];
+  }
+  if (bookmark.dateAdded !== undefined) {
+    normalized.dateAdded = bookmark.dateAdded;
+  }
+  if (bookmark.syncId !== undefined) {
+    normalized.syncId = bookmark.syncId;
+  }
+  if (bookmark.type !== undefined) {
+    normalized.type = bookmark.type;
+  }
+  if (bookmark.readState !== undefined) {
+    normalized.readState = bookmark.readState;
+  }
+  if (bookmark.source !== undefined) {
+    normalized.source = bookmark.source;
+  }
+
+  return normalized;
+}
+
 export function diffBookmarks(
   accepted: LinkItem[],
   existingUrls: readonly string[],

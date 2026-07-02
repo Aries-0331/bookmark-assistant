@@ -5,7 +5,12 @@ export type {
 } from './bookmarks';
 export type { DescriptionSource, HtmlDescriptionResult } from './descriptions';
 
-export { diffBookmarks, validateBookmarkInput, validateLinkItemInput } from './bookmarks';
+export {
+  diffBookmarks,
+  normalizeBookmarkForSyncPlanning,
+  validateBookmarkInput,
+  validateLinkItemInput,
+} from './bookmarks';
 export {
   extractContentFromStructuredElements,
   extractDescriptionFromHtml,
