@@ -77,6 +77,7 @@ Options:
 Token handling:
   Prefer NPM_TOKEN for this command, or point NPM_CONFIG_USERCONFIG at a temporary
   npmrc. The script never writes npm credentials into the repository.
+  In GitHub Actions trusted publishing, do not set NPM_TOKEN; npm uses OIDC.
 `);
 }
 
@@ -322,7 +323,7 @@ function publishPackages(options, env) {
       console.log(`${item.name}@${packageJson.version} is not published yet; publishing.`);
     }
 
-    run('pnpm', publishArgs, {
+    run('npm', publishArgs, {
       cwd: path.join(repoRoot, item.dir),
       env,
     });
