@@ -13,9 +13,14 @@ describe('server bookmark core', () => {
   it('exposes the stable public runtime API', () => {
     expect(Object.keys(publicApi).sort()).toEqual([
       'diffBookmarks',
+      'extractContentFromStructuredElements',
+      'extractDescriptionFromHtml',
       'isFetchableHttpUrl',
+      'isValidDescription',
       'isValidUrl',
+      'looksLikeDescription',
       'normalizeUrlForSync',
+      'sanitizeDescription',
       'validateBookmarkInput',
       'validateLinkItemInput',
     ]);
