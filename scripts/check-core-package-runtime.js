@@ -125,7 +125,7 @@ function main() {
       'node',
       [
         '-e',
-        "const core = require('@bookmark-assistant/server-core'); console.log([typeof core.diffBookmarks, typeof core.validateLinkItemInput, typeof core.normalizeUrlForSync, core.normalizeUrlForSync('https://example.com/page/?b=2&a=1#top'), core.isValidUrl('file:///tmp/page.html'), core.isFetchableHttpUrl('file:///tmp/page.html')].join(','))",
+        "const core = require('@bookmark-assistant/server-core'); const desc = core.extractDescriptionFromHtml('<html><head><meta name=\"description\" content=\"Runtime package description\" /></head></html>'); console.log([typeof core.diffBookmarks, typeof core.validateLinkItemInput, typeof core.normalizeUrlForSync, core.normalizeUrlForSync('https://example.com/page/?b=2&a=1#top'), core.isValidUrl('file:///tmp/page.html'), core.isFetchableHttpUrl('file:///tmp/page.html'), typeof core.extractDescriptionFromHtml, desc.text, desc.source, core.sanitizeDescription('<p>Text &amp; content</p>')].join(','))",
       ],
       { cwd: projectDir }
     );
@@ -145,10 +145,10 @@ function main() {
 
     if (
       serverCoreResult !==
-      'function,function,function,https://example.com/page?a=1&b=2,true,false'
+      'function,function,function,https://example.com/page?a=1&b=2,true,false,function,Runtime package description,meta_description,Text content'
     ) {
       fail(
-        `Expected server-core diff, validation, and URL helpers to be available, got ${serverCoreResult}`
+        `Expected server-core diff, validation, URL, and description helpers to be available, got ${serverCoreResult}`
       );
     }
 
