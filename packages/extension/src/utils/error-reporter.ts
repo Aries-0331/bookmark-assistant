@@ -1,5 +1,6 @@
+import { cleanErrorReports } from '@bookmark-assistant/extension-core';
+
 import { config } from '../background/config';
-import { cleanErrorReports } from './storage-cleanup';
 
 interface ErrorReport {
   message: string;

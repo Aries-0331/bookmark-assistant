@@ -37,6 +37,7 @@ describe('extension link helpers', () => {
   it('exposes the stable public runtime API', () => {
     expect(Object.keys(publicApi).sort()).toEqual([
       'buildBookmarkPath',
+      'cleanErrorReports',
       'createFallbackPageContent',
       'createSyncFingerprint',
       'extractPageContentFromDocument',
@@ -48,7 +49,9 @@ describe('extension link helpers', () => {
       'formatSavedLinkForSync',
       'isValidHttpUrl',
       'normalizeUrl',
+      'planStorageCleanup',
       'toSyncFingerprintItems',
+      'validatePartialSyncInfo',
       'withBookmarkType',
     ]);
   });
