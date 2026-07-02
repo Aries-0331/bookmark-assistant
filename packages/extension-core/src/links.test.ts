@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as publicApi from './index';
 import {
   buildBookmarkPath,
+  collectBookmarkSyncItems,
   flattenBookmarks,
   formatBookmarkForSync,
   formatCurrentPageForSync,
@@ -38,6 +39,7 @@ describe('extension link helpers', () => {
     expect(Object.keys(publicApi).sort()).toEqual([
       'buildBookmarkPath',
       'cleanErrorReports',
+      'collectBookmarkSyncItems',
       'createFallbackPageContent',
       'createSyncFingerprint',
       'extractPageContentFromDocument',
@@ -91,6 +93,51 @@ describe('extension link helpers', () => {
       description: 'Cached description',
       path: 'Bookmarks Bar / Articles',
       syncId: 'sync-1',
+      type: 'bookmark',
+    });
+  });
+
+  it('collects bookmark tree sync items and fingerprint inputs', async () => {
+    const collected = await collectBookmarkSyncItems(bookmarkTree[0].children!, {
+      getDescription: (url) => (url === 'https://example.com' ? 'Cached description' : ''),
+      createSyncId: (bookmark) => `sync-${bookmark.id}`,
+      now: () => new Date('2026-01-01T00:00:00.000Z'),
+    });
+
+    expect(collected.items).toEqual([
+      {
+        title: 'Example',
+        url: 'https://example.com',
+        description: 'Cached description',
+        path: 'Bookmarks / Articles',
+        dateAdded: '2026-01-01T00:00:00.000Z',
+        syncId: 'sync-bookmark-1',
+      },
+    ]);
+
+    expect(collected.fingerprintItems).toEqual([
+      {
+        title: 'Example',
+        url: 'https://example.com',
+        path: 'Bookmarks / Articles',
+        type: undefined,
+      },
+    ]);
+  });
+
+  it('supports async bookmark descriptions and bookmark type metadata', async () => {
+    const collected = await collectBookmarkSyncItems(bookmarkTree[0].children!, {
+      getDescription: async () => 'Async description',
+      createSyncId: (bookmark) => `sync-${bookmark.id}`,
+      includeType: true,
+    });
+
+    expect(collected.items[0]).toMatchObject({
+      description: 'Async description',
+      type: 'bookmark',
+      syncId: 'sync-bookmark-1',
+    });
+    expect(collected.fingerprintItems[0]).toMatchObject({
       type: 'bookmark',
     });
   });

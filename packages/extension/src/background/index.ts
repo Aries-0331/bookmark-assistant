@@ -1,8 +1,8 @@
 import './polyfill';
 import type { LinkItem } from '@bookmark-assistant/contracts';
 import {
+  collectBookmarkSyncItems,
   createSyncFingerprint,
-  formatBookmarkForSync,
   formatSavedLinkForSync,
   normalizeUrl,
   toSyncFingerprintItems,
@@ -267,39 +267,28 @@ async function performBookmarkSync(): Promise<{
 
     await setState({ sync_in_progress: true, last_sync_error: null });
 
-    formatted = []; // Use existing declaration
-    const minimalForHash: Array<{ url: string; title: string; path: string }> = [];
-    const flatten = (nodes: BookmarkTreeNodeLike[], currentPath = 'Bookmarks') => {
-      for (const node of nodes) {
-        if (node.url) {
-          const title = node.title || 'Untitled';
-          const url = node.url || '';
-          const normalizedUrl = normalizeUrl(url);
-          const description = getCachedDescription(url);
-          console.log(
-            `[Sync] Processing bookmark: "${title}" -> ${url} (normalized: ${normalizedUrl})`
-          );
-          console.log(
-            `[Sync] Description for ${url}: "${description}" (${description ? 'found' : 'not found'})`
-          );
-          formatted.push(
-            formatBookmarkForSync(node, currentPath, {
-              description,
-              createSyncId: (bookmark) =>
-                globalThis.crypto && 'randomUUID' in globalThis.crypto
-                  ? (globalThis.crypto as any).randomUUID()
-                  : `${bookmark.id}-${Date.now()}`,
-            })
-          );
-          minimalForHash.push({ url, title, path: currentPath });
-        } else if (node.children) {
-          const nextPath = node.title ? `${currentPath} / ${node.title}` : currentPath;
-          flatten(node.children, nextPath);
-        }
-      }
-    };
+    let minimalForHash: Array<{ url: string; title: string; path: string }> = [];
     console.log('[Sync] Starting to flatten bookmarks...');
-    flatten(flat as BookmarkTreeNodeLike[]);
+    const collectedBookmarks = await collectBookmarkSyncItems(flat as BookmarkTreeNodeLike[], {
+      getDescription: (url, node) => {
+        const title = node.title || 'Untitled';
+        const normalizedUrl = normalizeUrl(url);
+        const description = getCachedDescription(url);
+        console.log(
+          `[Sync] Processing bookmark: "${title}" -> ${url} (normalized: ${normalizedUrl})`
+        );
+        console.log(
+          `[Sync] Description for ${url}: "${description}" (${description ? 'found' : 'not found'})`
+        );
+        return description;
+      },
+      createSyncId: (bookmark) =>
+        globalThis.crypto && 'randomUUID' in globalThis.crypto
+          ? (globalThis.crypto as any).randomUUID()
+          : `${bookmark.id}-${Date.now()}`,
+    });
+    formatted = collectedBookmarks.items;
+    minimalForHash = collectedBookmarks.fingerprintItems;
     console.log(`[Sync] Flattened ${formatted.length} bookmarks`);
     console.log(`[Sync] Cache size: ${pageDescriptionCache.size} URLs with descriptions`);
 

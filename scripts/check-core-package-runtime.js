@@ -116,7 +116,7 @@ function main() {
       [
         '--input-type=module',
         '-e',
-        "import('@bookmark-assistant/extension-core').then(async (m) => { const item = m.toSyncFingerprintItems([{ title: 'Current', url: 'https://example.com', source: 'current_page', syncId: 'sync-1' }], 'Fallback')[0]; const fallback = m.createFallbackPageContent('https://www.example.com/docs/'); const reading = m.formatReadingListItemForSync({ title: { content: 'Read' }, url: { url: 'https://example.com/read' }, readState: { state: 'READ' }, dateAdded: Date.UTC(2026, 0, 1) }, { createSyncId: () => 'reading-1' }); const fingerprint = await m.createSyncFingerprint([], { crypto: null }); const cleanup = m.planStorageCleanup({ last_sync_hash: 'x', last_sync_partial_info: { new_count: '2' } }); console.log([typeof m.formatBookmarkForSync, typeof m.formatCurrentPageForSync, typeof m.normalizeUrl, typeof m.extractPageContentFromDocument, typeof m.formatReadingListItemForSync, typeof m.createSyncFingerprint, typeof m.planStorageCleanup, m.isValidHttpUrl('https://example.com'), fallback.title, reading.type, reading.readState, reading.syncId, item.source, item.syncId, fingerprint, m.normalizeUrl('https://example.com/page/?b=2&a=1#top'), cleanup.removeKeys.join('|'), cleanup.updateValues.last_sync_partial_info.new_count].join(',')); })",
+        "import('@bookmark-assistant/extension-core').then(async (m) => { const item = m.toSyncFingerprintItems([{ title: 'Current', url: 'https://example.com', source: 'current_page', syncId: 'sync-1' }], 'Fallback')[0]; const fallback = m.createFallbackPageContent('https://www.example.com/docs/'); const reading = m.formatReadingListItemForSync({ title: { content: 'Read' }, url: { url: 'https://example.com/read' }, readState: { state: 'READ' }, dateAdded: Date.UTC(2026, 0, 1) }, { createSyncId: () => 'reading-1' }); const fingerprint = await m.createSyncFingerprint([], { crypto: null }); const cleanup = m.planStorageCleanup({ last_sync_hash: 'x', last_sync_partial_info: { new_count: '2' } }); const collected = await m.collectBookmarkSyncItems([{ id: 'folder', title: 'Folder', children: [{ id: 'bookmark-1', title: 'Bookmark', url: 'https://example.com/bookmark' }] }], { getDescription: () => 'Runtime description', createSyncId: () => 'bookmark-sync-1' }); console.log([typeof m.formatBookmarkForSync, typeof m.formatCurrentPageForSync, typeof m.normalizeUrl, typeof m.extractPageContentFromDocument, typeof m.formatReadingListItemForSync, typeof m.createSyncFingerprint, typeof m.planStorageCleanup, typeof m.collectBookmarkSyncItems, m.isValidHttpUrl('https://example.com'), fallback.title, reading.type, reading.readState, reading.syncId, item.source, item.syncId, fingerprint, m.normalizeUrl('https://example.com/page/?b=2&a=1#top'), cleanup.removeKeys.join('|'), cleanup.updateValues.last_sync_partial_info.new_count, collected.items[0].description, collected.fingerprintItems[0].path].join(',')); })",
       ],
       { cwd: projectDir }
     );
@@ -136,10 +136,10 @@ function main() {
 
     if (
       extensionCoreResult !==
-      'function,function,function,function,function,function,function,true,example.com/docs/,reading_list,READ,reading-1,current_page,sync-1,811c9dc5,https://example.com/page?a=1&b=2,last_sync_hash,2'
+      'function,function,function,function,function,function,function,function,true,example.com/docs/,reading_list,READ,reading-1,current_page,sync-1,811c9dc5,https://example.com/page?a=1&b=2,last_sync_hash,2,Runtime description,Bookmarks / Folder'
     ) {
       fail(
-        `Expected extension-core runtime helpers, content helpers, reading list helpers, sync fingerprint hash helper, storage cleanup helpers, fingerprint metadata, and URL normalization to be available, got ${extensionCoreResult}`
+        `Expected extension-core runtime helpers, content helpers, reading list helpers, sync fingerprint hash helper, storage cleanup helpers, bookmark collection helpers, fingerprint metadata, and URL normalization to be available, got ${extensionCoreResult}`
       );
     }
 
