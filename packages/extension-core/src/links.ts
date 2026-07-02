@@ -38,6 +38,19 @@ export interface FormatBookmarkOptions {
   includeType?: boolean;
 }
 
+export interface CollectBookmarkSyncItemsOptions {
+  defaultPath?: string;
+  now?: () => Date;
+  createSyncId?: (bookmark: BookmarkTreeNodeLike) => string;
+  getDescription?: (url: string, bookmark: BookmarkTreeNodeLike) => string | Promise<string>;
+  includeType?: boolean;
+}
+
+export interface CollectedBookmarkSyncItems {
+  items: LinkItem[];
+  fingerprintItems: SyncFingerprintItem[];
+}
+
 export interface FormatSavedLinkInput {
   title?: string;
   url: string;
@@ -132,6 +145,47 @@ export function formatBookmarkForSync(
   }
 
   return item;
+}
+
+export async function collectBookmarkSyncItems(
+  bookmarkNodes: BookmarkTreeNodeLike[],
+  options: CollectBookmarkSyncItemsOptions = {}
+): Promise<CollectedBookmarkSyncItems> {
+  const defaultPath = options.defaultPath ?? 'Bookmarks';
+  const items: LinkItem[] = [];
+  const fingerprintItems: SyncFingerprintItem[] = [];
+
+  async function traverse(nodes: BookmarkTreeNodeLike[], currentPath: string): Promise<void> {
+    for (const node of nodes) {
+      if (node.url) {
+        const title = node.title || 'Untitled';
+        const url = node.url || '';
+        const description = (await options.getDescription?.(url, node)) ?? '';
+
+        items.push(
+          formatBookmarkForSync(node, currentPath, {
+            description,
+            now: options.now,
+            createSyncId: options.createSyncId,
+            includeType: options.includeType,
+          })
+        );
+
+        fingerprintItems.push({
+          url,
+          title,
+          path: currentPath,
+          type: options.includeType ? 'bookmark' : undefined,
+        });
+      } else if (node.children) {
+        const nextPath = node.title ? `${currentPath} / ${node.title}` : currentPath;
+        await traverse(node.children, nextPath);
+      }
+    }
+  }
+
+  await traverse(bookmarkNodes, defaultPath);
+  return { items, fingerprintItems };
 }
 
 export function withBookmarkType(items: LinkItem[]): LinkItem[] {
