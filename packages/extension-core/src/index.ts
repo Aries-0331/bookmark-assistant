@@ -9,6 +9,13 @@ export type {
 } from './links.js';
 export type { PageContent } from './content.js';
 export type { ChromeReadingListItemLike, FormatReadingListItemOptions } from './reading-list.js';
+export type {
+  CleanErrorReportsOptions,
+  ErrorReport,
+  PartialSyncInfo,
+  PlanStorageCleanupOptions,
+  StorageCleanupPlan,
+} from './storage-cleanup.js';
 
 export {
   buildBookmarkPath,
@@ -30,3 +37,9 @@ export {
 } from './content.js';
 
 export { formatReadingListItemForSync, formatReadingListItemsForSync } from './reading-list.js';
+
+export {
+  cleanErrorReports,
+  planStorageCleanup,
+  validatePartialSyncInfo,
+} from './storage-cleanup.js';
