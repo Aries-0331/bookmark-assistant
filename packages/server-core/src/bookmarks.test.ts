@@ -5,6 +5,7 @@ import {
   isFetchableHttpUrl,
   isValidUrl,
   normalizeUrlForSync,
+  normalizeBookmarkForSyncPlanning,
   validateBookmarkInput,
   validateLinkItemInput,
 } from './index';
@@ -19,6 +20,7 @@ describe('server bookmark core', () => {
       'isValidDescription',
       'isValidUrl',
       'looksLikeDescription',
+      'normalizeBookmarkForSyncPlanning',
       'normalizeUrlForSync',
       'sanitizeDescription',
       'validateBookmarkInput',
@@ -177,6 +179,59 @@ describe('server bookmark core', () => {
       dateAdded: '2026-01-01T00:00:00.000Z',
       syncId: 'link-1',
       source: 'current_page',
+    });
+  });
+
+  it('normalizes bookmarks for sync planning while preserving shared metadata', () => {
+    const item = normalizeBookmarkForSyncPlanning({
+      title: 'Reading List Item',
+      url: 'https://example.com/article',
+      path: 'Reading List',
+      description: 'Saved article',
+      tags: ['reading', 'research'],
+      dateAdded: '2026-01-01T00:00:00.000Z',
+      syncId: 'reading-list-1',
+      type: 'reading_list',
+      readState: 'UNREAD',
+      source: 'reading_list',
+    });
+
+    expect(item).toEqual({
+      title: 'Reading List Item',
+      url: 'https://example.com/article',
+      path: 'Reading List',
+      description: 'Saved article',
+      tags: ['reading', 'research'],
+      dateAdded: '2026-01-01T00:00:00.000Z',
+      syncId: 'reading-list-1',
+      type: 'reading_list',
+      readState: 'UNREAD',
+      source: 'reading_list',
+    });
+  });
+
+  it('does not share the tags array when normalizing for sync planning', () => {
+    const tags = ['one'];
+    const item = normalizeBookmarkForSyncPlanning({
+      title: 'Bookmark',
+      url: 'https://example.com',
+      tags,
+    });
+
+    tags.push('two');
+
+    expect(item.tags).toEqual(['one']);
+  });
+
+  it('supports minimal bookmark normalization for sync planning', () => {
+    expect(
+      normalizeBookmarkForSyncPlanning({
+        title: 'Bookmark',
+        url: 'https://example.com',
+      })
+    ).toEqual({
+      title: 'Bookmark',
+      url: 'https://example.com',
     });
   });
 });

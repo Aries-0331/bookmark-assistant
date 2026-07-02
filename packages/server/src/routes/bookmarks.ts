@@ -6,7 +6,7 @@ import type {
   BookmarkSyncResult,
   LinkItem as BookmarkItem,
 } from '@bookmark-assistant/contracts';
-import { diffBookmarks } from '@bookmark-assistant/server-core';
+import { diffBookmarks, normalizeBookmarkForSyncPlanning } from '@bookmark-assistant/server-core';
 import { AuthenticatedRequest } from '../types';
 import { validateSession } from '../middleware/auth';
 import { notionService } from '../services/notion';
@@ -320,21 +320,6 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
           );
         };
 
-        // Helper function to normalize bookmark to ensure all properties are present
-        const normalizeBookmark = (bookmark: BookmarkItem): BookmarkItem => {
-          return {
-            title: bookmark.title,
-            url: bookmark.url,
-            path: bookmark.path,
-            description: bookmark.description,
-            tags: bookmark.tags,
-            dateAdded: bookmark.dateAdded,
-            syncId: bookmark.syncId,
-            type: bookmark.type,
-            readState: bookmark.readState,
-          };
-        };
-
         // Process each batch sequentially
         for (let i = 0; i < descriptionBatches.length; i++) {
           const batch = descriptionBatches[i];
@@ -352,7 +337,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
                   `[Bookmark Sync] Generated description for ${bookmark.title}: "${result.description.substring(0, 50)}..."`
                 );
                 // Store updated bookmark in map
-                const updated = normalizeBookmark({
+                const updated = normalizeBookmarkForSyncPlanning({
                   ...bookmark,
                   description: result.description,
                 });
@@ -369,7 +354,7 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
                 error
               );
             }
-            return normalizeBookmark(bookmark);
+            return normalizeBookmarkForSyncPlanning(bookmark);
           });
 
           const batchWithDescriptions = await Promise.all(batchPromises);
@@ -409,7 +394,9 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
         // Update enrichedBookmarks with extracted descriptions
         enrichedBookmarks = enrichedBookmarks.map((bm) => {
           const updated = updatedBookmarksMap.get(getBookmarkKey(bm));
-          return updated ? normalizeBookmark(updated) : normalizeBookmark(bm);
+          return updated
+            ? normalizeBookmarkForSyncPlanning(updated)
+            : normalizeBookmarkForSyncPlanning(bm);
         });
 
         console.log('[Bookmark Sync] Description generation completed');
