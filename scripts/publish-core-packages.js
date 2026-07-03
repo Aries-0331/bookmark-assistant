@@ -356,20 +356,18 @@ function sleep(ms) {
   }
 }
 
-function waitForPublicVersion(packageName, version, publicEnv) {
+function waitForPublishedVersion(packageName, version, env, label) {
   let lastResult = null;
 
   for (const delay of publicVisibilityRetryDelaysMs) {
     sleep(delay);
-    lastResult = getPublishedVersion(packageName, version, publicEnv);
+    lastResult = getPublishedVersion(packageName, version, env);
 
     if (lastResult === version) {
       return lastResult;
     }
 
-    console.log(
-      `${packageName}@${version} is not public-visible yet; retrying registry check...`
-    );
+    console.log(`${packageName}@${version} is not ${label} yet; retrying registry check...`);
   }
 
   return lastResult;
@@ -378,7 +376,12 @@ function waitForPublicVersion(packageName, version, publicEnv) {
 function verifyPublishedVersions(env, publicEnv) {
   for (const item of packages) {
     const packageJson = readPackageJson(item.dir);
-    const authenticatedVersion = getPublishedVersion(item.name, packageJson.version, env);
+    const authenticatedVersion = waitForPublishedVersion(
+      item.name,
+      packageJson.version,
+      env,
+      'authenticated-visible'
+    );
 
     if (authenticatedVersion !== packageJson.version) {
       fail(
@@ -386,7 +389,12 @@ function verifyPublishedVersions(env, publicEnv) {
       );
     }
 
-    let publicVersion = waitForPublicVersion(item.name, packageJson.version, publicEnv);
+    let publicVersion = waitForPublishedVersion(
+      item.name,
+      packageJson.version,
+      publicEnv,
+      'public-visible'
+    );
 
     if (publicVersion !== packageJson.version) {
       console.log(
@@ -394,7 +402,12 @@ function verifyPublishedVersions(env, publicEnv) {
       );
 
       run('npm', ['access', 'public', item.name, `--registry=${registry}`], { env });
-      publicVersion = waitForPublicVersion(item.name, packageJson.version, publicEnv);
+      publicVersion = waitForPublishedVersion(
+        item.name,
+        packageJson.version,
+        publicEnv,
+        'public-visible'
+      );
     }
 
     if (publicVersion !== packageJson.version) {
