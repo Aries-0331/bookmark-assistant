@@ -6,6 +6,7 @@ import {
   isValidUrl,
   normalizeUrlForSync,
   normalizeBookmarkForSyncPlanning,
+  selectUnsyncedDescribedBookmarks,
   validateBookmarkInput,
   validateLinkItemInput,
 } from './index';
@@ -23,6 +24,7 @@ describe('server bookmark core', () => {
       'normalizeBookmarkForSyncPlanning',
       'normalizeUrlForSync',
       'sanitizeDescription',
+      'selectUnsyncedDescribedBookmarks',
       'validateBookmarkInput',
       'validateLinkItemInput',
     ]);
@@ -233,6 +235,53 @@ describe('server bookmark core', () => {
       title: 'Bookmark',
       url: 'https://example.com',
     });
+  });
+
+  it('selects described bookmarks that are not already synced by URL or sync ID', () => {
+    const unsynced = {
+      title: 'Unsynced described bookmark',
+      url: 'https://example.com/new',
+      syncId: 'new-sync-id',
+      description: 'A useful page description',
+    };
+
+    expect(
+      selectUnsyncedDescribedBookmarks(
+        [
+          {
+            title: 'Missing description',
+            url: 'https://example.com/missing-description',
+            syncId: 'missing-description',
+            description: '   ',
+          },
+          {
+            title: 'Existing by URL',
+            url: 'https://example.com/existing-url',
+            syncId: 'new-sync-id-by-url',
+            description: 'Already synced by URL',
+          },
+          {
+            title: 'Existing by sync ID',
+            url: 'https://example.com/new-url',
+            syncId: 'existing-sync-id',
+            description: 'Already synced by sync ID',
+          },
+          unsynced,
+        ],
+        ['https://example.com/existing-url'],
+        ['existing-sync-id']
+      )
+    ).toEqual([unsynced]);
+  });
+
+  it('keeps described bookmarks without URL or sync ID when they are not otherwise known', () => {
+    const item = {
+      title: 'Title-only described bookmark',
+      url: '',
+      description: 'Description from import',
+    };
+
+    expect(selectUnsyncedDescribedBookmarks([item], [], [])).toEqual([item]);
   });
 });
 

@@ -6,7 +6,11 @@ import type {
   BookmarkSyncResult,
   LinkItem as BookmarkItem,
 } from '@bookmark-assistant/contracts';
-import { diffBookmarks, normalizeBookmarkForSyncPlanning } from '@bookmark-assistant/server-core';
+import {
+  diffBookmarks,
+  normalizeBookmarkForSyncPlanning,
+  selectUnsyncedDescribedBookmarks,
+} from '@bookmark-assistant/server-core';
 import { AuthenticatedRequest } from '../types';
 import { validateSession } from '../middleware/auth';
 import { notionService } from '../services/notion';
@@ -403,16 +407,11 @@ router.post('/sync', validateSession, async (req: AuthenticatedRequest, res: Res
 
         // After description extraction, sync bookmarks that were NOT in bookmarksNeedingDescriptions
         // (they already had descriptions and were not processed in the batch loop)
-        const bookmarksWithDescriptions = enrichedBookmarks.filter((bm) => {
-          // This bookmark had a description originally (not in bookmarksNeedingDescriptions)
-          // OR it was updated in the batch loop
-          const hadDescription = bm.description?.trim();
-          // Check if this bookmark was already synced (in urls/syncIds from batch loop)
-          const alreadySynced =
-            (bm.url && urls.includes(bm.url)) || (bm.syncId && syncIds.includes(bm.syncId));
-          // We want to sync bookmarks that have descriptions but haven't been synced yet
-          return hadDescription && !alreadySynced;
-        });
+        const bookmarksWithDescriptions = selectUnsyncedDescribedBookmarks(
+          enrichedBookmarks,
+          urls,
+          syncIds
+        );
 
         if (bookmarksWithDescriptions.length > 0) {
           console.debug(
