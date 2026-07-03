@@ -1,6 +1,6 @@
 {
   "name": "@bookmark-assistant/server-core",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Pure server-side core helpers for Bookmark Assistant.",
   "license": "AGPL-3.0-or-later",
   "repository": {

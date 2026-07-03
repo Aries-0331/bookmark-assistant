@@ -8,6 +8,7 @@ export type { DescriptionSource, HtmlDescriptionResult } from './descriptions';
 export {
   diffBookmarks,
   normalizeBookmarkForSyncPlanning,
+  selectUnsyncedDescribedBookmarks,
   validateBookmarkInput,
   validateLinkItemInput,
 } from './bookmarks';

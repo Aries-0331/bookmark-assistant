@@ -18,6 +18,26 @@ export interface ValidateBookmarkOptions {
   createSyncId?: () => string;
 }
 
+export function selectUnsyncedDescribedBookmarks(
+  bookmarks: readonly LinkItem[],
+  existingUrls: readonly string[],
+  existingSyncIds: readonly string[]
+): LinkItem[] {
+  const existingUrlSet = new Set(existingUrls);
+  const existingSyncIdSet = new Set(existingSyncIds);
+
+  return bookmarks.filter((bookmark) => {
+    if (!bookmark.description?.trim()) {
+      return false;
+    }
+
+    return !(
+      (bookmark.url && existingUrlSet.has(bookmark.url)) ||
+      (bookmark.syncId && existingSyncIdSet.has(bookmark.syncId))
+    );
+  });
+}
+
 export function normalizeBookmarkForSyncPlanning(bookmark: LinkItem): LinkItem {
   const normalized: LinkItem = {
     title: bookmark.title,
