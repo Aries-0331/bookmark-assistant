@@ -286,7 +286,7 @@ function verifyPackages(env) {
 
   try {
     for (const item of packages) {
-      run('pnpm', ['pack', '--pack-destination', packDir], {
+      run('npm', ['pack', '--pack-destination', packDir], {
         cwd: path.join(repoRoot, item.dir),
         env,
       });

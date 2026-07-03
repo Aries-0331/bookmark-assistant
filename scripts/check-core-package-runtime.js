@@ -56,22 +56,23 @@ function readPackageJson(packageDir) {
   );
 }
 
+function projectNameFor(packageName) {
+  return packageName.replace(/^@/, '').replace(/\//g, '-');
+}
+
 function main() {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bookmark-assistant-core-runtime-'));
-  const projectDir = path.join(tempDir, 'project');
   const npmCacheDir = path.join(tempDir, 'npm-cache');
   const env = { ...process.env, NPM_CONFIG_CACHE: npmCacheDir };
 
   try {
-    fs.mkdirSync(projectDir);
     fs.mkdirSync(npmCacheDir);
-    fs.writeFileSync(
-      path.join(projectDir, 'package.json'),
-      JSON.stringify({ private: true, type: 'module' }, null, 2)
-    );
+
+    const projects = new Map();
 
     const tarballs = packages.map((item) => {
-      run('pnpm', ['--dir', item.dir, 'pack', '--pack-destination', tempDir], {
+      run('npm', ['pack', '--pack-destination', tempDir], {
+        cwd: path.join(repoRoot, item.dir),
         stdio: 'inherit',
       });
 
@@ -79,13 +80,20 @@ function main() {
       return path.join(tempDir, `${item.tarballPrefix}-${packageJson.version}.tgz`);
     });
 
-    run('npm', ['install', ...tarballs, '--ignore-scripts', '--force'], {
-      cwd: projectDir,
-      env,
-      stdio: 'inherit',
-    });
+    for (const [index, item] of packages.entries()) {
+      const projectDir = path.join(tempDir, projectNameFor(item.name));
+      fs.mkdirSync(projectDir);
+      fs.writeFileSync(
+        path.join(projectDir, 'package.json'),
+        JSON.stringify({ private: true, type: 'module' }, null, 2)
+      );
 
-    for (const item of packages) {
+      run('npm', ['install', tarballs[index], '--ignore-scripts', '--force'], {
+        cwd: projectDir,
+        env,
+        stdio: 'inherit',
+      });
+
       const expectedVersion = readPackageJson(item.dir).version;
       const installedPackageJson = JSON.parse(
         fs.readFileSync(
@@ -99,6 +107,18 @@ function main() {
           `${item.name} installed version ${installedPackageJson.version}, expected ${expectedVersion}`
         );
       }
+
+      for (const [dependencyName, dependencyVersion] of Object.entries(
+        installedPackageJson.dependencies || {}
+      )) {
+        if (typeof dependencyVersion === 'string' && dependencyVersion.startsWith('workspace:')) {
+          fail(
+            `${item.name} published dependency ${dependencyName} uses non-registry specifier ${dependencyVersion}`
+          );
+        }
+      }
+
+      projects.set(item.name, projectDir);
     }
 
     const contractsResult = run(
@@ -108,7 +128,7 @@ function main() {
         '-e',
         "import('@bookmark-assistant/contracts').then((m) => console.log(Object.keys(m).length))",
       ],
-      { cwd: projectDir }
+      { cwd: projects.get('@bookmark-assistant/contracts') }
     );
 
     const extensionCoreResult = run(
@@ -118,7 +138,7 @@ function main() {
         '-e',
         "import('@bookmark-assistant/extension-core').then(async (m) => { const item = m.toSyncFingerprintItems([{ title: 'Current', url: 'https://example.com', source: 'current_page', syncId: 'sync-1' }], 'Fallback')[0]; const fallback = m.createFallbackPageContent('https://www.example.com/docs/'); const reading = m.formatReadingListItemForSync({ title: { content: 'Read' }, url: { url: 'https://example.com/read' }, readState: { state: 'READ' }, dateAdded: Date.UTC(2026, 0, 1) }, { createSyncId: () => 'reading-1' }); const fingerprint = await m.createSyncFingerprint([], { crypto: null }); const cleanup = m.planStorageCleanup({ last_sync_hash: 'x', last_sync_partial_info: { new_count: '2' } }); const collected = await m.collectBookmarkSyncItems([{ id: 'folder', title: 'Folder', children: [{ id: 'bookmark-1', title: 'Bookmark', url: 'https://example.com/bookmark' }] }], { getDescription: () => 'Runtime description', createSyncId: () => 'bookmark-sync-1' }); console.log([typeof m.formatBookmarkForSync, typeof m.formatCurrentPageForSync, typeof m.normalizeUrl, typeof m.extractPageContentFromDocument, typeof m.formatReadingListItemForSync, typeof m.createSyncFingerprint, typeof m.planStorageCleanup, typeof m.collectBookmarkSyncItems, m.isValidHttpUrl('https://example.com'), fallback.title, reading.type, reading.readState, reading.syncId, item.source, item.syncId, fingerprint, m.normalizeUrl('https://example.com/page/?b=2&a=1#top'), cleanup.removeKeys.join('|'), cleanup.updateValues.last_sync_partial_info.new_count, collected.items[0].description, collected.fingerprintItems[0].path].join(',')); })",
       ],
-      { cwd: projectDir }
+      { cwd: projects.get('@bookmark-assistant/extension-core') }
     );
 
     const serverCoreResult = run(
@@ -127,7 +147,7 @@ function main() {
         '-e',
         "const core = require('@bookmark-assistant/server-core'); const desc = core.extractDescriptionFromHtml('<html><head><meta name=\"description\" content=\"Runtime package description\" /></head></html>'); const normalized = core.normalizeBookmarkForSyncPlanning({ title: 'Reading', url: 'https://example.com/read', source: 'reading_list', type: 'reading_list', readState: 'READ', tags: ['runtime'] }); console.log([typeof core.diffBookmarks, typeof core.validateLinkItemInput, typeof core.normalizeBookmarkForSyncPlanning, normalized.source, normalized.type, normalized.readState, normalized.tags.join('|'), typeof core.normalizeUrlForSync, core.normalizeUrlForSync('https://example.com/page/?b=2&a=1#top'), core.isValidUrl('file:///tmp/page.html'), core.isFetchableHttpUrl('file:///tmp/page.html'), typeof core.extractDescriptionFromHtml, desc.text, desc.source, core.sanitizeDescription('<p>Text &amp; content</p>')].join(','))",
       ],
-      { cwd: projectDir }
+      { cwd: projects.get('@bookmark-assistant/server-core') }
     );
 
     if (contractsResult !== '0') {
