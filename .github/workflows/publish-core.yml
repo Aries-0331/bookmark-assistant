@@ -2,6 +2,16 @@ name: Publish Core Packages
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - packages/contracts/**
+      - packages/extension-core/**
+      - packages/server-core/**
+      - scripts/check-core-package-runtime.js
+      - scripts/publish-core-packages.js
+      - pnpm-lock.yaml
 
 permissions:
   contents: read
