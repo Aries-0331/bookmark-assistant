@@ -4,6 +4,11 @@ export type {
   ValidateBookmarkOptions,
 } from './bookmarks';
 export type { DescriptionSource, HtmlDescriptionResult } from './descriptions';
+export type {
+  BuildBookmarkPropertiesOptions,
+  NotionPropertySchema,
+  NotionSchemaProperty,
+} from './notion-properties';
 
 export {
   diffBookmarks,
@@ -19,4 +24,8 @@ export {
   looksLikeDescription,
   sanitizeDescription,
 } from './descriptions';
+export {
+  buildBookmarkPropertiesFromNotionSchema,
+  isReadOnlyNotionPropertyType,
+} from './notion-properties';
 export { isFetchableHttpUrl, isValidUrl, normalizeUrlForSync } from './urls';
