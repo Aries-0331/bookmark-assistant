@@ -7,6 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { buildBookmarkPropertiesFromNotionSchema } from '@bookmark-assistant/server-core';
 import { BookmarkItem } from '../types';
 
 describe('BookmarkItem type definition', () => {
@@ -143,37 +144,59 @@ describe('BookmarkItem type definition', () => {
 });
 
 describe('PROPERTY_MAPPING_CONFIG behavior', () => {
-  // These tests verify the expected behavior of the property mapping
-  // The actual mapping is tested through integration tests
-
   it('should define type property as single_select', () => {
-    // Verify the expected mapping behavior
-    const typeMapping = {
-      bookmarkField: 'type',
-      type: 'single_select',
-      builder: (value: any) => ({
-        single_select: value === 'reading_list' ? { name: 'Reading List' } : { name: 'Bookmark' },
-      }),
-    };
+    const readingListProperties = buildBookmarkPropertiesFromNotionSchema(
+      {
+        Name: { type: 'title' },
+        Type: { type: 'single_select' },
+      },
+      {
+        title: 'Reading List Item',
+        url: 'https://example.com',
+        type: 'reading_list',
+      }
+    );
+    const bookmarkProperties = buildBookmarkPropertiesFromNotionSchema(
+      {
+        Name: { type: 'title' },
+        Type: { type: 'single_select' },
+      },
+      {
+        title: 'Bookmark',
+        url: 'https://example.com',
+        type: 'bookmark',
+      }
+    );
 
-    expect(typeMapping.type).toBe('single_select');
-    expect(typeMapping.builder('reading_list').single_select.name).toBe('Reading List');
-    expect(typeMapping.builder('bookmark').single_select.name).toBe('Bookmark');
-    expect(typeMapping.builder(undefined).single_select.name).toBe('Bookmark'); // default
+    expect(readingListProperties.Type).toEqual({ single_select: { name: 'Reading List' } });
+    expect(bookmarkProperties.Type).toEqual({ single_select: { name: 'Bookmark' } });
   });
 
   it('should define readState property as status', () => {
-    // Verify the expected mapping behavior
-    const readStateMapping = {
-      bookmarkField: 'readState',
-      type: 'status',
-      builder: (value: any) => ({
-        status: value === 'READ' ? { name: 'Read' } : { name: 'Unread' },
-      }),
-    };
+    const readProperties = buildBookmarkPropertiesFromNotionSchema(
+      {
+        Name: { type: 'title' },
+        Status: { type: 'status' },
+      },
+      {
+        title: 'Read Article',
+        url: 'https://example.com/read',
+        readState: 'READ',
+      }
+    );
+    const unreadProperties = buildBookmarkPropertiesFromNotionSchema(
+      {
+        Name: { type: 'title' },
+        Status: { type: 'status' },
+      },
+      {
+        title: 'Unread Article',
+        url: 'https://example.com/unread',
+        readState: 'UNREAD',
+      }
+    );
 
-    expect(readStateMapping.type).toBe('status');
-    expect(readStateMapping.builder('READ').status.name).toBe('Read');
-    expect(readStateMapping.builder('UNREAD').status.name).toBe('Unread');
+    expect(readProperties.Status).toEqual({ status: { name: 'Read' } });
+    expect(unreadProperties.Status).toEqual({ status: { name: 'Unread' } });
   });
 });

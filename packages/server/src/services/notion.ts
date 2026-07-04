@@ -1,106 +1,10 @@
 // 🔗 Notion API Service Layer
 
 import { Client, APIResponseError } from '@notionhq/client';
-import type { LinkItem as BookmarkItem, NotionLinkField } from '@bookmark-assistant/contracts';
+import type { LinkItem as BookmarkItem } from '@bookmark-assistant/contracts';
+import { buildBookmarkPropertiesFromNotionSchema } from '@bookmark-assistant/server-core';
 import { config } from '../config';
 import { isValidUrl } from '../utils';
-
-/**
- * Property mapping configuration
- * Defines how bookmark fields map to Notion property types
- */
-interface PropertyMatcher {
-  bookmarkField: NotionLinkField;
-  type: string;
-  patterns: RegExp[];
-  required: boolean;
-  builder: (value: any) => any;
-}
-
-const PROPERTY_MAPPING_CONFIG: PropertyMatcher[] = [
-  {
-    bookmarkField: 'title',
-    type: 'title',
-    patterns: [/^name$/i, /^title$/i],
-    required: true,
-    builder: (value: any) => ({ title: [{ text: { content: value || 'Untitled Bookmark' } }] }),
-  },
-  {
-    bookmarkField: 'url',
-    type: 'url',
-    patterns: [/^url$/i, /^link$/i, /^website$/i],
-    required: false,
-    builder: (value: any) => ({ url: value }),
-  },
-  {
-    bookmarkField: 'tags',
-    type: 'multi_select',
-    patterns: [/tag/i, /label/i, /category/i, /topic/i],
-    required: false,
-    builder: (value: any) => ({
-      multi_select: Array.isArray(value) ? value.map((t) => ({ name: t })) : [],
-    }),
-  },
-  {
-    bookmarkField: 'description',
-    type: 'rich_text',
-    patterns: [/desc/i, /summary/i, /note/i, /content/i],
-    required: false,
-    builder: (value: any) => ({ rich_text: [{ text: { content: value } }] }),
-  },
-  {
-    bookmarkField: 'path',
-    type: 'rich_text',
-    patterns: [/folder/i, /path/i, /location/i, /directory/i],
-    required: false,
-    builder: (value: any) => ({ rich_text: [{ text: { content: value } }] }),
-  },
-  {
-    bookmarkField: 'dateAdded',
-    type: 'date',
-    patterns: [/date/i, /created/i, /added/i, /time/i],
-    required: false,
-    builder: (value: any) => ({ date: { start: value || new Date().toISOString() } }),
-  },
-  {
-    bookmarkField: 'syncId',
-    type: 'rich_text',
-    patterns: [/sync.*id/i, /identifier/i, /^id$/i],
-    required: false,
-    builder: (value: any) => ({ rich_text: [{ text: { content: value } }] }),
-  },
-  {
-    bookmarkField: 'type',
-    type: 'single_select',
-    patterns: [/type/i],
-    required: false,
-    builder: (value: any) => ({
-      single_select: value === 'reading_list' ? { name: 'Reading List' } : { name: 'Bookmark' },
-    }),
-  },
-  {
-    bookmarkField: 'readState',
-    type: 'status',
-    patterns: [/read.*state/i, /status/i],
-    required: false,
-    builder: (value: any) => ({
-      status: value === 'READ' ? { name: 'Read' } : { name: 'Unread' },
-    }),
-  },
-];
-
-/**
- * Read-only property types that should be skipped during property building
- * These are auto-calculated by Notion (e.g., formulas like Site and Status)
- */
-const READ_ONLY_PROPERTY_TYPES = new Set([
-  'formula',
-  'rollup',
-  'created_time',
-  'created_by',
-  'last_edited_time',
-  'last_edited_by',
-]);
 
 export class NotionService {
   /**
@@ -313,72 +217,22 @@ export class NotionService {
     });
 
     const schema = dataSource?.properties || {};
-
-    // Filter out read-only property types using shared configuration
-    const writableEntries = Object.entries<any>(schema).filter(
-      ([_, propDef]) => !READ_ONLY_PROPERTY_TYPES.has(propDef?.type)
+    const hasTitleProperty = Object.values<any>(schema).some(
+      (propDef) => propDef?.type === 'title'
     );
+    const fallbackTitlePropertyName = hasTitleProperty
+      ? undefined
+      : await this.resolveTitlePropertyName(dataSourceId, accessToken);
 
-    const props: Record<string, any> = {};
-
-    // Iterate through configuration-driven property matchers
-    for (const matcher of PROPERTY_MAPPING_CONFIG) {
-      const bookmarkValue = (bookmark as any)[matcher.bookmarkField];
-
-      // Skip if no value and not required
-      if (!bookmarkValue && !matcher.required) continue;
-
-      // Find matching property name in schema using matcher configuration
-      const propertyName = this.findPropertyName(
-        matcher,
-        writableEntries,
-        dataSourceId,
-        accessToken
+    if (!hasTitleProperty) {
+      console.warn(
+        `[Notion] Using fallback title property: "${fallbackTitlePropertyName || 'Name'}"`
       );
-
-      // Build and assign property value if name found
-      if (propertyName) {
-        const resolvedName = await propertyName;
-        if (resolvedName) {
-          props[resolvedName] = matcher.builder(bookmarkValue);
-        }
-      }
     }
 
-    return props;
-  }
-
-  /**
-   * Find property name in schema based on matcher configuration.
-   * Uses three-tier matching strategy: pattern → type → fallback
-   */
-  private async findPropertyName(
-    matcher: PropertyMatcher,
-    writableEntries: Array<[string, any]>,
-    dataSourceId: string,
-    accessToken: string
-  ): Promise<string | undefined> {
-    // 1. Try pattern matching first (most specific)
-    for (const pattern of matcher.patterns) {
-      const match = writableEntries.find(
-        ([name, propDef]) => propDef?.type === matcher.type && pattern.test(name)
-      )?.[0];
-      if (match) return match;
-    }
-
-    // 2. Fallback to any property of the correct type (less specific)
-    const typeMatch = writableEntries.find(([_, propDef]) => propDef?.type === matcher.type)?.[0];
-    if (typeMatch) return typeMatch;
-
-    // 3. For required title property, use ultimate fallback
-    if (matcher.required && matcher.type === 'title') {
-      const titleFromFallback = await this.resolveTitlePropertyName(dataSourceId, accessToken);
-      const fallbackName = titleFromFallback || 'Name';
-      console.warn(`[Notion] Using fallback title property: "${fallbackName}"`);
-      return fallbackName;
-    }
-
-    return undefined;
+    return buildBookmarkPropertiesFromNotionSchema(schema, bookmark, {
+      fallbackTitlePropertyName,
+    });
   }
 
   /**
@@ -709,7 +563,7 @@ export class NotionService {
 
           // Extract URL - check both url type and rich_text for valid URLs
           let urlValue: string | null = null;
-          for (const [propName, propDef] of Object.entries(properties)) {
+          for (const [_propName, propDef] of Object.entries(properties)) {
             const def = propDef as any;
             // First try native url type
             if (def?.type === 'url' && def?.url) {

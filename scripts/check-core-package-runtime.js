@@ -145,7 +145,7 @@ function main() {
       'node',
       [
         '-e',
-        "const core = require('@bookmark-assistant/server-core'); const desc = core.extractDescriptionFromHtml('<html><head><meta name=\"description\" content=\"Runtime package description\" /></head></html>'); const normalized = core.normalizeBookmarkForSyncPlanning({ title: 'Reading', url: 'https://example.com/read', source: 'reading_list', type: 'reading_list', readState: 'READ', tags: ['runtime'] }); const unsynced = core.selectUnsyncedDescribedBookmarks([{ title: 'Existing', url: 'https://example.com/existing', description: 'Existing description' }, { title: 'New', url: 'https://example.com/new', syncId: 'new-sync-id', description: 'New description' }], ['https://example.com/existing'], []); console.log([typeof core.diffBookmarks, typeof core.validateLinkItemInput, typeof core.normalizeBookmarkForSyncPlanning, normalized.source, normalized.type, normalized.readState, normalized.tags.join('|'), typeof core.normalizeUrlForSync, core.normalizeUrlForSync('https://example.com/page/?b=2&a=1#top'), core.isValidUrl('file:///tmp/page.html'), core.isFetchableHttpUrl('file:///tmp/page.html'), typeof core.extractDescriptionFromHtml, desc.text, desc.source, core.sanitizeDescription('<p>Text &amp; content</p>'), typeof core.selectUnsyncedDescribedBookmarks, unsynced.length, unsynced[0].syncId].join(','))",
+        "const core = require('@bookmark-assistant/server-core'); const desc = core.extractDescriptionFromHtml('<html><head><meta name=\"description\" content=\"Runtime package description\" /></head></html>'); const normalized = core.normalizeBookmarkForSyncPlanning({ title: 'Reading', url: 'https://example.com/read', source: 'reading_list', type: 'reading_list', readState: 'READ', tags: ['runtime'] }); const unsynced = core.selectUnsyncedDescribedBookmarks([{ title: 'Existing', url: 'https://example.com/existing', description: 'Existing description' }, { title: 'New', url: 'https://example.com/new', syncId: 'new-sync-id', description: 'New description' }], ['https://example.com/existing'], []); const notionProps = core.buildBookmarkPropertiesFromNotionSchema({ Name: { type: 'title' }, URL: { type: 'url' }, Type: { type: 'single_select' }, Status: { type: 'status' }, Site: { type: 'formula' } }, { title: 'Runtime Notion', url: 'https://example.com/notion', type: 'reading_list', readState: 'READ' }); console.log([typeof core.diffBookmarks, typeof core.validateLinkItemInput, typeof core.normalizeBookmarkForSyncPlanning, normalized.source, normalized.type, normalized.readState, normalized.tags.join('|'), typeof core.normalizeUrlForSync, core.normalizeUrlForSync('https://example.com/page/?b=2&a=1#top'), core.isValidUrl('file:///tmp/page.html'), core.isFetchableHttpUrl('file:///tmp/page.html'), typeof core.extractDescriptionFromHtml, desc.text, desc.source, core.sanitizeDescription('<p>Text &amp; content</p>'), typeof core.selectUnsyncedDescribedBookmarks, unsynced.length, unsynced[0].syncId, typeof core.buildBookmarkPropertiesFromNotionSchema, notionProps.Name.title[0].text.content, notionProps.Type.single_select.name, notionProps.Status.status.name, core.isReadOnlyNotionPropertyType('formula'), Object.prototype.hasOwnProperty.call(notionProps, 'Site')].join(','))",
       ],
       { cwd: projects.get('@bookmark-assistant/server-core') }
     );
@@ -165,10 +165,10 @@ function main() {
 
     if (
       serverCoreResult !==
-      'function,function,function,reading_list,reading_list,READ,runtime,function,https://example.com/page?a=1&b=2,true,false,function,Runtime package description,meta_description,Text content,function,1,new-sync-id'
+      'function,function,function,reading_list,reading_list,READ,runtime,function,https://example.com/page?a=1&b=2,true,false,function,Runtime package description,meta_description,Text content,function,1,new-sync-id,function,Runtime Notion,Reading List,Read,true,false'
     ) {
       fail(
-        `Expected server-core diff, validation, normalization, URL, description, and sync planning helpers to be available, got ${serverCoreResult}`
+        `Expected server-core diff, validation, normalization, URL, description, sync planning, and Notion property helpers to be available, got ${serverCoreResult}`
       );
     }
 

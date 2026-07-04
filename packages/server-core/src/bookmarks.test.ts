@@ -17,6 +17,7 @@ describe('server bookmark core', () => {
       'diffBookmarks',
       'extractContentFromStructuredElements',
       'extractDescriptionFromHtml',
+      'buildBookmarkPropertiesFromNotionSchema',
       'isFetchableHttpUrl',
       'isValidDescription',
       'isValidUrl',
@@ -25,9 +26,10 @@ describe('server bookmark core', () => {
       'normalizeUrlForSync',
       'sanitizeDescription',
       'selectUnsyncedDescribedBookmarks',
+      'isReadOnlyNotionPropertyType',
       'validateBookmarkInput',
       'validateLinkItemInput',
-    ]);
+    ].sort());
   });
 
   it('diffs bookmarks by sync ID before URL', () => {
