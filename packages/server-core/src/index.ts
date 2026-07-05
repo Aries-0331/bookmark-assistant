@@ -28,4 +28,10 @@ export {
   buildBookmarkPropertiesFromNotionSchema,
   isReadOnlyNotionPropertyType,
 } from './notion-properties';
-export { isFetchableHttpUrl, isValidUrl, normalizeUrlForSync } from './urls';
+export {
+  buildGoogleS2FaviconUrl,
+  isFetchableHttpUrl,
+  isValidUrl,
+  normalizeUrlForSync,
+} from './urls';
+export type { BuildGoogleS2FaviconUrlOptions } from './urls';

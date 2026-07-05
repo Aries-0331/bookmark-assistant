@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as publicApi from './index';
 import {
+  buildGoogleS2FaviconUrl,
   diffBookmarks,
   isFetchableHttpUrl,
   isValidUrl,
@@ -14,6 +15,7 @@ import {
 describe('server bookmark core', () => {
   it('exposes the stable public runtime API', () => {
     expect(Object.keys(publicApi).sort()).toEqual([
+      'buildGoogleS2FaviconUrl',
       'diffBookmarks',
       'extractContentFromStructuredElements',
       'extractDescriptionFromHtml',
@@ -314,5 +316,21 @@ describe('server URL core', () => {
     expect(isFetchableHttpUrl('http://example.com/page')).toBe(true);
     expect(isFetchableHttpUrl('file:///local/file.html')).toBe(false);
     expect(isFetchableHttpUrl('not-a-valid-url')).toBe(false);
+  });
+
+  it('builds Google S2 favicon URLs from URL hostnames', () => {
+    expect(buildGoogleS2FaviconUrl('https://docs.example.com/path?x=1')).toBe(
+      'https://www.google.com/s2/favicons?domain=docs.example.com&sz=64'
+    );
+  });
+
+  it('supports custom Google S2 favicon sizes', () => {
+    expect(buildGoogleS2FaviconUrl('https://example.com/page', { size: 128 })).toBe(
+      'https://www.google.com/s2/favicons?domain=example.com&sz=128'
+    );
+  });
+
+  it('returns undefined for invalid favicon source URLs', () => {
+    expect(buildGoogleS2FaviconUrl('not-a-valid-url')).toBeUndefined();
   });
 });

@@ -63,19 +63,6 @@ export class NotionService {
   }
 
   /**
-   * Extract hostname from URL and generate Google S2 favicon URL
-   */
-  private generateFaviconUrl(url: string, size: number = 64): string | undefined {
-    try {
-      const hostname = new URL(url).hostname;
-      return `https://www.google.com/s2/favicons?domain=${hostname}&sz=${size}`;
-    } catch (error) {
-      console.warn('[Notion] Failed to generate favicon URL for:', url, error);
-      return undefined;
-    }
-  }
-
-  /**
    * Resolve the title property name from inline database schema.
    * For inline databases, dataSourceId equals databaseId.
    */
