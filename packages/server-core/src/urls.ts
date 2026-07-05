@@ -46,3 +46,20 @@ export function isFetchableHttpUrl(url: string): boolean {
     return false;
   }
 }
+
+export interface BuildGoogleS2FaviconUrlOptions {
+  size?: number;
+}
+
+export function buildGoogleS2FaviconUrl(
+  url: string,
+  options: BuildGoogleS2FaviconUrlOptions = {}
+): string | undefined {
+  try {
+    const hostname = new URL(url).hostname;
+    const size = options.size ?? 64;
+    return `https://www.google.com/s2/favicons?domain=${hostname}&sz=${size}`;
+  } catch {
+    return undefined;
+  }
+}

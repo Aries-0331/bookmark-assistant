@@ -7,6 +7,7 @@ import type {
   LinkItem as BookmarkItem,
 } from '@bookmark-assistant/contracts';
 import {
+  buildGoogleS2FaviconUrl,
   diffBookmarks,
   normalizeBookmarkForSyncPlanning,
   selectUnsyncedDescribedBookmarks,
@@ -39,10 +40,7 @@ async function syncBatchToNotion(
         bookmark
       );
 
-      // Generate favicon URL from bookmark URL
-      const iconUrl = bookmark.url
-        ? `https://www.google.com/s2/favicons?domain=${new URL(bookmark.url).hostname}&sz=64`
-        : undefined;
+      const iconUrl = bookmark.url ? buildGoogleS2FaviconUrl(bookmark.url) : undefined;
 
       // Create new page (incremental create-only)
       // Use verifiedDatabaseId - NOT data_source_id. data_source_id is for data source queries only.
@@ -107,7 +105,7 @@ async function syncBatchToNotion(
           originalBookmark
         );
         const iconUrl = originalBookmark.url
-          ? `https://www.google.com/s2/favicons?domain=${new URL(originalBookmark.url).hostname}&sz=64`
+          ? buildGoogleS2FaviconUrl(originalBookmark.url)
           : undefined;
 
         await notionService.createPage(
