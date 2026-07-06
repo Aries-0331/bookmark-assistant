@@ -2,7 +2,10 @@
 
 import { Client, APIResponseError } from '@notionhq/client';
 import type { LinkItem as BookmarkItem } from '@bookmark-assistant/contracts';
-import { buildBookmarkPropertiesFromNotionSchema } from '@bookmark-assistant/server-core';
+import {
+  buildBookmarkPropertiesFromNotionSchema,
+  getPrimaryNotionDataSourceId,
+} from '@bookmark-assistant/server-core';
 import { config } from '../config';
 import { isValidUrl } from '../utils';
 
@@ -138,9 +141,8 @@ export class NotionService {
         3
       );
 
-      if (db.data_sources && db.data_sources.length > 0) {
-        return db.data_sources[0].id;
-      }
+      const dataSourceId = getPrimaryNotionDataSourceId(db);
+      if (dataSourceId) return dataSourceId;
 
       throw new Error('No data sources found in database object');
     } catch (error: any) {
@@ -717,9 +719,8 @@ export class NotionService {
 
                 console.log('[Notion] ✅ Found inline database:', db.id);
 
-                // Extract data_source_id from data_sources array
-                if (db.data_sources && db.data_sources.length > 0) {
-                  const dataSourceId = db.data_sources[0].id;
+                const dataSourceId = getPrimaryNotionDataSourceId(db);
+                if (dataSourceId) {
                   console.log('[Notion] ✅ Resolved:', { databaseId: candidateId, dataSourceId });
                   return { databaseId: candidateId, dataSourceId };
                 } else {
