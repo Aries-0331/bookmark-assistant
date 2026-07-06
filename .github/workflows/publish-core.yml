@@ -6,9 +6,12 @@ on:
     branches:
       - main
     paths:
+      - .github/workflows/publish-core.yml
       - packages/contracts/**
       - packages/extension-core/**
       - packages/server-core/**
+      - package.json
+      - pnpm-workspace.yaml
       - scripts/check-core-package-runtime.js
       - scripts/publish-core-packages.js
       - pnpm-lock.yaml
@@ -25,6 +28,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -50,11 +55,174 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      - name: Run lint
+        run: pnpm lint
+
       - name: Build workspace
         run: pnpm build:all
 
       - name: Validate package runtime
         run: pnpm check:core-runtime
 
+      - name: Collect published package summary
+        id: package-summary
+        shell: bash
+        run: |
+          {
+            echo 'versions<<EOF'
+            node - <<'NODE'
+          const fs = require('node:fs');
+          const packages = [
+            'packages/contracts/package.json',
+            'packages/extension-core/package.json',
+            'packages/server-core/package.json',
+          ];
+
+          for (const filePath of packages) {
+            const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            console.log(`- ${packageJson.name}@${packageJson.version}`);
+          }
+          NODE
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo 'exports<<EOF'
+            git diff --unified=0 HEAD^ HEAD -- \
+              packages/contracts/src/index.ts \
+              packages/extension-core/src/index.ts \
+              packages/server-core/src/index.ts \
+              | sed -n 's/^+export /- export /p' \
+              | sed '/^+++ /d' || true
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+          node - <<'NODE' > "$RUNNER_TEMP/unpublished-core-packages.txt"
+          const fs = require('node:fs');
+          const { spawnSync } = require('node:child_process');
+          const packages = [
+            'packages/contracts/package.json',
+            'packages/extension-core/package.json',
+            'packages/server-core/package.json',
+          ];
+
+          for (const filePath of packages) {
+            const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            const spec = `${packageJson.name}@${packageJson.version}`;
+            const result = spawnSync(
+              'npm',
+              ['view', spec, 'version', '--registry=https://registry.npmjs.org/'],
+              { encoding: 'utf8' }
+            );
+
+            if (result.status === 0) {
+              continue;
+            }
+
+            const output = `${result.stdout}\n${result.stderr}`;
+
+            if (output.includes('E404') || output.includes('Not found')) {
+              console.log(`- ${spec}`);
+              continue;
+            }
+
+            console.error(output.trim());
+            process.exit(result.status || 1);
+          }
+          NODE
+
+          {
+            echo 'unpublished<<EOF'
+            cat "$RUNNER_TEMP/unpublished-core-packages.txt"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+          if [ -s "$RUNNER_TEMP/unpublished-core-packages.txt" ]; then
+            echo 'has_unpublished=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'has_unpublished=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate publish dry run
+        if: steps.package-summary.outputs.has_unpublished == 'true'
+        run: pnpm publish:core:dry-run
+
       - name: Publish core packages
-        run: pnpm publish:core -- --yes
+        id: publish
+        if: steps.package-summary.outputs.has_unpublished == 'true'
+        run: pnpm publish:core -- --yes --skip-verify
+
+      - name: Skip publish when versions already exist
+        if: steps.package-summary.outputs.has_unpublished != 'true'
+        run: echo "All core package versions are already public-visible on npm; skipping publish and Pro handoff."
+
+      - name: Comment Pro validation request
+        if: success() && steps.package-summary.outputs.has_unpublished == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PRO_COORDINATION_TOKEN }}
+          COORDINATION_REPO: ${{ vars.PRO_COORDINATION_REPO }}
+          COORDINATION_ISSUE_NUMBER: ${{ vars.PRO_COORDINATION_ISSUE_NUMBER }}
+          PACKAGE_VERSIONS: ${{ steps.package-summary.outputs.versions }}
+          PUBLISHED_PACKAGE_VERSIONS: ${{ steps.package-summary.outputs.unpublished }}
+          NEW_EXPORTS: ${{ steps.package-summary.outputs.exports }}
+        shell: bash
+        run: |
+          if [ -z "$GH_TOKEN" ] || [ -z "$COORDINATION_REPO" ] || [ -z "$COORDINATION_ISSUE_NUMBER" ]; then
+            echo "::notice::Pro coordination issue is not configured; skipping handoff comment."
+            exit 0
+          fi
+
+          if [ -z "$NEW_EXPORTS" ]; then
+            NEW_EXPORTS="- No index export additions detected in the latest public commit."
+          fi
+
+          body="$(cat <<EOF
+          PUBLIC PACKAGE PUBLISHED
+
+          Newly published packages:
+          $PUBLISHED_PACKAGE_VERSIONS
+
+          Current public core package baseline:
+          $PACKAGE_VERSIONS
+
+          New public exports detected from the latest public commit:
+          $NEW_EXPORTS
+
+          Public validation passed:
+          - pnpm test
+          - pnpm lint
+          - pnpm build:all
+          - pnpm check:core-runtime
+          - pnpm publish:core:dry-run
+          - pnpm publish:core -- --yes --skip-verify
+          - npm public visibility verification via publish script
+
+          Requested Pro-side validation:
+          1. Pin changed @bookmark-assistant/* packages to the published versions above.
+          2. Consume the new public exports where behavior matches.
+          3. Keep Pro-only runtime orchestration and private internals out of public core.
+          4. Extend public-core-consumption-check for new public exports.
+          5. Run the standard Pro validation workflow and report results here.
+
+          Boundary review:
+          - No Paddle, billing, entitlement, managed OAuth internals, AI internals, private deployment details, secrets, tokens, or credentials are expected in public core.
+          - LiteContext / ContextItem-compatible shapes are unchanged unless explicitly listed above.
+          EOF
+          )"
+
+          gh issue comment "$COORDINATION_ISSUE_NUMBER" --repo "$COORDINATION_REPO" --body "$body"
+
+      - name: Comment npm publish gate on publish failure
+        if: failure() && steps.publish.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.PRO_COORDINATION_TOKEN }}
+          COORDINATION_REPO: ${{ vars.PRO_COORDINATION_REPO }}
+          COORDINATION_ISSUE_NUMBER: ${{ vars.PRO_COORDINATION_ISSUE_NUMBER }}
+        shell: bash
+        run: |
+          if [ -z "$GH_TOKEN" ] || [ -z "$COORDINATION_REPO" ] || [ -z "$COORDINATION_ISSUE_NUMBER" ]; then
+            echo "::notice::Pro coordination issue is not configured; skipping publish gate comment."
+            exit 0
+          fi
+
+          gh issue comment "$COORDINATION_ISSUE_NUMBER" --repo "$COORDINATION_REPO" --body "HUMAN GATE REQUIRED: npm publish"
