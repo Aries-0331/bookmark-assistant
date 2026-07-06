@@ -4,6 +4,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { isRetryablePersistenceError } from '@bookmark-assistant/server-core';
 import { prisma } from './userPrisma';
 
 export interface CachedDescription {
@@ -83,7 +84,7 @@ export class DescriptionCacheService {
   async set(url: string, description: string, source: string): Promise<void> {
     const maxRetries = 3;
     let attempt = 0;
-    
+
     while (attempt < maxRetries) {
       try {
         const now = new Date();
@@ -108,15 +109,8 @@ export class DescriptionCacheService {
         return; // Success, exit retry loop
       } catch (error: any) {
         attempt++;
-        
-        // Check if it's a connection pool exhaustion error
-        const isPoolExhausted =
-          error?.message?.includes('MaxClientsInSessionMode') ||
-          error?.message?.includes('max clients reached') ||
-          error?.message?.includes('connection pool') ||
-          error?.code === 'P1001'; // Prisma connection error code
-        
-        if (isPoolExhausted && attempt < maxRetries) {
+
+        if (isRetryablePersistenceError(error) && attempt < maxRetries) {
           // Exponential backoff: 100ms, 200ms, 400ms
           const delayMs = 100 * Math.pow(2, attempt - 1);
           console.warn(
@@ -125,7 +119,7 @@ export class DescriptionCacheService {
           await new Promise((resolve) => setTimeout(resolve, delayMs));
           continue;
         }
-        
+
         // If not a pool error or max retries reached, throw
         console.error('[DescriptionCache] Error setting cache:', error);
         throw error;

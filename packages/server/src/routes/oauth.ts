@@ -2,6 +2,7 @@
 
 import { Router, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import { isRetryablePersistenceError } from '@bookmark-assistant/server-core';
 import { AuthenticatedRequest, OAuthExchangeRequest } from '../types';
 import { validateExtension, validateSession } from '../middleware/auth';
 import { notionService } from '../services/notion';
@@ -27,14 +28,7 @@ async function retryPrismaOperation<T>(
     } catch (error: any) {
       attempt++;
 
-      // Check if it's a connection pool exhaustion error (P2024 or connection timeout)
-      const isPoolExhausted =
-        error?.code === 'P2024' || // Prisma pool timeout
-        error?.message?.includes('connection pool') ||
-        error?.message?.includes('Timed out fetching') ||
-        error?.message?.includes('MaxClientsInSessionMode');
-
-      if (isPoolExhausted && attempt < maxRetries) {
+      if (isRetryablePersistenceError(error) && attempt < maxRetries) {
         // Exponential backoff: 200ms, 400ms, 800ms
         const delayMs = 200 * Math.pow(2, attempt - 1);
         console.warn(
