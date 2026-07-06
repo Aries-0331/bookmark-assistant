@@ -5,6 +5,7 @@ import type { LinkItem as BookmarkItem } from '@bookmark-assistant/contracts';
 import {
   buildBookmarkPropertiesFromNotionSchema,
   getPrimaryNotionDataSourceId,
+  hasNotionDataSourceId,
 } from '@bookmark-assistant/server-core';
 import { config } from '../config';
 import { isValidUrl } from '../utils';
@@ -172,8 +173,7 @@ export class NotionService {
             method: 'get',
             path: `databases/${dbSummary.id}`,
           })) as any;
-          const dataSources = (db?.data_sources || []) as Array<{ id: string }>;
-          if (Array.isArray(dataSources) && dataSources.some((ds) => ds.id === dataSourceId)) {
+          if (hasNotionDataSourceId(db, dataSourceId)) {
             return dbSummary.id as string;
           }
         } catch (e) {
