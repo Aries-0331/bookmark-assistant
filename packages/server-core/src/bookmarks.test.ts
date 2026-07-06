@@ -17,6 +17,7 @@ describe('server bookmark core', () => {
     expect(Object.keys(publicApi).sort()).toEqual([
       'buildGoogleS2FaviconUrl',
       'diffBookmarks',
+      'getPrimaryNotionDataSourceId',
       'extractContentFromStructuredElements',
       'extractDescriptionFromHtml',
       'buildBookmarkPropertiesFromNotionSchema',

@@ -9,6 +9,7 @@ export type {
   NotionPropertySchema,
   NotionSchemaProperty,
 } from './notion-properties';
+export type { NotionDatabaseLike, NotionDataSourceLike } from './notion-database';
 export type { PersistenceErrorLike } from './persistence';
 export type { BookmarkSyncResultWithRetryState } from './sync-results';
 
@@ -30,6 +31,7 @@ export {
   buildBookmarkPropertiesFromNotionSchema,
   isReadOnlyNotionPropertyType,
 } from './notion-properties';
+export { getPrimaryNotionDataSourceId } from './notion-database';
 export { isRetryablePersistenceError } from './persistence';
 export {
   isRetryableSyncError,
