@@ -312,7 +312,7 @@ function publishPackages(options, env) {
   for (const item of packages) {
     const packageJson = readPackageJson(item.dir);
 
-    if (!options.dryRun && !options.force) {
+    if (!options.force) {
       const publishedVersion = getPublishedVersion(item.name, packageJson.version, env);
 
       if (publishedVersion === packageJson.version) {
@@ -320,7 +320,8 @@ function publishPackages(options, env) {
         continue;
       }
 
-      console.log(`${item.name}@${packageJson.version} is not published yet; publishing.`);
+      const action = options.dryRun ? 'dry-run publishing' : 'publishing';
+      console.log(`${item.name}@${packageJson.version} is not published yet; ${action}.`);
     }
 
     run('npm', publishArgs, {
