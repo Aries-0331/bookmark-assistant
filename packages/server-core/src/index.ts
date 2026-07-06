@@ -9,6 +9,7 @@ export type {
   NotionPropertySchema,
   NotionSchemaProperty,
 } from './notion-properties';
+export type { BookmarkSyncResultWithRetryState } from './sync-results';
 
 export {
   diffBookmarks,
@@ -28,6 +29,11 @@ export {
   buildBookmarkPropertiesFromNotionSchema,
   isReadOnlyNotionPropertyType,
 } from './notion-properties';
+export {
+  isRetryableSyncError,
+  mergeRetryResults,
+  selectRetryableSyncFailures,
+} from './sync-results';
 export {
   buildGoogleS2FaviconUrl,
   isFetchableHttpUrl,

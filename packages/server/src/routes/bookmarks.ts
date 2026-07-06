@@ -9,7 +9,9 @@ import type {
 import {
   buildGoogleS2FaviconUrl,
   diffBookmarks,
+  mergeRetryResults,
   normalizeBookmarkForSyncPlanning,
+  selectRetryableSyncFailures,
   selectUnsyncedDescribedBookmarks,
 } from '@bookmark-assistant/server-core';
 import { AuthenticatedRequest } from '../types';
@@ -73,15 +75,7 @@ async function syncBatchToNotion(
   })[];
 
   // Single retry pass for failed items (max 1 retry per item)
-  const retryableFailures = batchResults.filter((r) => {
-    if (!r.success && r.retryCount === 0) {
-      const error = (r.error || '').toLowerCase();
-      // Retry if it's a network/fetch error, but not if it's a Notion API error
-      const isRetryable = error.includes('fetch failed') || error.includes('econnreset');
-      return isRetryable;
-    }
-    return false;
-  });
+  const retryableFailures = selectRetryableSyncFailures(batchResults);
 
   if (retryableFailures.length > 0) {
     console.log(
@@ -133,13 +127,7 @@ async function syncBatchToNotion(
 
     const retryResults = await Promise.all(retryPromises);
 
-    // Update results with retry results
-    for (const retryResult of retryResults) {
-      const index = batchResults.findIndex((r) => r.bookmark === retryResult.bookmark);
-      if (index >= 0) {
-        batchResults[index] = retryResult;
-      }
-    }
+    batchResults = mergeRetryResults(batchResults, retryResults);
 
     const newSuccesses = retryResults.filter((r) => r.success).length;
     if (newSuccesses > 0) {
