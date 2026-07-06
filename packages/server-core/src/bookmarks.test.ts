@@ -22,6 +22,7 @@ describe('server bookmark core', () => {
       'buildBookmarkPropertiesFromNotionSchema',
       'isFetchableHttpUrl',
       'isValidDescription',
+      'isRetryablePersistenceError',
       'isValidUrl',
       'isRetryableSyncError',
       'looksLikeDescription',
