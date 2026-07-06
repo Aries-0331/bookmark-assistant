@@ -18,6 +18,7 @@ describe('server bookmark core', () => {
       'buildGoogleS2FaviconUrl',
       'diffBookmarks',
       'getPrimaryNotionDataSourceId',
+      'hasNotionDataSourceId',
       'extractContentFromStructuredElements',
       'extractDescriptionFromHtml',
       'buildBookmarkPropertiesFromNotionSchema',

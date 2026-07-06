@@ -31,7 +31,7 @@ export {
   buildBookmarkPropertiesFromNotionSchema,
   isReadOnlyNotionPropertyType,
 } from './notion-properties';
-export { getPrimaryNotionDataSourceId } from './notion-database';
+export { getPrimaryNotionDataSourceId, hasNotionDataSourceId } from './notion-database';
 export { isRetryablePersistenceError } from './persistence';
 export {
   isRetryableSyncError,
