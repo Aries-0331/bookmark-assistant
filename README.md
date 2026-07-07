@@ -19,9 +19,11 @@
 
 ---
 
+> Legacy notice: this public repository is kept for historical reference, AGPL-licensed self-hosted code, and old public core package provenance. Current Bookmark Assistant product development, product release tags, GitHub Releases, Chrome Web Store artifacts, and hosted-service operations are maintained from the private Bookmark Assistant Pro repository.
+
 Bookmark Assistant is a browser extension for turning browser-saved links into an organized Notion database. It syncs Chrome bookmarks and Reading List items, and it can save the current page or links from the browser context menu.
 
-The free self-hosted version is intended to be useful on its own: you can build the extension from source, run the server yourself, connect your own Notion integration, and sync saved link data to infrastructure you control.
+This legacy public codebase can still be self-hosted: you can build the extension from source, run the server yourself, connect your own Notion integration, and sync saved link data to infrastructure you control.
 
 Bookmark Assistant Pro is the managed version for users who want hosted Notion OAuth and managed automation. This public repository does not include payment logic, hosted service secrets, commercial OAuth infrastructure, or production AI backend internals.
 
@@ -42,7 +44,7 @@ Bookmark Assistant is focused on bookmarks, Reading List items, saved pages, and
 
 ## Core Packages
 
-This public repository owns the Free/Core packages: `@bookmark-assistant/contracts`, `@bookmark-assistant/extension-core`, and `@bookmark-assistant/server-core`. Bookmark Assistant Pro should consume released core packages instead of maintaining copied extension or server code. Temporary vendor checkouts are useful for validation, but they are not the long-term architecture.
+This public repository contains historical Free/Core packages: `@bookmark-assistant/contracts`, `@bookmark-assistant/extension-core`, and `@bookmark-assistant/server-core`. They are retained for provenance and compatibility with older Pro pins, but public core publishing is no longer the default product release path.
 
 Public core packages may include shared contracts, link formatting, local capture helpers, sync diffing, validation, and LiteContext-compatible data shapes. Pro-only internals such as payment logic, managed OAuth internals, entitlement implementation, production AI backend details, private deployment configuration, and secrets do not belong in this repository.
 
@@ -125,7 +127,7 @@ The self-hosted server is the sync destination for the extension. It stores the 
 
 ## Contributing
 
-Contributions are welcome if they fit the public repository scope.
+Maintenance contributions are welcome if they fit the legacy public repository scope.
 
 Start with [CONTRIBUTING.md](CONTRIBUTING.md).
 

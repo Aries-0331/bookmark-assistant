@@ -1,4 +1,4 @@
-name: Publish Core Packages
+name: Publish Legacy Core Packages
 
 on:
   workflow_dispatch:
@@ -22,7 +22,8 @@ permissions:
 
 jobs:
   publish:
-    name: Publish @bookmark-assistant core packages
+    name: Publish legacy @bookmark-assistant core packages
+    if: ${{ vars.ENABLE_LEGACY_CORE_PUBLISH == 'true' }}
     runs-on: ubuntu-latest
     environment: npm-publish
     steps:

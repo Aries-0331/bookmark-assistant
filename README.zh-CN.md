@@ -19,9 +19,11 @@
 
 ---
 
+> Legacy notice：这个公开仓库保留用于历史参考、AGPL 授权的自托管代码和旧 public core package provenance。当前 Bookmark Assistant 产品开发、产品 release tag、GitHub Release、Chrome Web Store artifact 和托管服务运营都在 private Bookmark Assistant Pro 仓库维护。
+
 Bookmark Assistant 是一个浏览器扩展，用于把浏览器中保存的链接整理到 Notion 数据库。它可以同步 Chrome 书签和 Reading List 条目，也可以从弹窗保存当前页面，或从浏览器右键菜单保存链接。
 
-免费自托管版本本身应当是可用的：你可以从源码构建扩展，自行运行服务端，连接自己的 Notion 集成，并将已保存链接数据同步到你控制的基础设施中。
+这个 legacy public codebase 仍可自托管：你可以从源码构建扩展，自行运行服务端，连接自己的 Notion 集成，并将已保存链接数据同步到你控制的基础设施中。
 
 Bookmark Assistant Pro 是面向托管 Notion OAuth 和托管自动化的版本。这个公开仓库不包含支付逻辑、托管服务密钥、商业 OAuth 基础设施或生产 AI 后端内部实现。
 
@@ -42,7 +44,7 @@ Bookmark Assistant 聚焦于书签、Reading List 条目、已保存页面和链
 
 ## Core Packages
 
-这个公开仓库负责维护 Free/Core packages：`@bookmark-assistant/contracts`、`@bookmark-assistant/extension-core` 和 `@bookmark-assistant/server-core`。Bookmark Assistant Pro 应消费已发布的 core packages，而不是长期维护复制出来的 extension 或 server 代码。临时 vendor checkout 可以用于验证，但不是长期架构。
+这个公开仓库包含历史 Free/Core packages：`@bookmark-assistant/contracts`、`@bookmark-assistant/extension-core` 和 `@bookmark-assistant/server-core`。它们保留用于 provenance，以及兼容旧的 Pro pin；public core publishing 不再是默认产品发布路径。
 
 Public core packages 可以包含共享契约、链接格式化、本地采集 helper、sync diff、数据验证，以及 LiteContext 兼容的数据结构。支付逻辑、托管 OAuth 内部实现、entitlement 实现、生产 AI 后端细节、私有部署配置和 secrets 等 Pro-only 内容不应进入这个仓库。
 
@@ -125,7 +127,7 @@ cp packages/server/.env.example packages/server/.env.local
 
 ## 贡献
 
-欢迎提交符合公开仓库范围的贡献。
+欢迎提交符合 legacy public repository 范围的维护类贡献。
 
 请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
