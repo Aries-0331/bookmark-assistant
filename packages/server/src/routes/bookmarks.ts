@@ -9,6 +9,7 @@ import type {
 import {
   buildGoogleS2FaviconUrl,
   diffBookmarks,
+  extractNotionPageFolderAndTags,
   mergeRetryResults,
   normalizeBookmarkForSyncPlanning,
   selectRetryableSyncFailures,
@@ -524,14 +525,11 @@ router.get(
       const tagCounts = new Map<string, number>();
 
       bookmarks.forEach((bookmark: any) => {
-        // Count folders
-        const folder = bookmark.properties?.Folder?.rich_text?.[0]?.text?.content || 'Default';
+        const { folder, tags } = extractNotionPageFolderAndTags(bookmark);
         folderCounts.set(folder, (folderCounts.get(folder) || 0) + 1);
 
-        // Count tags
-        const tags = bookmark.properties?.Tags?.multi_select || [];
-        tags.forEach((tag: any) => {
-          tagCounts.set(tag.name, (tagCounts.get(tag.name) || 0) + 1);
+        tags.forEach((tag) => {
+          tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
         });
       });
 

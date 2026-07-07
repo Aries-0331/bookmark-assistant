@@ -22,6 +22,7 @@ describe('server bookmark core', () => {
       'extractContentFromStructuredElements',
       'extractDescriptionFromHtml',
       'buildBookmarkPropertiesFromNotionSchema',
+      'extractNotionPageFolderAndTags',
       'isFetchableHttpUrl',
       'extractNotionPageLinkKeys',
       'isValidDescription',

@@ -6,6 +6,8 @@ export type {
 export type { DescriptionSource, HtmlDescriptionResult } from './descriptions';
 export type {
   BuildBookmarkPropertiesOptions,
+  ExtractNotionPageFolderAndTagsOptions,
+  ExtractNotionPageFolderAndTagsResult,
   ExtractNotionPageLinkKeysResult,
   NotionPageLike,
   NotionPagePropertiesLike,
@@ -34,6 +36,7 @@ export {
 } from './descriptions';
 export {
   buildBookmarkPropertiesFromNotionSchema,
+  extractNotionPageFolderAndTags,
   extractNotionPageLinkKeys,
   isReadOnlyNotionPropertyType,
 } from './notion-properties';
