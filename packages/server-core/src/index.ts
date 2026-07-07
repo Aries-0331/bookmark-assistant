@@ -9,6 +9,7 @@ export type {
   ExtractNotionPageFolderAndTagsOptions,
   ExtractNotionPageFolderAndTagsResult,
   ExtractNotionPageLinkKeysResult,
+  ExtractNotionPageTimestampsResult,
   NotionPageLike,
   NotionPagePropertiesLike,
   NotionPagePropertyValueLike,
@@ -38,6 +39,7 @@ export {
   buildBookmarkPropertiesFromNotionSchema,
   extractNotionPageFolderAndTags,
   extractNotionPageLinkKeys,
+  extractNotionPageTimestamps,
   isReadOnlyNotionPropertyType,
 } from './notion-properties';
 export { getPrimaryNotionDataSourceId, hasNotionDataSourceId } from './notion-database';

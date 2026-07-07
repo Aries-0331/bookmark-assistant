@@ -10,6 +10,7 @@ import {
   buildGoogleS2FaviconUrl,
   diffBookmarks,
   extractNotionPageFolderAndTags,
+  extractNotionPageTimestamps,
   mergeRetryResults,
   normalizeBookmarkForSyncPlanning,
   selectRetryableSyncFailures,
@@ -539,8 +540,9 @@ router.get(
         total: bookmarks.length,
         folders: Object.fromEntries(folderCounts),
         tags: Object.fromEntries(tagCounts),
-        lastSync: bookmarks[0]?.created_time || null,
-        oldestBookmark: bookmarks[bookmarks.length - 1]?.created_time || null,
+        lastSync: extractNotionPageTimestamps(bookmarks[0]).createdTime || null,
+        oldestBookmark:
+          extractNotionPageTimestamps(bookmarks[bookmarks.length - 1]).createdTime || null,
       };
 
       auditLog('bookmark_stats_fetch', userId, {
