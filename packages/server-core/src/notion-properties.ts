@@ -9,12 +9,20 @@ export type NotionPropertySchema = Record<string, NotionSchemaProperty | undefin
 
 export interface NotionRichTextFragmentLike {
   plain_text?: unknown;
+  text?: {
+    content?: unknown;
+  };
+}
+
+export interface NotionMultiSelectOptionLike {
+  name?: unknown;
 }
 
 export interface NotionPagePropertyValueLike {
   type?: unknown;
   url?: unknown;
   rich_text?: unknown;
+  multi_select?: unknown;
 }
 
 export type NotionPagePropertiesLike = Record<string, NotionPagePropertyValueLike | undefined>;
@@ -26,6 +34,17 @@ export interface NotionPageLike {
 export interface ExtractNotionPageLinkKeysResult {
   url?: string;
   syncId?: string;
+}
+
+export interface ExtractNotionPageFolderAndTagsOptions {
+  folderPropertyName?: string;
+  tagsPropertyName?: string;
+  defaultFolder?: string;
+}
+
+export interface ExtractNotionPageFolderAndTagsResult {
+  folder: string;
+  tags: string[];
 }
 
 export interface BuildBookmarkPropertiesOptions {
@@ -138,6 +157,21 @@ export function extractNotionPageLinkKeys(
   return {
     url: extractNotionPageUrl(properties),
     syncId: extractNotionPageSyncId(properties),
+  };
+}
+
+export function extractNotionPageFolderAndTags(
+  page: NotionPageLike | null | undefined,
+  options: ExtractNotionPageFolderAndTagsOptions = {}
+): ExtractNotionPageFolderAndTagsResult {
+  const properties = normalizePageProperties(page?.properties);
+  const folderPropertyName = options.folderPropertyName || 'Folder';
+  const tagsPropertyName = options.tagsPropertyName || 'Tags';
+  const defaultFolder = options.defaultFolder || 'Default';
+
+  return {
+    folder: getNotionRichTextPlainText(properties[folderPropertyName]?.rich_text) || defaultFolder,
+    tags: getNotionMultiSelectNames(properties[tagsPropertyName]?.multi_select),
   };
 }
 
@@ -264,10 +298,26 @@ function getNotionRichTextPlainText(value: unknown): string {
 
   return value
     .map((fragment: NotionRichTextFragmentLike) =>
-      typeof fragment?.plain_text === 'string' ? fragment.plain_text : ''
+      typeof fragment?.plain_text === 'string'
+        ? fragment.plain_text
+        : typeof fragment?.text?.content === 'string'
+          ? fragment.text.content
+          : ''
     )
     .join('')
     .trim();
+}
+
+function getNotionMultiSelectNames(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((option: NotionMultiSelectOptionLike) =>
+      typeof option?.name === 'string' ? option.name : undefined
+    )
+    .filter((name): name is string => typeof name === 'string' && name.length > 0);
 }
 
 function isSyncIdPropertyName(propName: string): boolean {

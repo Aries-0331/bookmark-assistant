@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildBookmarkPropertiesFromNotionSchema,
+  extractNotionPageFolderAndTags,
   extractNotionPageLinkKeys,
   isReadOnlyNotionPropertyType,
 } from './notion-properties';
@@ -269,5 +270,79 @@ describe('server Notion property mapping core', () => {
         },
       })
     ).toEqual({});
+  });
+
+  it('extracts folder and tag names from Notion page properties', () => {
+    expect(
+      extractNotionPageFolderAndTags({
+        properties: {
+          Folder: {
+            type: 'rich_text',
+            rich_text: [{ text: { content: 'Research / AI' } }],
+          },
+          Tags: {
+            type: 'multi_select',
+            multi_select: [{ name: 'notion' }, { name: 'bookmarks' }],
+          },
+        },
+      })
+    ).toEqual({
+      folder: 'Research / AI',
+      tags: ['notion', 'bookmarks'],
+    });
+  });
+
+  it('uses default folder and empty tags for missing Notion properties', () => {
+    expect(extractNotionPageFolderAndTags({ properties: {} })).toEqual({
+      folder: 'Default',
+      tags: [],
+    });
+  });
+
+  it('supports custom folder and tag property names', () => {
+    expect(
+      extractNotionPageFolderAndTags(
+        {
+          properties: {
+            Location: {
+              type: 'rich_text',
+              rich_text: [{ plain_text: 'Reading List' }],
+            },
+            Topics: {
+              type: 'multi_select',
+              multi_select: [{ name: 'docs' }],
+            },
+          },
+        },
+        {
+          folderPropertyName: 'Location',
+          tagsPropertyName: 'Topics',
+          defaultFolder: 'Inbox',
+        }
+      )
+    ).toEqual({
+      folder: 'Reading List',
+      tags: ['docs'],
+    });
+  });
+
+  it('ignores malformed folder and tag property values', () => {
+    expect(
+      extractNotionPageFolderAndTags({
+        properties: {
+          Folder: {
+            type: 'rich_text',
+            rich_text: 'not-rich-text',
+          },
+          Tags: {
+            type: 'multi_select',
+            multi_select: [{ name: '' }, { name: 123 }, { label: 'missing-name' }],
+          },
+        },
+      })
+    ).toEqual({
+      folder: 'Default',
+      tags: [],
+    });
   });
 });
