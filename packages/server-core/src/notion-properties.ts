@@ -28,6 +28,8 @@ export interface NotionPagePropertyValueLike {
 export type NotionPagePropertiesLike = Record<string, NotionPagePropertyValueLike | undefined>;
 
 export interface NotionPageLike {
+  created_time?: unknown;
+  last_edited_time?: unknown;
   properties?: unknown;
 }
 
@@ -45,6 +47,11 @@ export interface ExtractNotionPageFolderAndTagsOptions {
 export interface ExtractNotionPageFolderAndTagsResult {
   folder: string;
   tags: string[];
+}
+
+export interface ExtractNotionPageTimestampsResult {
+  createdTime?: string;
+  lastEditedTime?: string;
 }
 
 export interface BuildBookmarkPropertiesOptions {
@@ -175,6 +182,15 @@ export function extractNotionPageFolderAndTags(
   };
 }
 
+export function extractNotionPageTimestamps(
+  page: NotionPageLike | null | undefined
+): ExtractNotionPageTimestampsResult {
+  return {
+    createdTime: nonEmptyStringOrUndefined(page?.created_time),
+    lastEditedTime: nonEmptyStringOrUndefined(page?.last_edited_time),
+  };
+}
+
 export function buildBookmarkPropertiesFromNotionSchema(
   schema: NotionPropertySchema,
   bookmark: LinkItem,
@@ -244,6 +260,10 @@ function shouldBuildProperty(
 
 function stringOr(value: unknown, fallback: string): string {
   return typeof value === 'string' && value.length > 0 ? value : fallback;
+}
+
+function nonEmptyStringOrUndefined(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
 
 function resolveDefaultDate(options: BuildBookmarkPropertiesOptions): string {

@@ -3,6 +3,7 @@ import {
   buildBookmarkPropertiesFromNotionSchema,
   extractNotionPageFolderAndTags,
   extractNotionPageLinkKeys,
+  extractNotionPageTimestamps,
   isReadOnlyNotionPropertyType,
 } from './notion-properties';
 
@@ -344,5 +345,29 @@ describe('server Notion property mapping core', () => {
       folder: 'Default',
       tags: [],
     });
+  });
+
+  it('extracts top-level Notion page timestamps', () => {
+    expect(
+      extractNotionPageTimestamps({
+        created_time: '2026-01-01T00:00:00.000Z',
+        last_edited_time: '2026-01-02T00:00:00.000Z',
+        properties: {},
+      })
+    ).toEqual({
+      createdTime: '2026-01-01T00:00:00.000Z',
+      lastEditedTime: '2026-01-02T00:00:00.000Z',
+    });
+  });
+
+  it('ignores missing or malformed Notion page timestamps', () => {
+    expect(extractNotionPageTimestamps(undefined)).toEqual({});
+    expect(
+      extractNotionPageTimestamps({
+        created_time: '',
+        last_edited_time: 123,
+        properties: {},
+      })
+    ).toEqual({});
   });
 });
