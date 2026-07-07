@@ -4,11 +4,11 @@ import { Client, APIResponseError } from '@notionhq/client';
 import type { LinkItem as BookmarkItem } from '@bookmark-assistant/contracts';
 import {
   buildBookmarkPropertiesFromNotionSchema,
+  extractNotionPageLinkKeys,
   getPrimaryNotionDataSourceId,
   hasNotionDataSourceId,
 } from '@bookmark-assistant/server-core';
 import { config } from '../config';
-import { isValidUrl } from '../utils';
 
 export class NotionService {
   /**
@@ -550,53 +550,9 @@ export class NotionService {
             console.debug('[Notion] Property types found:', propTypes);
           }
 
-          // Extract URL - check both url type and rich_text for valid URLs
-          let urlValue: string | null = null;
-          for (const [_propName, propDef] of Object.entries(properties)) {
-            const def = propDef as any;
-            // First try native url type
-            if (def?.type === 'url' && def?.url) {
-              urlValue = def.url;
-              break;
-            }
-            // Fallback: check rich_text for valid URLs
-            // Some Notion databases store URLs as text instead of url type
-            if (def?.type === 'rich_text' && Array.isArray(def?.rich_text)) {
-              const text = def.rich_text
-                .map((t: any) => t?.plain_text || '')
-                .join('')
-                .trim();
-              if (isValidUrl(text)) {
-                urlValue = text;
-                break;
-              }
-            }
-          }
-          if (urlValue) {
-            urls.push(urlValue);
-          }
-
-          // Extract syncId (rich_text property matching patterns)
-          let syncIdValue: string | null = null;
-          for (const [propName, propDef] of Object.entries(properties)) {
-            const def = propDef as any;
-            if (def?.type === 'rich_text' && Array.isArray(def?.rich_text)) {
-              // Check if property name matches syncId patterns
-              if (/sync.*id/i.test(propName) || /identifier/i.test(propName) || propName === 'id') {
-                const text = def.rich_text
-                  .map((t: any) => t?.plain_text || '')
-                  .join('')
-                  .trim();
-                if (text) {
-                  syncIdValue = text;
-                  break;
-                }
-              }
-            }
-          }
-          if (syncIdValue) {
-            syncIds.push(syncIdValue);
-          }
+          const { url, syncId } = extractNotionPageLinkKeys({ properties });
+          if (url) urls.push(url);
+          if (syncId) syncIds.push(syncId);
         }
 
         cursor = response?.next_cursor || undefined;

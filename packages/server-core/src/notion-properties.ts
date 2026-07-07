@@ -1,10 +1,32 @@
 import type { LinkItem, NotionLinkField } from '@bookmark-assistant/contracts';
+import { isValidUrl } from './urls';
 
 export interface NotionSchemaProperty {
   type?: string;
 }
 
 export type NotionPropertySchema = Record<string, NotionSchemaProperty | undefined>;
+
+export interface NotionRichTextFragmentLike {
+  plain_text?: unknown;
+}
+
+export interface NotionPagePropertyValueLike {
+  type?: unknown;
+  url?: unknown;
+  rich_text?: unknown;
+}
+
+export type NotionPagePropertiesLike = Record<string, NotionPagePropertyValueLike | undefined>;
+
+export interface NotionPageLike {
+  properties?: unknown;
+}
+
+export interface ExtractNotionPageLinkKeysResult {
+  url?: string;
+  syncId?: string;
+}
 
 export interface BuildBookmarkPropertiesOptions {
   defaultDate?: string | (() => string);
@@ -108,6 +130,17 @@ export function isReadOnlyNotionPropertyType(type: unknown): boolean {
   return typeof type === 'string' && READ_ONLY_PROPERTY_TYPES.has(type);
 }
 
+export function extractNotionPageLinkKeys(
+  page: NotionPageLike | null | undefined
+): ExtractNotionPageLinkKeysResult {
+  const properties = normalizePageProperties(page?.properties);
+
+  return {
+    url: extractNotionPageUrl(properties),
+    syncId: extractNotionPageSyncId(properties),
+  };
+}
+
 export function buildBookmarkPropertiesFromNotionSchema(
   schema: NotionPropertySchema,
   bookmark: LinkItem,
@@ -184,4 +217,59 @@ function resolveDefaultDate(options: BuildBookmarkPropertiesOptions): string {
     return options.defaultDate();
   }
   return options.defaultDate || new Date().toISOString();
+}
+
+function normalizePageProperties(properties: unknown): NotionPagePropertiesLike {
+  return properties && typeof properties === 'object'
+    ? (properties as NotionPagePropertiesLike)
+    : {};
+}
+
+function extractNotionPageUrl(properties: NotionPagePropertiesLike): string | undefined {
+  for (const propDef of Object.values(properties)) {
+    if (propDef?.type === 'url' && typeof propDef.url === 'string' && propDef.url.length > 0) {
+      return propDef.url;
+    }
+
+    if (propDef?.type === 'rich_text') {
+      const text = getNotionRichTextPlainText(propDef.rich_text);
+      if (text && isValidUrl(text)) {
+        return text;
+      }
+    }
+  }
+
+  return undefined;
+}
+
+function extractNotionPageSyncId(properties: NotionPagePropertiesLike): string | undefined {
+  for (const [propName, propDef] of Object.entries(properties)) {
+    if (propDef?.type !== 'rich_text' || !isSyncIdPropertyName(propName)) {
+      continue;
+    }
+
+    const text = getNotionRichTextPlainText(propDef.rich_text);
+    if (text) {
+      return text;
+    }
+  }
+
+  return undefined;
+}
+
+function getNotionRichTextPlainText(value: unknown): string {
+  if (!Array.isArray(value)) {
+    return '';
+  }
+
+  return value
+    .map((fragment: NotionRichTextFragmentLike) =>
+      typeof fragment?.plain_text === 'string' ? fragment.plain_text : ''
+    )
+    .join('')
+    .trim();
+}
+
+function isSyncIdPropertyName(propName: string): boolean {
+  return /sync.*id/i.test(propName) || /identifier/i.test(propName) || propName === 'id';
 }

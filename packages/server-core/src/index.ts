@@ -6,7 +6,12 @@ export type {
 export type { DescriptionSource, HtmlDescriptionResult } from './descriptions';
 export type {
   BuildBookmarkPropertiesOptions,
+  ExtractNotionPageLinkKeysResult,
+  NotionPageLike,
+  NotionPagePropertiesLike,
+  NotionPagePropertyValueLike,
   NotionPropertySchema,
+  NotionRichTextFragmentLike,
   NotionSchemaProperty,
 } from './notion-properties';
 export type { NotionDatabaseLike, NotionDataSourceLike } from './notion-database';
@@ -29,6 +34,7 @@ export {
 } from './descriptions';
 export {
   buildBookmarkPropertiesFromNotionSchema,
+  extractNotionPageLinkKeys,
   isReadOnlyNotionPropertyType,
 } from './notion-properties';
 export { getPrimaryNotionDataSourceId, hasNotionDataSourceId } from './notion-database';
