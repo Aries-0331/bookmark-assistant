@@ -9,6 +9,7 @@ import { UserPrismaRepo } from './userPrisma';
 // Mock Prisma Client
 const { mockPrisma } = vi.hoisted(() => ({
   mockPrisma: {
+    $disconnect: vi.fn(),
     user: {
       findUnique: vi.fn(),
       create: vi.fn(),

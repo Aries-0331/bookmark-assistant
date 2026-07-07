@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildBookmarkPropertiesFromNotionSchema,
+  extractNotionPageLinkKeys,
   isReadOnlyNotionPropertyType,
 } from './notion-properties';
 
@@ -186,5 +187,87 @@ describe('server Notion property mapping core', () => {
     expect(isReadOnlyNotionPropertyType('created_time')).toBe(true);
     expect(isReadOnlyNotionPropertyType('title')).toBe(false);
     expect(isReadOnlyNotionPropertyType(undefined)).toBe(false);
+  });
+
+  it('extracts duplicate detection keys from native Notion URL and sync ID properties', () => {
+    expect(
+      extractNotionPageLinkKeys({
+        properties: {
+          URL: { type: 'url', url: 'https://example.com/native' },
+          'Sync ID': {
+            type: 'rich_text',
+            rich_text: [{ plain_text: 'bookmark-sync-1' }],
+          },
+        },
+      })
+    ).toEqual({
+      url: 'https://example.com/native',
+      syncId: 'bookmark-sync-1',
+    });
+  });
+
+  it('falls back to rich text URL properties when native URL is missing', () => {
+    expect(
+      extractNotionPageLinkKeys({
+        properties: {
+          Website: {
+            type: 'rich_text',
+            rich_text: [{ plain_text: ' https://example.com/from-text ' }],
+          },
+          Identifier: {
+            type: 'rich_text',
+            rich_text: [{ plain_text: 'text-sync-1' }],
+          },
+        },
+      })
+    ).toEqual({
+      url: 'https://example.com/from-text',
+      syncId: 'text-sync-1',
+    });
+  });
+
+  it('ignores invalid rich text URLs and non-matching sync ID property names', () => {
+    expect(
+      extractNotionPageLinkKeys({
+        properties: {
+          Notes: {
+            type: 'rich_text',
+            rich_text: [{ plain_text: 'not a url' }],
+          },
+          Internal: {
+            type: 'rich_text',
+            rich_text: [{ plain_text: 'not-a-sync-id' }],
+          },
+        },
+      })
+    ).toEqual({});
+  });
+
+  it('extracts lower-case id rich text as sync ID for legacy schemas', () => {
+    expect(
+      extractNotionPageLinkKeys({
+        properties: {
+          id: {
+            type: 'rich_text',
+            rich_text: [{ plain_text: 'legacy-sync-id' }],
+          },
+        },
+      })
+    ).toEqual({
+      syncId: 'legacy-sync-id',
+    });
+  });
+
+  it('handles missing or malformed page properties', () => {
+    expect(extractNotionPageLinkKeys(undefined)).toEqual({});
+    expect(extractNotionPageLinkKeys({ properties: null })).toEqual({});
+    expect(
+      extractNotionPageLinkKeys({
+        properties: {
+          URL: { type: 'url', url: 123 },
+          'Sync ID': { type: 'rich_text', rich_text: 'sync-1' },
+        },
+      })
+    ).toEqual({});
   });
 });
